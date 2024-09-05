@@ -1,0 +1,95 @@
+$date
+	Thu Sep  5 08:59:15 2024
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module tb_ALU $end
+$var wire 8 ! o_data [7:0] $end
+$var parameter 32 " NB_DATA $end
+$var parameter 32 # NB_OP $end
+$var reg 8 $ i_data_a [7:0] $end
+$var reg 8 % i_data_b [7:0] $end
+$var reg 6 & i_op [5:0] $end
+$scope module uut $end
+$var wire 8 ' i_data_a [7:0] $end
+$var wire 8 ( i_data_b [7:0] $end
+$var wire 8 ) i_op [7:0] $end
+$var wire 6 * o_data [5:0] $end
+$var parameter 32 + NB_DATA $end
+$var parameter 32 , NB_OP $end
+$var reg 8 - tmp [7:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b110 ,
+b1000 +
+b110 #
+b1000 "
+$end
+#0
+$dumpvars
+b11001 -
+b11001 *
+b100000 )
+b1111 (
+b1010 '
+b100000 &
+b1111 %
+b1010 $
+b11001 !
+$end
+#10000
+b1111 !
+b1111 *
+b1111 -
+b100010 )
+b100010 &
+b101 %
+b101 (
+b10100 $
+b10100 '
+#20000
+b1000 !
+b1000 *
+b10001000 -
+b100100 )
+b100100 &
+b11001100 %
+b11001100 (
+b10101010 $
+b10101010 '
+#30000
+b11101110 !
+b101110 *
+b11101110 -
+b100101 )
+b100101 &
+#40000
+b11100110 !
+b100110 *
+b1100110 -
+b100110 )
+b100110 &
+#50000
+b10101 !
+b10101 *
+b11010101 -
+b11 )
+b11 &
+#60000
+b1010101 -
+b10 )
+b10 &
+#70000
+b10001 !
+b10001 *
+b10001 -
+b100111 )
+b100111 &
+#80000
