@@ -6,4 +6,5 @@
 !*/
 # Ignore all vcd
 *.vcd
-
+# Ignore all .sh files
+*.sh
