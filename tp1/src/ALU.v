@@ -4,17 +4,30 @@ module ALU
     parameter NB_OP = 6                                     // Operation width (number of bits for the operation code)
 )
 (
-    input wire signed [NB_DATA-1 : 0] i_data_a,             // 8-bit number A
-    input wire signed [NB_DATA-1 : 0] i_data_b,             // 8-bit number B
+    input wire [NB_DATA-1 : 0] i_data_a,                    // 8-bit unsigned number A
+    input wire [NB_DATA-1 : 0] i_data_b,                    // 8-bit unsigned number B
     input wire [NB_OP-1 : 0] i_op,                          // 6-bit operation code
-    output reg signed [NB_DATA-1 : 0] o_data                // 8-bit output
+    output reg [NB_DATA-1 : 0] o_data,                      // 8-bit unsigned output
+    output reg carry_borrow                                 // 1-bit carry/borrow flag
 );
 
     always @(*)                                             // Code block that is executed when any of the inputs change
     begin                       
+        carry_borrow = 0;                                   // Reset carry/borrow flag
+        
         case (i_op)
-            6'b100000: o_data = i_data_a + i_data_b;        // ADD
-            6'b100010: o_data = i_data_a - i_data_b;        // SUB
+            6'b100000:                                      // ADD
+            begin
+                {carry_borrow, o_data} = i_data_a + i_data_b;
+            end
+            
+            6'b100010:                                      // SUB
+            begin
+                if (i_data_a < i_data_b)                    // Check for borrow
+                    carry_borrow = 1;
+                o_data = i_data_a - i_data_b;
+            end
+            
             6'b100100: o_data = i_data_a & i_data_b;        // AND
             6'b100101: o_data = i_data_a | i_data_b;        // OR
             6'b100110: o_data = i_data_a ^ i_data_b;        // XOR
