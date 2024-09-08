@@ -37,21 +37,20 @@ initial begin
     seed = $time;
     
     // Display the header for results
-    $display("Time\t A\t B\t OP\t Result\t Carry");
-
+    $display("Time\t  A\t	  B\t     OP\t     Result\t	 Carry");
     // Start simulation
     #10
 
     // Test 1 ADD (Expect carry)
-    i_data_a = 8'b11111111;  // 255
-    i_data_b = 8'b00000001;  // 1
+    i_data_a = $random(seed) % 256;
+    i_data_b = $random(seed) % 256;
     i_op = 6'b100000;        // ADD operation
     #10;
     $display("%0t\t %d\t %d\t ADD\t %d\t %b", $time, i_data_a, i_data_b, o_data, carry_borrow);
 
     // Test 2 SUB (Expect borrow)
-    i_data_a = 8'b00000011;  // 3
-    i_data_b = 8'b00000101;  // 5
+    i_data_a = $random(seed) % 256;
+    i_data_b = $random(seed) % 256;
     i_op = 6'b100010;        // SUB operation
     #10;
     $display("%0t\t %d\t %d\t SUB\t %d\t %b", $time, i_data_a, i_data_b, o_data, carry_borrow);
