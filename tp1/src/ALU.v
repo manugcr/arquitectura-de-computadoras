@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module ALU
 #(
     parameter NB_DATA = 8,                                  // Data bus width (number of bits for A and B)
