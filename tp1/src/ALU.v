@@ -1,40 +1,38 @@
-module ALU 
+module ALU
 #(
     parameter NB_DATA = 8,                                  // Data bus width (number of bits for A and B)
     parameter NB_OP = 6                                     // Operation width (number of bits for the operation code)
 )
 (
-    input wire [NB_DATA-1 : 0] i_data_a,                    // 8-bit unsigned number A
-    input wire [NB_DATA-1 : 0] i_data_b,                    // 8-bit unsigned number B
-    input wire [NB_OP-1 : 0] i_op,                          // 6-bit operation code
-    output reg [NB_DATA-1 : 0] o_data,                      // 8-bit unsigned output
-    output reg carry_borrow                                 // 1-bit carry/borrow flag
+    input wire signed [NB_DATA-1 : 0] i_data_a,             // Signed 8-bit number A
+    input wire signed [NB_DATA-1 : 0] i_data_b,             // Signed 8-bit number B
+    input wire [NB_OP-1 : 0] i_op,                          // Unsigned 6-bit operation code
+    output reg signed [NB_DATA-1 : 0] o_data                // Signed 8-bit output
 );
 
-    always @(*)                                             // Code block that is executed when any of the inputs change
-    begin                       
-        carry_borrow = 0;                                   // Reset carry/borrow flag
-        
+    localparam OP_ADD = 6'b100000;                          // ADD operation
+    localparam OP_SUB = 6'b100010;                          // SUB operation
+    localparam OP_AND = 6'b100100;                          // AND operation
+    localparam OP_OR  = 6'b100101;                          // OR operation
+    localparam OP_XOR = 6'b100110;                          // XOR operation
+    localparam OP_SRA = 6'b000011;                          // SRA (arithmetic shift right)
+    localparam OP_SRL = 6'b000010;                          // SRL (logical shift right)
+    localparam OP_NOR = 6'b100111;                          // NOR operation
+
+    // Combinational block, it will trigger every time any of the inputs change.
+    always @(*)
+    begin
         case (i_op)
-            6'b100000:                                      // ADD
-            begin
-                {carry_borrow, o_data} = i_data_a + i_data_b;
-            end
-            
-            6'b100010:                                      // SUB
-            begin
-                if (i_data_a < i_data_b)                    // Check for borrow
-                    carry_borrow = 1;
-                o_data = i_data_a - i_data_b;
-            end
-            
-            6'b100100: o_data = i_data_a & i_data_b;        // AND
-            6'b100101: o_data = i_data_a | i_data_b;        // OR
-            6'b100110: o_data = i_data_a ^ i_data_b;        // XOR
-            6'b000011: o_data = i_data_a >>> 1;             // SRA (arithmetic shift right)
-            6'b000010: o_data = i_data_a >> 1;              // SRL (logical shift right)
-            6'b100111: o_data = ~(i_data_a | i_data_b);     // NOR
-            default: o_data = 0;                            // Default case (optional)
+            OP_ADD: o_data = i_data_a + i_data_b;           // With signed numbers addition is two's complement.
+            OP_SUB: o_data = i_data_a - i_data_b;           // With signed numbers subtraction is two's complement.
+            OP_AND: o_data = i_data_a & i_data_b;
+            OP_OR:  o_data = i_data_a | i_data_b;
+            OP_XOR: o_data = i_data_a ^ i_data_b;
+            OP_SRA: o_data = i_data_a >>> 1;
+            OP_SRL: o_data = i_data_a >> 1;
+            OP_NOR: o_data = ~(i_data_a | i_data_b);
+            default: o_data = 0;
         endcase
     end
+
 endmodule
