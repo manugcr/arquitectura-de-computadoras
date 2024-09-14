@@ -7,7 +7,7 @@ echo "  ->  Removing old files if they exist..."
 [ -f dump.vcd ] && rm dump.vcd
 
 echo "  ->  Compiling and running ALU testbench..."
-iverilog -o sim ALU.v tb_ALU.v || { echo "Compilation failed!"; exit 1; }
+iverilog -o sim alu.v tb_alu.v || { echo "Compilation failed!"; exit 1; }
 
 echo "  ->  Running simulation..."
 vvp sim || { echo "Simulation failed!"; exit 1; }

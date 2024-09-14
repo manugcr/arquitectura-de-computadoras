@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_ALU;
+module tb_alu;
 
     // ALU parameters
     parameter NB_DATA   = 8;
@@ -15,7 +15,7 @@ module tb_ALU;
     integer seed;
 
     // Instantiate the ALU module
-    ALU #(
+    alu #(
         .NB_DATA(NB_DATA),
         .NB_OP(NB_OP)
     ) uut (
@@ -42,7 +42,7 @@ module tb_ALU;
     initial begin
         // Dump VCD file for gtkwave
         $dumpfile("dump.vcd");
-        $dumpvars(0, tb_ALU);
+        $dumpvars(0, tb_alu);
 
         seed = $random;
 

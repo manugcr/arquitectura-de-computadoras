@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module ALU
+module alu
 #(
     parameter NB_DATA = 8,                                  // Data bus width (number of bits for A and B)
     parameter NB_OP = 6                                     // Operation width (number of bits for the operation code)
