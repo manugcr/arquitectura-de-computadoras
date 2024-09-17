@@ -3,7 +3,6 @@
     <img src="imgs/image.png" alt="Logo">
   </a>
 
-
 ***TRABAJO PRACTICO 1***
 
 **Titulo:** Construyamos una ALU
@@ -13,9 +12,6 @@
 **Integrantes:**
    - Gil Cernich, Manuel 
    - Cabrera, Augusto Gabriel 
-
-**Fecha:** 7/9/2024
-   
 
 ---------------
 ## Enunciado
@@ -48,8 +44,6 @@ Desarrollar una Unidad Lógica Aritmética (ALU) parametrizable en lenguaje Veri
 
 El siguiente código Verilog define un módulo `ALU` (Unidad Lógica Aritmética) que realiza diversas operaciones aritméticas y lógicas de 8 bits. 
 
-
-
 <p align="center">
   <a href="https://example.com/">
     <img src="imgs/image6.png" alt="Diagrama">
@@ -57,9 +51,7 @@ El siguiente código Verilog define un módulo `ALU` (Unidad Lógica Aritmética
 </p>
 <p align="center"><em>Figura 2: Esquema Obtenido</em></p>
 
-
-
-## Lógica y TOP
+### Lógica y TOP
 
 <p align="center">
   <a href="https://example.com/">
@@ -68,8 +60,7 @@ El siguiente código Verilog define un módulo `ALU` (Unidad Lógica Aritmética
 </p>
 <p align="center"><em>Figura 3: Esquema Lógica y TOP</em></p>
 
-
-### Top
+#### Top
 El término **Top** hace referencia a las **compuertas de entrada o salida** que contiene nuestro circuito, como:
 - **GROUND**: Conexión a tierra.
 - **TRIGGER**: Señal de activación.
@@ -82,12 +73,11 @@ Estas conexiones son fáciles de identificar al principio, ya que permiten que e
 En este trabajo práctico:
 - Los archivos **`TOP.v`** y **`constraints.xdc`** forman parte del "Top", ya que gestionan las conexiones y el mapeo de los pines a los periféricos del sistema.
 
-### Lógica
+#### Lógica
 La **lógica** es la parte del diseño que desarrollamos como **diseñadores** y es una parte fundamental del código. Aquí es donde implementamos el comportamiento y las operaciones que queremos que realice el circuito.
 
 En este trabajo práctico:
 - El archivo **`ALU.v`** forma parte de la "Lógica", ya que contiene las operaciones que la ALU (Unidad Lógica Aritmética) ejecuta, como suma, resta, desplazamiento y operaciones lógicas.
-
 
 <p align="center">
   <a href="https://example.com/">
@@ -96,18 +86,13 @@ En este trabajo práctico:
 </p>
 <p align="center"><em>Figura 4: Etapas </em></p>
 
+---
 
 A continuación se describe cada parte del código:
-
-
-
-
-
 
 ## Código Verilog: ALU.v
 
 Este módulo describe una **Unidad Lógica Aritmética (ALU)** en Verilog, la cual realiza operaciones aritméticas y lógicas en dos números de 8 bits de entrada (`A` y `B`).
-
 
 ### 1. `module alu`
 Define el inicio del módulo **`alu`**, el cual es parametrizado. Se utilizan dos parámetros:
@@ -147,71 +132,7 @@ Este bloque define el comportamiento de la ALU. Se ejecuta cada vez que una de l
 - **`>>>`**: Operador de **desplazamiento aritmético** a la derecha en Verilog. Mantiene el bit de signo en el desplazamiento.
 - **`>>`**: Operador de **desplazamiento lógico** a la derecha. No conserva el signo y llena con ceros.
 
-
-
-##  Operaciones 
-
-El código ejecuta una operación dependiendo del valor de `i_op`, que se compara con las siguientes instrucciones:
-
-- **`6'b100000` (ADD):** 
-  - Se suma `i_data_a` e `i_data_b`, y el bit más significativo se almacena en `carry_borrow` si hay un acarreo.
-  - `{carry_borrow, o_data} = i_data_a + i_data_b;`: Usa un registro de 9 bits para almacenar el acarreo en el bit más significativo.
-
-<p align="center">
-  <a href="https://example.com/">
-    <img src="imgs/image2.png" alt="Diagrama">
-  </a>
-</p>
-<p align="center"><em>Figura 3: Ej Operando ADD (con Carry)</em></p>
-
-- **`6'b100010` (SUB):**
-  - Resta `i_data_a - i_data_b`.
-  - Si `i_data_a < i_data_b`, se activa `carry_borrow` para indicar un préstamo.
-  - `carry_borrow = 1;` y `o_data = i_data_a - i_data_b;`.
-
-<p align="center">
-  <a href="https://example.com/">
-    <img src="imgs/image3.png" alt="Diagrama">
-  </a>
-</p>
-<p align="center"><em>Figura 4: Ej Operando SUB (con Borrow)</em></p>
-
-<p align="center">
-  <a href="https://example.com/">
-    <img src="imgs/image4.png" alt="Diagrama">
-  </a>
-</p>
-<p align="center"><em>Figura 5: Ej Operando SUB (sin Borrow)</em></p>
-
-- `Borrow = 1` Resultado NEGATIVO
-- `Borrow = 0` Resultado POSITIVO
-
-- **Operaciones lógicas:**
-  - `6'b100100`: **AND** bit a bit entre `i_data_a` e `i_data_b`.
-  - `6'b100101`: **OR** bit a bit entre `i_data_a` e `i_data_b`.
-  - `6'b100110`: **XOR** bit a bit entre `i_data_a` e `i_data_b`.
-  - `6'b100111`: **NOR** bit a bit (es decir, primero realiza un OR y luego una negación).
-
-- **Desplazamientos:**
-  - `6'b000011`: **SRA** (desplazamiento aritmético a la derecha). Mantiene el bit de signo.
-  - `6'b000010`: **SRL** (desplazamiento lógico a la derecha). Desplaza los bits e inserta ceros desde la izquierda.
-
-- **Caso por defecto:**
-  - Si `i_op` no coincide con ningún valor predefinido, `o_data` se pone a 0.
-
-Este código es un diseño típico de una ALU que soporta operaciones básicas como suma, resta, operaciones lógicas y desplazamientos, útiles en la implementación de procesadores o sistemas digitales.
-
-<p align="center">
-  <a href="https://example.com/">
-    <img src="imgs/image5.png" alt="Esquema">
-  </a>
-</p>
-<p align="center"><em>Figura 6: Ej Operando AND, OR , XOR , NOR , SRA , SRL</em></p>
-
-
-
-
-
+---
 
 ## Test Bench
 
@@ -222,9 +143,7 @@ Este *testbench* es un archivo en Verilog que se utiliza para verificar el compo
     <img src="imgs/image7.png" alt="Esquema">
   </a>
 </p>
-<p align="center"><em>Figura 7: Test Bench</em></p>
-
-
+<p align="center"><em>Figura 5: Test Bench</em></p>
 
 A continuación se explican las partes clave:
 ### 1. `module tb_alu`
@@ -285,14 +204,11 @@ Este bloque se ejecuta al inicio de la simulación. Aquí se define el flujo de 
     <img src="imgs/image10.png" alt="Diagrama">
   </a>
 </p>
-<p align="center"><em>Figura Y: Simulación</em></p>
+<p align="center"><em>Figura 6: Simulación</em></p>
 
+---
 
 ## TOP.v
-
-
-
-
 
 ### 1. Módulo `Top`
 Este módulo es el diseño principal que incluye la **ALU** y la lógica para controlar la operación basada en entradas de switches y botones.
@@ -337,10 +253,9 @@ Otro bloque que se ejecuta en el flanco de subida del reloj:
 ### 8. Asignación de `o_test_led`
 El **LED de prueba** (**`o_test_led`**) se enciende si el reset está activo. Este LED sirve para verificar visualmente el estado del reset.
 
+---
 
 ## constraints.xdc
-
-
 
 Este archivo define cómo se asignan las señales lógicas del diseño a los pines físicos de la FPGA en la tarjeta Basys 3, así como otras propiedades, como la frecuencia del reloj y los estándares de entrada/salida.
 
@@ -349,7 +264,7 @@ Este archivo define cómo se asignan las señales lógicas del diseño a los pin
     <img src="imgs/image8.png" alt="Diagrama">
   </a>
 </p>
-<p align="center"><em>Figura X:  Periféricos en uso BASYS 3</em></p>
+<p align="center"><em>Figura 7:  Periféricos en uso BASYS 3</em></p>
 
 ### 1. Reloj (`i_clk`)
 - **`set_property -dict { PACKAGE_PIN W5 IOSTANDARD LVCMOS33 } [get_ports { i_clk }];`**  
@@ -393,7 +308,6 @@ Este archivo define cómo se asignan las señales lógicas del diseño a los pin
   - **`i_sw[6]`** al pin **W14**.
   - **`i_sw[7]`** al pin **W13**.
 
+----
 
-
-
-
+## Anexo
