@@ -309,5 +309,13 @@ Este archivo define cómo se asignan las señales lógicas del diseño a los pin
   - **`i_sw[7]`** al pin **W13**.
 
 ----
-
 ## Anexo
+
+En el siguiente enlace se presenta la prueba física implementada en la FPGA para las siguientes operaciones: https://drive.google.com/file/d/1y1pOZlfDWtyy2c2WjPMaGEe4uv_ALwu_/view?usp=sharing
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="imgs/image12.png" alt="Diagrama">
+  </a>
+</p>
+<p align="center"><em>Figura 8:  Simulación a ejecutar</em></p>
