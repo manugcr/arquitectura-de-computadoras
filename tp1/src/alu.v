@@ -30,8 +30,8 @@ module alu
             OP_AND: o_data = i_data_a & i_data_b;
             OP_OR:  o_data = i_data_a | i_data_b;
             OP_XOR: o_data = i_data_a ^ i_data_b;
-            OP_SRA: o_data = i_data_a >>> 1;
-            OP_SRL: o_data = i_data_a >> 1;
+            OP_SRA: o_data = i_data_a >>> i_data_b;
+            OP_SRL: o_data = i_data_a >> i_data_b;
             OP_NOR: o_data = ~(i_data_a | i_data_b);
             default: o_data = 0;
         endcase
