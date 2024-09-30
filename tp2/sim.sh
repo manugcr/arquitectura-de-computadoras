@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Check if the correct number of arguments was provided
-if [ $# -ne 2 ]; then
-    echo "Usage: $0 <design_file_name> <testbench_file_name>"
-    echo "Example: $0 baudrate_gen tb_baudrate_gen"
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <design_file_name>"
+    echo "Example: $0 alu"
     exit 1
 fi
 
@@ -12,11 +12,10 @@ cd ./src/tests || { echo "Directory ./src/tests not found!"; exit 1; }
 
 # Assign parameters to variables
 design_name=$1
-testbench_name=$2
 
 # Construct design and testbench file paths
 design_file="../${design_name}.v"
-testbench_file="${testbench_name}.v"
+testbench_file="tb_${design_name}.v"
 
 # Check if design file exists
 if [ ! -f "$design_file" ]; then
