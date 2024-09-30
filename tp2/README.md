@@ -234,3 +234,170 @@ Este transmisor UART envía un byte de datos serialmente, bit por bit, con una s
 
 Cada bit (incluido el de inicio y el de parada) toma 16 ticks en total para ser enviado.
 
+
+
+
+
+### FIFO  (`fifo.v`)
+
+
+
+#### Parámetros del Módulo
+- **`B`**: Número de bits en una palabra que se almacenará en el FIFO (8 bits por defecto).
+- **`W`**: Número de bits de dirección, que determina el tamaño del FIFO (el tamaño será \(2^W\) palabras, es decir, 16 palabras por defecto).
+
+#### Entradas y Salidas
+- **Entradas**:
+  - **`clk`**: Señal de reloj que sincroniza el funcionamiento del FIFO.
+  - **`reset`**: Señal para restablecer el FIFO a su estado inicial.
+  - **`rd`**: Señal para indicar si se desea leer del FIFO.
+  - **`wr`**: Señal para indicar si se desea escribir en el FIFO.
+  - **`write_data`**: Datos que se desean escribir en el FIFO.
+
+- **Salidas**:
+  - **`empty`**: Indica si el FIFO está vacío.
+  - **`full`**: Indica si el FIFO está lleno.
+  - **`read_data`**: Datos leídos del FIFO.
+
+#### Variables Internas
+- **`array_reg`**: Arreglo que almacena los datos en el FIFO.
+- **`w_ptr_reg`, `w_ptr_next`, `w_ptr_succ`**: Puntero de escritura actual, próximo y siguiente.
+- **`r_ptr_reg`, `r_ptr_next`, `r_ptr_succ`**: Puntero de lectura actual, próximo y siguiente.
+- **`full_reg`, `empty_reg`**: Indicadores de estado del FIFO (si está lleno o vacío).
+- **`full_next`, `empty_next`**: Valores para los estados en el siguiente ciclo.
+- **`wr_en`**: Señal de habilitación de escritura.
+
+#### Comportamiento del FIFO
+1. **Escritura en el FIFO**:
+   - En cada flanco positivo del reloj (`posedge clk`), si `wr_en` es verdadero (lo que significa que la señal de escritura `wr` es alta y el FIFO no está lleno), se escriben los `write_data` en la posición actual del puntero de escritura (`w_ptr_reg`).
+   
+2. **Lectura del FIFO**:
+   - La señal de salida `read_data` se asigna al valor de `array_reg` en la posición actual del puntero de lectura (`r_ptr_reg`).
+
+3. **Control de Punteros y Estado**:
+   - En el bloque `always @(posedge clk)`, se gestionan los punteros y los estados del FIFO. Si se activa la señal de `reset`, se inicializan los punteros y los estados del FIFO.
+   - De lo contrario, los punteros y los estados se actualizan según la lógica de estado siguiente.
+
+4. **Lógica de Siguiente Estado**:
+   - En el bloque `always @*`, se determina el próximo estado de los punteros de lectura y escritura según las señales de control (`wr` y `rd`).
+   - Dependiendo de las combinaciones de señales (NO_OP, READ, WRITE, READ_WRITE), se actualizan los punteros y los estados del FIFO.
+   - La lógica asegura que no se sobrescriban datos en el FIFO si está lleno y que no se intente leer datos si está vacío.
+
+#### Salidas del FIFO
+- Las salidas `full` y `empty` se asignan a los registros de estado correspondientes (`full_reg` y `empty_reg`), que reflejan el estado actual del FIFO.
+
+
+
+### Ejemplo de Ejecución del FIFO
+
+Este documento ilustra cómo funciona un FIFO en términos de bits, mostrando las operaciones de escritura y lectura.
+
+
+#### 1. Inicialización
+- Estado inicial:
+  - `empty = 1` (FIFO está vacío)
+  - `full = 0` (FIFO no está lleno)
+
+#### 2. Escritura de Datos
+- **Escribir `0xAA` (10101010 en binario)**:
+  - `wr = 1`, `write_data = 8'b10101010`
+  - Puntero de escritura (`w_ptr`) avanza de `0` a `1`
+  - Estado:
+    - Datos en FIFO: `[10101010, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]`
+    - `empty = 0`, `full = 0`
+  
+- **Escribir `0xBB` (10111011 en binario)**:
+  - `write_data = 8'b10111011`
+  - `wr = 1` (continúa escribiendo)
+  - Puntero de escritura (`w_ptr`) avanza de `1` a `2`
+  - Estado:
+    - Datos en FIFO: `[10101010, 10111011, _, _, _, _, _, _, _, _, _, _, _, _, _, _]`
+    - `empty = 0`, `full = 0`
+
+- **Escribir `0xCC` (11001100 en binario)**:
+  - `write_data = 8'b11001100`
+  - `wr = 1` (continúa escribiendo)
+  - Puntero de escritura (`w_ptr`) avanza de `2` a `3`
+  - Estado:
+    - Datos en FIFO: `[10101010, 10111011, 11001100, _, _, _, _, _, _, _, _, _, _, _, _, _]`
+    - `empty = 0`, `full = 0`
+
+#### 3. Lectura de Datos
+- **Leer un dato**:
+  - `rd = 1` (activar lectura)
+  - Puntero de lectura (`r_ptr`) avanza de `0` a `1`
+  - Dato leído: `0xAA` (10101010)
+  - Estado:
+    - Datos en FIFO: `[_, 10111011, 11001100, _, _, _, _, _, _, _, _, _, _, _, _, _]`
+    - `empty = 0`, `full = 0`
+
+- **Leer el siguiente dato**:
+  - `rd = 1` (activar lectura)
+  - Puntero de lectura (`r_ptr`) avanza de `1` a `2`
+  - Dato leído: `0xBB` (10111011)
+  - Estado:
+    - Datos en FIFO: `[_, _, 11001100, _, _, _, _, _, _, _, _, _, _, _, _, _]`
+    - `empty = 0`, `full = 0`
+
+- **Leer el siguiente dato**:
+  - `rd = 1` (activar lectura)
+  - Puntero de lectura (`r_ptr`) avanza de `2` a `3`
+  - Dato leído: `0xCC` (11001100)
+  - Estado:
+    - Datos en FIFO: `[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]`
+    - `empty = 1` (FIFO está vacío), `full = 0`
+
+#### Resumen de la Ejecución
+- **Escritura**:
+  - `w_ptr` avanza al escribir datos: de `0` a `1` a `2` a `3`.
+  - Se escribieron tres datos: `0xAA`, `0xBB`, `0xCC`.
+
+- **Lectura**:
+  - `r_ptr` avanza al leer datos: de `0` a `1` a `2` a `3`.
+  - Se leyeron los mismos tres datos en el mismo orden que se escribieron.
+
+
+
+
+
+### Baud Rate `baud_rate.v`
+
+
+1. **Parámetros:**
+   - `N=8`: Esto significa que el contador se representa con 8 bits. Con 8 bits, puedes contar hasta 2^8 - 1 = 255, que es suficiente para contar hasta 163.
+   - `M=163`: Este es el valor máximo que el contador alcanzará antes de reiniciarse. En este caso, el contador se reiniciará después de contar 163 ciclos de reloj.
+
+2. **Entradas y Salidas:**
+   - `clk`: La señal de reloj que controla el funcionamiento del contador.
+   - `reset`: Una señal que reinicia el contador a 0.
+   - `tick`: Indica cuándo se ha generado un tick. Esta señal se activa (1) cuando el contador alcanza 163.
+   - `q`: Muestra el valor actual del contador.
+
+3. **Registro y Lógica del Contador:**
+   - `r_reg`: Un registro que almacena el valor actual del contador.
+   - `r_next`: Una señal que representa el siguiente estado del contador.
+   - En la lógica del registro, el contador se incrementa en cada flanco ascendente del reloj (`posedge clk`).
+   - Si la señal de reset está activa, se reinicia el contador a 0.
+   - Si el contador alcanza 162 (es decir, `M-1`), se reinicia a 0; de lo contrario, se incrementa en 1.
+
+4. **Generación del Tick:**
+   - La señal `tick` se activa cuando el contador alcanza 163, indicando que ha pasado el tiempo necesario para muestrear un bit de datos.
+
+#### Cálculos para la Generación de Ticks
+
+1. **Frecuencia de Baud Rate:**
+   - **Baud Rate:** 19,200 bps (bits por segundo).
+   - **Muestras por bit:** 16.
+   - **Frecuencia de muestreo:** 
+     - Frecuencia de muestreo = Baud Rate × Muestras por bit = 19,200 bps × 16 = 307,200 ticks por segundo.
+
+2. **Frecuencia del Reloj:**
+   - **Frecuencia del reloj de la placa:** 50 MHz, que equivale a 50,000,000 ciclos por segundo.
+
+3. **Ciclos de reloj por tick:**
+   - Para determinar cuántos ciclos de reloj se necesitan para generar un tick, utilizamos la siguiente fórmula:
+     - Ciclos de reloj por tick = Frecuencia del reloj / Frecuencia de muestreo = 50,000,000 Hz / 307,200 ticks/segundo ≈ 163 ciclos de reloj.
+
+#### Resumen
+- Este contador está diseñado para contar hasta 163 ciclos de reloj y luego reiniciarse, generando una señal de tick cada vez que se alcanza este valor.
+- La relación entre la frecuencia del reloj de la placa y la frecuencia de muestreo garantiza que los datos se muestreen correctamente para el Baud Rate deseado, asegurando la precisión y confiabilidad en la transmisión de datos en el sistema UART.
