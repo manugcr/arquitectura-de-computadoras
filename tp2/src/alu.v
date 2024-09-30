@@ -1,5 +1,7 @@
 `timescale 1ns/1ps
 
+// TODO: Add carry bit 
+
 module alu
 #(
     parameter NB_DATA = 8,                                  // Data bus width (number of bits for A and B)
