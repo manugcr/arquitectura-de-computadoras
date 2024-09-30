@@ -2,8 +2,8 @@
 
 module transmitter
 #(
-	parameter	DBIT = 8,        // # data bits
-				TICKS_END = 16   // # ticks for stop bits
+	parameter	DBIT = 8,        // Data bits
+				TICKS_END = 16   // Ticks for stop bits
 )
 (
 	input wire 	clk, reset,
@@ -13,43 +13,40 @@ module transmitter
 	output wire tx
 );
 
-	// symbolic state declaration
+	// Symbolic state declaration
 	localparam [1:0]
 		waiting  	= 2'b00,
 		start 		= 2'b01,
 		data  		= 2'b10,
 		stop  		= 2'b11;
 
-	// signal declaration
+	// Signal declaration
 	reg [1:0]	state_reg, state_next;
 	reg [3:0]	tick_counter, tick_counter_next;
 	reg [2:0]	bit_counter, bit_counter_next;
 	reg [7:0]	data_shift_reg, data_shift_reg_next;
 	reg 		tx_signal, tx_next;
 
-	// body
+	// Body
 	// FSMD state & data registers
 	always @(posedge clk, posedge reset)
-		if (reset)
-			begin
-				state_reg 		<= waiting;
-				tick_counter 	<= 0;
-				bit_counter 	<= 0;
-				data_shift_reg 	<= 0;
-				tx_signal 		<= 1'b1;
-			end
-		else
-			begin
-				state_reg 		<= state_next;
-				tick_counter 	<= tick_counter_next;
-				bit_counter 	<= bit_counter_next;
-				data_shift_reg 	<= data_shift_reg_next;
-				tx_signal 		<= tx_next;
-			end
+		if (reset) begin
+			state_reg 		<= waiting;
+			tick_counter 	<= 0;
+			bit_counter 	<= 0;
+			data_shift_reg 	<= 0;
+			tx_signal 		<= 1'b1;
+		end
+		else begin
+			state_reg 		<= state_next;
+			tick_counter 	<= tick_counter_next;
+			bit_counter 	<= bit_counter_next;
+			data_shift_reg 	<= data_shift_reg_next;
+			tx_signal 		<= tx_next;
+		end
 
 	// FSMD next-state logic & functional units: ejecuta cada vez que cualquiera de las señales dentro de él cambian
-	always @*
-	begin
+	always @* begin
 		state_next 			= state_reg;
 		tx_done_tick 		= 1'b0;
 		tick_counter_next 	= tick_counter;
@@ -62,27 +59,23 @@ module transmitter
 			// El sistema pasará del estado "stop" al estado "waiting" cuando: 
 			// Después de 16 ticks en total y pulse_tick esté activo para avanzar el contador de ticks.
 			// Justo antes de cambiar al estado "waiting", el sistema activa tx_done_tick para señalar que la transmisión ha finalizado.
-			waiting:
-			begin
+			waiting: begin
 				tx_next = 1'b1;
-				if (tx_go)
-					begin
-						state_next 			= start;
-						tick_counter_next 	= 0;
-						data_shift_reg_next	= din;
-					end
+				if (tx_go) begin
+					state_next 			= start;
+					tick_counter_next 	= 0;
+					data_shift_reg_next	= din;
+				end
 			end
 
-			start:
-			begin
+			start: begin
 				tx_next = 1'b0;
 				if (pulse_tick)
-					if (tick_counter==(TICKS_END-1))
-						begin
+					if (tick_counter==(TICKS_END-1)) begin
 						state_next 			= data;
 						tick_counter_next 	= 0;
 						bit_counter_next 	= 0;
-						end
+					end
 					else
 						tick_counter_next 	= tick_counter + 1;
 			end
@@ -90,19 +83,17 @@ module transmitter
 			// DATA:   Se transmitirán 8 bits de datos.
 			// TICKS_END = 16: Cada bit de datos requerirá 16 ticks.
 			// Total de ticks = 8×16  =  128  ticks
-			data:
-			begin
+			data: begin
 				tx_next = data_shift_reg[0];
 				if (pulse_tick)
-					if (tick_counter==(TICKS_END-1))
-						begin
-							tick_counter_next 	= 0;
-							data_shift_reg_next = data_shift_reg >> 1;
-							if (bit_counter==(DBIT-1))
-								state_next = stop ;
-							else
-								bit_counter_next = bit_counter + 1;
-						end
+					if (tick_counter==(TICKS_END-1)) begin
+						tick_counter_next 	= 0;
+						data_shift_reg_next = data_shift_reg >> 1;
+						if (bit_counter==(DBIT-1))
+							state_next = stop ;
+						else
+							bit_counter_next = bit_counter + 1;
+					end
 					else
 						tick_counter_next = tick_counter + 1;
 			end
@@ -111,21 +102,18 @@ module transmitter
 			// El transmisor pasará del estado "data" al estado "stop" cuando:
 			// Se hayan transmitido todos los bits de datos (cuando bit_counter == DBIT - 1).
 			// Y el contador de ticks haya llegado al final para el último bit (tick_counter == TICKS_END - 1).  
-			stop:
-			begin
+			stop: begin
 				tx_next = 1'b1;
-				if (pulse_tick)
-						begin
-							state_next 		= waiting;
-							tx_done_tick 	= 1'b1;
-						end
-					else
-						tick_counter_next 	= tick_counter + 1;
+				if (pulse_tick) begin
+						state_next 		= waiting;
+						tx_done_tick 	= 1'b1;
+				end
+				else
+					tick_counter_next 	= tick_counter + 1;
 			end
 		endcase
 	end
 
-	// output
 	assign tx = tx_signal;
 
-	endmodule
+endmodule

@@ -2,30 +2,33 @@
 
 module baud_rate 
 #(
-	parameter N=8, 										// Número de bits en el contador
-		M=163 											// Valor máximo que el contador alcanzará antes de reiniciarse
+	// 19200 baud rate
+    parameter N = 8,                                    // Number of bits in the counter
+    parameter M = 163                                   // Maximum value the counter will reach before resetting
 )
 (
-	input wire clk,   
-	input wire reset,  
-	output wire tick, 									// Salida que indica cuando se ha generado un tick
-	output wire [N-1:0] q 								// Salida que representa el valor actual del contador
+    input wire clk,   
+    input wire reset,  
+    output wire tick,                                  	// Output that indicates when a tick has been generated
+    output wire [N-1:0] q                             	// Output that represents the current value of the counter
 );
 
-	reg [N-1:0] r_reg; 									// Registro que almacena el valor actual del contador
-	wire [N-1:0] r_next; 								// Señal que representa el siguiente estado del contador
+    reg [N-1:0] r_reg;                                	// Register that stores the current value of the counter
+    wire [N-1:0] r_next;                              	// Signal that represents the next state of the counter
 
-	// Lógica del registro
-	always @(posedge clk) 								// Se activa en el flanco ascendente del reloj
-		if (reset) 										// Si la señal de reinicio está activa
-			r_reg <= 0; 								// Reiniciar el registro a 0
-		else
-			r_reg <= r_next; 							// De lo contrario, actualizar el registro al siguiente estado
+    // Register logic
+    always @(posedge clk, posedge reset)				// Triggered on the rising edge of the clock
+	begin
+        if (reset)
+            r_reg <= 0;
+        else
+            r_reg <= r_next;
+    end
 
-	// Lógica para determinar el siguiente estado del contador
-	assign r_next = (r_reg == (M-1)) ? 0 : r_reg + 1;	// Si se alcanza M-1, reiniciar; de lo contrario, incrementar
-	assign tick = (r_reg == (M-1)) ? 1'b1 : 1'b0;		// Activar tick si se alcanza M-1, de lo contrario, desactivarlo
+    // Logic to determine the next state of the counter
+    assign r_next = (r_reg == (M - 1)) ? 0 : r_reg + 1;
+    assign tick = (r_reg == (M - 1)) ? 1'b1 : 1'b0;
 
-	assign q = r_reg; 									// Salida del contador
+    assign q = r_reg;
 
 endmodule
