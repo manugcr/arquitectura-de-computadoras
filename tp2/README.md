@@ -130,3 +130,107 @@ En algunos sistemas, cuando se detectan errores de paridad o se excede el tiempo
 
  **Estado de Verificación (Parity Bit)**:
 Si se utiliza paridad, se transmite un bit adicional para verificar la corrección de los datos enviados. Este bit de paridad puede ser par o impar, dependiendo de la configuración establecida, y permite detectar errores en los datos recibidos.
+
+
+## Código 
+
+### Transmisor UART (`transmitter.v`)
+
+Este transmisor UART envía un byte de datos serialmente, bit por bit, con una secuencia: **bit de inicio**, **bits de datos** y **bit de parada**. La máquina de estados sigue una secuencia de cuatro etapas principales:
+1. **Waiting** (Esperando)
+2. **Start** (Enviando el bit de inicio)
+3. **Data** (Enviando los bits de datos, uno por uno)
+4. **Stop** (Enviando el bit de parada)
+
+#### Suposiciones:
+- **Parámetros**: 
+  - **DBIT = 8** (es decir, 8 bits de datos).
+  - **TICKS_END = 16** (es decir, 16 ticks para completar la transmisión de cada bit).
+- El dato que se quiere enviar es el byte: `10101100`.
+
+### Ejemplo paso a paso:
+
+#### 1. Estado: Waiting (Esperando)
+- El sistema está en reposo, en el estado **Waiting**.
+- **Variables iniciales**: 
+  - `tx_signal = 1` (línea inactiva, es decir, alta).
+  - `tick_counter = 0` (contador de ticks).
+  - `bit_counter = 0` (contador de bits de datos).
+  - `data_shift_reg = 0` (dato a transmitir).
+- **Evento**: Se activa la señal **`tx_go = 1`**, lo que significa que el transmisor va a comenzar a enviar el byte de datos `10101100`.
+
+---
+
+#### 2. Estado: Start (Enviando bit de inicio)
+- El sistema pasa al estado **Start** para enviar el **bit de inicio**.
+- **Acciones**:
+  - Se pone la línea **tx_signal = 0** (bit de inicio = 0).
+  - Se inicia el contador de ticks: `tick_counter = 0`.
+  - Carga el byte de datos en **`data_shift_reg = 10101100`**.
+- **Tick 1 a Tick 16**:
+  - Por cada tick de reloj (siempre que **`pulse_tick = 1`**), el **`tick_counter`** se incrementa de 0 a 15.
+  - Cuando **`tick_counter = 15`**, ha pasado suficiente tiempo (16 ticks) para transmitir el bit de inicio.
+  - **Transición**: El sistema pasa al estado **Data**.
+
+---
+
+#### 3. Estado: Data (Enviando bits de datos)
+- Ahora el sistema se encuentra en el estado **Data**, transmitiendo los bits de datos uno a uno.
+- **Acciones** (para cada bit):
+  - Se envía el bit menos significativo del registro de datos **`data_shift_reg[0]`**.
+  - **Bit 1 a enviar**: `data_shift_reg[0] = 0`.
+  - **Se pone**: `tx_signal = 0` (el valor del bit menos significativo).
+  - Inicia el conteo de ticks para ese bit.
+- **Tick 1 a Tick 16**:
+  - Por cada tick (siempre que **`pulse_tick = 1`**), el **`tick_counter`** se incrementa de 0 a 15.
+  - Después de 16 ticks (cuando **`tick_counter = 15`**), se completa la transmisión del bit.
+  - **Acciones adicionales**:
+    - **Se desplaza** el registro de datos a la derecha: `data_shift_reg = data_shift_reg >> 1`.
+    - **Incrementa el contador de bits**: `bit_counter = bit_counter + 1`.
+- Este proceso se repite para cada uno de los 8 bits de datos, transmitiéndose de la siguiente manera:
+  - Bit 1 (`data_shift_reg[0] = 0`) → **tx_signal = 0**
+  - Bit 2 (`data_shift_reg[0] = 0`) → **tx_signal = 0**
+  - Bit 3 (`data_shift_reg[0] = 1`) → **tx_signal = 1**
+  - Bit 4 (`data_shift_reg[0] = 1`) → **tx_signal = 1**
+  - Bit 5 (`data_shift_reg[0] = 0`) → **tx_signal = 0**
+  - Bit 6 (`data_shift_reg[0] = 1`) → **tx_signal = 1**
+  - Bit 7 (`data_shift_reg[0] = 0`) → **tx_signal = 0**
+  - Bit 8 (`data_shift_reg[0] = 1`) → **tx_signal = 1**
+- **Transición**: Cuando se han transmitido los 8 bits de datos (es decir, cuando **`bit_counter = DBIT - 1`**), el sistema pasa al estado **Stop**.
+
+---
+
+#### 4. Estado: Stop (Enviando bit de parada)
+- Después de transmitir los 8 bits de datos, el sistema entra en el estado **Stop** para enviar el **bit de parada**.
+- **Acciones**:
+  - Se coloca la línea de transmisión **tx_signal = 1** (bit de parada = 1).
+  - Inicia de nuevo el contador de ticks: **tick_counter = 0**.
+- **Tick 1 a Tick 16**:
+  - Por cada tick (siempre que **`pulse_tick = 1`**), el **`tick_counter`** se incrementa de 0 a 15.
+  - Cuando **`tick_counter = 15`**, ha pasado suficiente tiempo (16 ticks) para transmitir el bit de parada.
+  - **Transición**: El sistema vuelve al estado **Waiting** y levanta la señal **`tx_done_tick = 1`** para indicar que la transmisión ha finalizado.
+
+---
+
+#### Resumen visual del flujo de estados y ticks:
+1. **Waiting**: Espera a que **`tx_go = 1`**.
+2. **Start**: 
+   - Envía **bit de inicio** (`tx_signal = 0`).
+   - Espera 16 ticks.
+3. **Data**: 
+   - Envía **bit de datos** (`tx_signal = data_shift_reg[0]`).
+   - Repite por 8 bits, esperando 16 ticks por cada bit.
+4. **Stop**: 
+   - Envía **bit de parada** (`tx_signal = 1`).
+   - Espera 16 ticks.
+5. **Waiting**: Termina la transmisión y espera la siguiente.
+
+---
+
+#### Secuencia del byte `10101100`:
+- **Bit de inicio (start)**: 0.
+- **Bits de datos (data)**: 0, 0, 1, 1, 0, 1, 0, 1.
+- **Bit de parada (stop)**: 1.
+
+Cada bit (incluido el de inicio y el de parada) toma 16 ticks en total para ser enviado.
+
