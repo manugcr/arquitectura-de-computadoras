@@ -1,16 +1,16 @@
 `timescale 1ns / 1ps
 module receiver
 #(
-    parameter   DBITS = 8,          // number of data bits in a data word
-                SB_TICK = 16        // number of stop bit / oversampling ticks (1 stop bit)
+    parameter   DBIT = 8,          // number of data bits in a data word
+                TICKS_END = 16        // number of stop bit / oversampling ticks (1 stop bit)
 )
 (
-    input clk_100MHz,               // basys 3 FPGA
+    input clk,               // basys 3 FPGA
     input reset,                    // reset
     input rx,                       // receiver data line
-    input sample_tick,              // sample tick from baud rate generator
+    input tick,              // sample tick from baud rate generator
     output reg data_ready,          // signal when new data word is complete (received)
-    output [DBITS-1:0] data_out     // data to FIFO
+    output [DBIT-1:0] data_out     // data to FIFO
 );
     
     // State Machine States
@@ -26,7 +26,7 @@ module receiver
     reg [7:0] data_reg, data_next;      // reassembled data word
     
     // Register Logic
-    always @(posedge clk_100MHz, posedge reset)
+    always @(posedge clk, posedge reset)
         if(reset) begin
             state <= idle;
             tick_reg <= 0;
@@ -55,7 +55,7 @@ module receiver
                     tick_next = 0;
                 end
             start:
-                if(sample_tick)
+                if(tick)
                     if(tick_reg == 7) begin
                         next_state = data;
                         tick_next = 0;
@@ -64,11 +64,11 @@ module receiver
                     else
                         tick_next = tick_reg + 1;
             data:
-                if(sample_tick)
+                if(tick)
                     if(tick_reg == 15) begin
                         tick_next = 0;
                         data_next = {rx, data_reg[7:1]};
-                        if(nbits_reg == (DBITS-1))
+                        if(nbits_reg == (DBIT-1))
                             next_state = stop;
                         else
                             nbits_next = nbits_reg + 1;
@@ -76,8 +76,8 @@ module receiver
                     else
                         tick_next = tick_reg + 1;
             stop:
-                if(sample_tick)
-                    if(tick_reg == (SB_TICK-1)) begin
+                if(tick)
+                    if(tick_reg == (TICKS_END-1)) begin
                         next_state = idle;
                         data_ready = 1'b1;
                     end

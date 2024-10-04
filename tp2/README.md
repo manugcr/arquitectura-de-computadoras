@@ -16,7 +16,7 @@
    - Cabrera, Augusto Gabriel 
 
 ---------------
-## Enunciado
+# Enunciado
 
 Implementar una interfaz de comunicación UART para la unidad
 aritmético-lógica (ALU) previamente desarrollada (Trabajo Práctico N°1). Esta comunicación serie permitirá proporcionar a la ALU
@@ -28,7 +28,7 @@ los operandos y el operador a través del puerto serie (RX), y transmitir el res
   </a>
 
 
-## Marco Teorico
+# Marco Teorico
 
 ### UART (Transmisor-Receptor Asíncrono Universal)
 
@@ -85,6 +85,8 @@ El truco de este protocolo es muestrear cada bit justo en la mitad de su períod
 
 #### Generador de Baud Rate
 
+El módulo `baud_rate` tiene como objetivo generar una señal de sincronización periódica, llamada `tick`, a una frecuencia más baja que la del reloj de entrada.
+
 - El **Baud Rate Generator** es un contador que cuenta hasta **163** (el número de ciclos de reloj necesarios para generar un tick) y se reinicia. Cuando el contador alcanza este valor, genera un tick (señal de muestreo).
 
 - Este contador puede ser implementado en Verilog o en hardware de otras formas. Cada vez que el contador se reinicia, indica que ha pasado el tiempo necesario para muestrear un bit de datos.
@@ -104,7 +106,7 @@ Esto asegura que el sistema UART sea capaz de leer y transmitir datos de manera 
 
 
 
-## Implementación
+# Implementación
 
 La función principal del módulo de comunicación serie de la PC es TX individualmente los bits de cada byte, y el módulo UART desarrollado se encarga de recibirlos en una cola FIFO de RX , reensamblar los bits para formar nuevamente los bytes completos, y enviar esta información a la ALU. 
 
@@ -363,6 +365,8 @@ Este documento ilustra cómo funciona un FIFO en términos de bits, mostrando la
 ### Baud Rate `baud_rate.v`
 
 
+
+
 1. **Parámetros:**
    - `N=8`: Esto significa que el contador se representa con 8 bits. Con 8 bits, puedes contar hasta 2^8 - 1 = 255, que es suficiente para contar hasta 163.
    - `M=163`: Este es el valor máximo que el contador alcanzará antes de reiniciarse. En este caso, el contador se reiniciará después de contar 163 ciclos de reloj.
@@ -401,3 +405,71 @@ Este documento ilustra cómo funciona un FIFO en términos de bits, mostrando la
 #### Resumen
 - Este contador está diseñado para contar hasta 163 ciclos de reloj y luego reiniciarse, generando una señal de tick cada vez que se alcanza este valor.
 - La relación entre la frecuencia del reloj de la placa y la frecuencia de muestreo garantiza que los datos se muestreen correctamente para el Baud Rate deseado, asegurando la precisión y confiabilidad en la transmisión de datos en el sistema UART.
+
+
+### `alu_uart_interface.v`
+
+
+
+
+Actúa como un intermediario entre  UART  y la ALU. 
+#### Funcionalidades del Módulo
+
+1. **Interfaz UART**:
+   - **Entrada `rx`**: Señal de entrada de datos en serie proveniente de la UART. Recibe datos que se envían desde otro dispositivo (por ejemplo, un PC o un microcontrolador).
+   - **Salida `tx`**: Señal de salida de datos en serie que se enviará a través de la UART. Contiene el resultado de las operaciones realizadas por la ALU.
+   - **Reloj y Reset**: Utiliza señales de reloj (`i_clock`) y reset (`i_reset`) para sincronizar el funcionamiento del módulo y reiniciar su estado cuando sea necesario.
+
+2. **Registro de Valores**:
+   - **`value_a` y `value_b`**: Almacenan los dos operandos que se recibirán a través de la UART.
+   - **`opcode`**: Almacena el código de operación que determina qué operación aritmética o lógica se va a realizar (suma, resta, etc.).
+   - **`tx_data`**: Almacena el resultado que se enviará a través de la UART después de que la ALU lo calcule.
+   - **`o_result`**: Se utiliza para guardar el resultado final de la ALU que se enviará por la UART.
+   - **`state_reg` y `state_next`**: Registros que controlan el estado actual y el siguiente estado del módulo.
+
+3. **Estados de Operación**:
+   - **`DATOA`**: Estado en el que se lee el primer operando (`value_a`) desde la UART.
+   - **`DATOB`**: Estado en el que se lee el segundo operando (`value_b`) desde la UART.
+   - **`OPCODE`**: Estado en el que se lee el código de operación (`opcode`) y se calcula el resultado utilizando la ALU. Después de calcular el resultado, este se prepara para ser enviado a través de la UART.
+
+4. **Control de Lectura y Escritura**:
+   - Utiliza señales `rd_signal` y `wr_signal` para controlar cuándo se deben leer o escribir datos desde y hacia los FIFOs de la UART.
+   - Si hay datos disponibles en el FIFO de recepción (`rx_empty`), el módulo procede a leer y procesar esos datos en función del estado actual.
+
+5. **Instancias de Otros Módulos**:
+   - **UART**: Se instancia un módulo UART, que se encarga de la comunicación serial. Se conecta a las señales correspondientes, como los datos de entrada y salida, y las señales de control.
+   - **ALU**: Se instancia un módulo ALU, que realiza operaciones aritméticas y lógicas sobre los operandos leídos. Recibe los operandos y el código de operación, y devuelve el resultado.
+
+6. **Resultados**:
+   - Los resultados de las operaciones de la ALU se almacenan en `result` y `carry`, que se pueden utilizar para indicar si hubo un acarreo en las operaciones aritméticas.
+
+#### Resumen
+
+Este módulo permite la comunicación entre un dispositivo que envía datos en serie (a través de UART) y una ALU que realiza operaciones sobre esos datos. La secuencia general es:
+
+1. Recibe un operando A desde la UART.
+2. Recibe un operando B desde la UART.
+3. Recibe un código de operación que indica qué operación se debe realizar (como suma o resta).
+4. Realiza la operación utilizando la ALU.
+5. Envía el resultado de vuelta a través de la UART.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#  Test Benches
+
