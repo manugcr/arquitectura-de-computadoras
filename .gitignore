@@ -6,4 +6,5 @@
 !*/
 # Ignore all vcd
 *.vcd
-
+# Ignore .ini
+*.ini
