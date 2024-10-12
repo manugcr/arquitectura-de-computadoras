@@ -1,29 +1,13 @@
-`timescale 1ns / 1ps
-
 module tb_transmitter;
-
-    // Parameters
-    parameter DBIT = 8;               // Data bits
-    parameter TICKS_END = 16;         // Ticks for stop bits
-    parameter CLK_PERIOD = 20;        // Clock period for 50 MHz (20 ns)
-    
-    // Inputs
     reg clk;
     reg reset;
     reg tx_go;
     reg pulse_tick;
     reg [7:0] din;
-
-    // Outputs
     wire tx_done_tick;
     wire tx;
 
-    // Instantiate the transmitter module
-    transmitter 
-    #(
-        .DBIT(DBIT), 
-        .TICKS_END(TICKS_END)
-    ) uut (
+    transmitter uut (
         .clk(clk),
         .reset(reset),
         .tx_go(tx_go),
@@ -33,50 +17,33 @@ module tb_transmitter;
         .tx(tx)
     );
 
-    // Clock generation
     initial begin
+        // Inicialización
         clk = 0;
-        forever #(CLK_PERIOD / 2) clk = ~clk;  // Toggle clock every 10 ns
-    end
-
-    // Test sequence
-    initial begin
-        // Initialize inputs
         reset = 1;
         tx_go = 0;
         pulse_tick = 0;
-        din = 8'b10101010;  // Example data to transmit
-        
-        // Release reset
-        #(CLK_PERIOD) reset = 0;  
-        
-        // Start the transmission
-        #(CLK_PERIOD) tx_go = 1;  // Assert tx_go to start transmission
-        #(CLK_PERIOD) tx_go = 0;  // Deassert tx_go
-        
-        // Generate pulse ticks for transmission
-        repeat (128) begin  // 128 ticks for 8 bits of data at TICKS_END = 16
-            #(CLK_PERIOD) pulse_tick = 1;  // Assert pulse_tick
-            #(CLK_PERIOD) pulse_tick = 0;   // Deassert pulse_tick
+        din = 8'b10101110; // Dato a enviar
+
+        #10 reset = 0; // Desactivar reset
+        #10 tx_go = 1; // Comenzar transmisión
+
+        // Generar pulsos de reloj y ticks
+        forever begin
+            #5 clk = ~clk; // Cambia el reloj cada 5 ns
+            pulse_tick = (clk == 1); // Generar pulso en clk
+            #5 pulse_tick = 0;
         end
-
-        // Wait for transmission to complete
-        #(CLK_PERIOD * 10);  // Adjust time as needed to observe tx_done_tick
-        
-        // Finish the simulation
-        $finish;
     end
 
-    // VCD Dump 
     initial begin
-        $dumpfile("dump.vcd");
-        $dumpvars(0, tb_transmitter);
+        // Monitorear señales importantes
+        $monitor("Time: %0t | TX_GO: %b | DIN: %b | TX: %b | TX_Done: %b",
+                 $time, tx_go, din, tx, tx_done_tick);
     end
 
-    // Monitor outputs
     initial begin
-        $monitor("Time: %0t | Reset: %b | TX_GO: %b | Pulse_Tick: %b | Din: %b | TX_Done: %b | TX: %b", 
-                 $time, reset, tx_go, pulse_tick, din, tx_done_tick, tx);
+        #500; // Espera un tiempo para observar la transmisión
+        $finish; // Terminar simulación
     end
-
 endmodule

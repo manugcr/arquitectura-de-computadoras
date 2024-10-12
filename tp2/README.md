@@ -473,3 +473,194 @@ Este módulo permite la comunicación entre un dispositivo que envía datos en s
 
 #  Test Benches
 
+
+## tb_transmitter (tb_transmitter.v)
+
+
+
+###  Señales Clave a Monitorear
+
+- **`tx_go`**: Indica que deseas comenzar la TX. Se activa después de 10 ns.
+  
+- **`din`**: Dato que se está enviando. Permanece constante en `8'b10101110` durante la TX.
+
+- **`tx`**: Señal  cambiará a `0` cuando se inicie la TX (en el estado `start`) y luego cambiará para reflejar cada bit de datos enviado en el estado `data`. Finalmente, debe volver a `1` en el estado `stop`.
+
+- **`tx_done_tick`**: Esta señal debe activarse al final de la transmisión, indicando que el módulo ha completado el envío de todos los bits.
+
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="img/image6.png" alt="bloq">
+  </a>
+
+
+## Comportamiento Esperado Durante la Simulación
+
+
+#### Inicio de la Simulación (0-10 ns)
+  - `reset` está activo, por lo que `tx` debe ser `1` (estado `waiting`).
+  - `tx_done_tick` también debe ser `0` ya que aún no ha comenzado la transmisión.
+
+#### Activación de `tx_go` (10 ns)
+  - `tx_go` se activa, lo que debería hacer que el estado cambie a `start`.
+  - `tx` debe cambiar a `0` al entrar en el estado `start`.
+  
+#### Transición al Estado `data`
+  - Después de 16 ticks (en `pulse_tick`), el estado debe cambiar a `data`.
+  - La señal `tx` comenzará a alternar entre `0` y `1` en función de los bits de `din` que se estén transmitiendo. 
+    - En el caso de `8'b10101110`, deberías ver: `0` (bit menos significativo), `1`, `1`, `1`, `0`, `1`, `0`, `1` en secuencia.
+
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="img/image5.png" alt="bloq">
+  </a>
+
+
+#### Transición al Estado `stop`
+  - Después de transmitir todos los bits (8 bits en este caso), el módulo debe entrar en el estado `stop`, donde `tx` debe volver a `1`.
+
+### Finalización de la Transmisión
+  - Al finalizar la transmisión, `tx_done_tick` debe activarse, indicando que la transmisión ha sido completada.
+
+### Ejemplo de Monitoreo de Salida
+
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="img/image7.png" alt="bloq">
+  </a>
+
+### Esquema de funcionamiento
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="img/image8.png" alt="bloq">
+  </a>
+
+
+
+
+## tb_receiver (tb_receiver.v)
+
+
+El testbench define dos parámetros clave:
+- **DBIT**: Número de bits de datos, que en este caso son 8 bits.
+- **TICKS_END**: Número de ticks por bit, que son 16, lo cual representa un muestreo de sobreimpulso (oversampling).
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="img/image9.png" alt="bloq">
+  </a>
+
+
+### Señales de Entrada y Salida
+
+#### Entradas:
+
+- **rx**: Línea de datos recibidos por el receptor UART.
+- **tick**: Pulso generado por el generador de baudios, usado para muestrear los bits.
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="img/image10.png" alt="bloq">
+  </a>
+
+#### Salidas:
+- **data_ready**: Señal que indica que un byte completo ha sido recibido.
+- **data_out**: Los datos recibidos a través de la señal `rx`.
+
+
+
+### Proceso de Estimulación
+El proceso de estimulación simula la recepción completa de una trama UART:
+
+1. **Inicialización**: Se establecen valores iniciales para las señales `clk`, `tick`, `reset` y `rx`, con la línea `rx` inactiva en un estado alto (`1`).
+
+2. **Liberación del Reset**: Después de un breve tiempo, la señal de `reset` se desactiva, permitiendo que el receptor empiece a operar.
+
+3. **Simulación de una Trama UART**: Se simula una transmisión UART que incluye un bit de inicio (LOW), 8 bits de datos (`11101110`), y un bit de parada (HIGH). Los bits de datos son enviados uno a uno, con una duración de 16 ticks cada uno, para simular el muestreo de cada bit.
+
+
+### Comportamiento Esperado
+- El receptor debe detectar el bit de inicio cuando la señal `rx` pasa de alto a bajo.
+- Los 8 bits de datos deben ser recibidos correctamente por el receptor.
+- La señal `data_ready` se debe activar después de recibir el bit de parada, indicando que la transmisión ha sido exitosa.
+- El valor de la salida `data_out` debe reflejar los datos recibidos correctamente, que en este caso es `10101010` en binario.
+
+### Esquema de funcionamiento
+
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="img/image11.png" alt="bloq">
+  </a>
+
+
+
+## tb_baud_rate (tb_baud_rate.v)
+
+### Parámetros Definidos
+
+El testbench define los siguientes parámetros importantes:
+
+- **N**: El número de bits en el contador, que corresponde al tamaño del registro que cuenta los ciclos del reloj.
+- **M**: El valor máximo que alcanzará el contador antes de generar un pulso (`tick`).
+- **CLK_PERIOD**: El período de la señal de reloj, establecido en 20 nanosegundos, lo que simula un reloj de 50 MHz.
+- **RESET_TIME**: El tiempo que la señal de `reset` permanecerá activa al inicio de la simulación.
+
+### Señales de Entrada y Salida
+
+#### Entradas:
+- **clk**: Señal de reloj utilizada para sincronizar el módulo.
+- **reset**: Señal de reinicio que pone el contador en su estado inicial.
+
+#### Salidas:
+- **tick**: Señal de salida que genera un pulso cada vez que el contador llega a su valor máximo (M-1).
+- **q**: Salida que muestra el valor actual del contador.
+
+###  Instanciación del Módulo `baud_rate`
+El módulo bajo prueba (DUT) es el módulo `baud_rate`, que se instancia con los parámetros definidos anteriormente. El DUT cuenta los ciclos de reloj hasta que el contador alcanza el valor `M`, y luego genera un pulso en la señal `tick`.
+
+###  Generación de la Señal de Reloj
+El testbench genera una señal de reloj con un período de 20 nanosegundos para simular un reloj de 50 MHz. El reloj se alterna cada 10 nanosegundos para crear un ciclo de reloj completo.
+
+###  Secuencia de Pruebas
+
+1. **Inicialización de Señales**: Al inicio de la simulación, la señal de `reset` se activa durante un breve período de tiempo para inicializar el módulo. Después del tiempo de `RESET_TIME`, la señal de `reset` se desactiva, lo que permite que el módulo empiece a contar ciclos de reloj.
+
+2. **Ejecución del Testbench**: Una vez que se libera el `reset`, el testbench permite que el sistema corra durante un período de tiempo suficiente para observar varios ciclos del contador y los pulsos `tick`. En este caso, se ejecuta durante 200 ciclos de reloj.
+
+3. **Finalización**: Tras el tiempo de simulación, se llama al comando `$finish` para detener la simulación.
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="img/image12.png" alt="bloq">
+  </a>
+
+ Si el contador alcanza 162 (es decir, `M-1`), se reinicia a 0; de lo contrario, se incrementa en 1.
+El tiempo que demora en generar un tick es 3260 nanosegundos, o 3.26 microsegundos.
+
+
+
+###  Visualización y Monitoreo
+
+- **VCD Dump**: Se genera un archivo VCD (`dump.vcd`) que almacena toda la información de la simulación para que pueda ser visualizada utilizando herramientas como GTKWave. Esto permite analizar los cambios en las señales a lo largo del tiempo.
+  
+- **Monitorización**: El testbench incluye un bloque `$monitor` que imprime los valores de las señales importantes en la consola, incluyendo el tiempo, el estado de `reset`, el valor de `tick`, y el valor del contador `q`.
+
+###  Comportamiento Esperado
+Durante la simulación, se espera observar lo siguiente:
+
+- Al inicio, el contador se reiniciará debido a la señal `reset`.
+- Una vez que el `reset` se desactiva, el contador comenzará a incrementar con cada ciclo de reloj.
+- Cada vez que el contador alcance el valor máximo `M-1`, se generará un pulso en la señal `tick`.
+- El contador se reiniciará después de generar el pulso `tick`, comenzando el ciclo nuevamente.
+
+Este testbench ayuda a verificar que el módulo `baud_rate` está contando correctamente y generando la señal `tick` en los momentos adecuados.
+
+
+
+
+
