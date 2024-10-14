@@ -661,6 +661,93 @@ Durante la simulación, se espera observar lo siguiente:
 Este testbench ayuda a verificar que el módulo `baud_rate` está contando correctamente y generando la señal `tick` en los momentos adecuados.
 
 
+## tb_fifo (tb_fifo.v)
 
 
+### Objetivos del Test Bench:
+1. **Inicialización de señales**: Se configuran las señales iniciales como el reloj, el reset, los valores de entrada de escritura y lectura.
+2. **Escritura en el FIFO**: El test bench escribe tres datos consecutivos (A1, B2, C3) en el FIFO y verifica si se almacenan correctamente.
+3. **Lectura del FIFO**: Luego de realizar las escrituras, se leen los valores almacenados en el FIFO para verificar si los datos correctos salen en el orden esperado.
+4. **Verificación con `$display`**: Se muestra por consola el valor leído en cada operación de lectura.
+
+### Estructura y Explicación:
+
+1. **Parámetros:**
+   - `B`: Ancho de los datos (8 bits).
+   - `W`: Ancho de las direcciones (4 bits), lo que significa que el FIFO puede almacenar hasta 16 palabras de 8 bits.
+
+2. **Instanciación del módulo FIFO:**
+   - Se crea una instancia del módulo `fifo` con los parámetros `B` y `W` especificados.
+   - Las señales de entrada y salida están conectadas para interactuar con el módulo.
+
+3. **Generación del reloj:**
+   - Un ciclo de reloj de 50 MHz es simulado, donde el reloj cambia su valor cada 10 ns.
+
+4. **Secuencia de prueba:**
+   - **Reset**: El sistema comienza en estado de reset durante 50 ns, luego se desactiva el reset.
+   - **Operaciones de escritura**: 
+     - Se escribe el valor `A1` en el FIFO y después se espera 40 ns.
+     - Se repite la operación para `B2` y `C3` con tiempos de espera similares entre cada escritura.
+   - **Operaciones de lectura**:
+     - Comienza a leer desde el FIFO con el control `rd` en alto y se extraen los tres valores escritos anteriormente.
+     - En cada lectura, se utiliza `$display` para mostrar el valor leído y verificar que sea correcto.
+
+5. **VCD Dump**:
+   - Se crea un archivo de volcado (`dump.vcd`) para observar las señales en un simulador de formas de onda como GTKWave, permitiendo una visualización detallada de la ejecución.
+
+### Resumen de los pasos del test:
+- Se escriben los valores `A1`, `B2`, `C3` en el FIFO.
+- Se leen los valores en el orden correcto.
+- Se muestran los datos leídos por consola y se guarda un archivo de formas de onda para análisis detallado.
+
+<p align="center">
+  <a href="https://example.com/">
+    <img src="img/image13.png" alt="bloq">
+  </a>
+
+
+
+
+## tb_uart (tb_uart.v)
+
+
+
+### Simulación de Transmisión de Datos
+- **Enviar el Primer Byte (`0xAA`)**:
+  - La tarea `send_byte` se llama para enviar el primer byte `0xAA`. En esta tarea:
+    - Se simula un **bit de inicio** (`rx` se establece en `0` durante 8 ns).
+    - Se envían los 8 bits de datos (`A`, `A`) uno a uno, cada uno durante 8 ns.
+    - Finalmente, se simula un **bit de parada** (se establece `rx` a `1`).
+  - Después de enviar los datos, `wr_uart` se activa para indicar que se está escribiendo en la FIFO de transmisión, se espera 10 ns, y luego se desactiva.
+
+- **Enviar el Segundo Byte (`0xAE`)**:
+  - El proceso anterior se repite para el segundo byte `0xAE`. Se llama a `send_byte` nuevamente, que sigue el mismo patrón: bit de inicio, 8 bits de datos, y bit de parada.
+  - `wr_uart` se activa y desactiva de la misma manera que para el primer byte.
+
+### Lectura de Datos
+- **Activar Lectura**:
+  - Después de enviar los datos, `rd_uart` se activa para indicar que se desea leer un dato de la FIFO de recepción. Esto permite que el módulo UART entregue el dato recibido (`r_data`).
+  - Se espera 10 ns para dar tiempo al módulo UART para realizar la operación de lectura, y luego se desactiva `rd_uart`.
+
+### Finalización de la Simulación
+- Después de un período de 100 ns, se llama a `$finish`, que finaliza la simulación.
+
+### Monitoreo de Salidas
+- **Monitor de Salida**:
+  - Se utiliza `$monitor` para observar y registrar el estado de las señales `tx`, `r_data`, `rx_empty`, y `tx_full` en cada cambio de tiempo. Esto proporciona una visualización en tiempo real de cómo se comportan las señales durante la simulación.
+
+### Resumen del Flujo de Datos
+1. **Inicio**:
+   - Se inicializan las señales y se activa el reset.
+2. **Transmisión de Datos**:
+   - Se envían dos bytes a través de `rx` usando la tarea `send_byte`.
+   - Se activa y desactiva `wr_uart` para indicar la escritura en la FIFO de transmisión.
+3. **Lectura de Datos**:
+   - Se activa `rd_uart` para leer el dato de la FIFO de recepción.
+4. **Monitoreo**:
+   - Se registran los cambios en las señales de salida durante la simulación.
+5. **Finalización**:
+   - Se termina la simulación después de un tiempo específico.
+
+Este flujo asegura que el módulo UART se prueba adecuadamente, cubriendo tanto la transmisión como la recepción de datos, y permite validar su funcionalidad en el contexto del testbench. Si necesitas más información o detalles sobre alguna parte específica, no dudes en preguntar.
 
