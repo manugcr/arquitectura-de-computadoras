@@ -163,3 +163,22 @@ En algunos sistemas, cuando se detectan errores de paridad o se excede el tiempo
 Si se utiliza paridad, se transmite un bit adicional para verificar la corrección de los datos enviados. Este bit de paridad puede ser par o impar, dependiendo de la configuración establecida, y permite detectar errores en los datos recibidos.
 
 
+## Esquema de Diseño (Schematic)
+
+Representación gráfica que proporciona una visión detallada de las conexiones dentro del diseño digital. A través de esta herramienta, los diseñadores pueden:
+
+- Ver una representación gráfica de la lista de conexiones.
+- Revisar las puertas, jerarquías y conectividad de los componentes.
+- Trazar y ampliar conos de lógica para un análisis más profundo.
+- Analizar el diseño para identificar posibles mejoras o errores.
+- Comprender mejor los procesos que ocurren dentro del diseño.
+
+A continuación, se presenta el esquemático de todo el programa:
+
+<p align="center">
+    <img src="img/image8.png" alt="bloq">
+</p>
+
+<p align="center">
+    <img src="img/image9.png" alt="bloq">
+</p>
