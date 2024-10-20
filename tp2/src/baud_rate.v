@@ -8,7 +8,7 @@ module baud_rate#
 (
     input wire i_clk,
     input wire i_reset,
-    output wire o_tick_ovf
+    output wire o_tick
 );
 
 reg [NB_COUNTER-1 : 0] counter;
@@ -25,6 +25,6 @@ end
 
 
 assign counter_next = (counter == (COUNTER_LIMIT-1)) ? 0 : counter + 1;
-assign o_tick_ovf = (counter == (COUNTER_LIMIT-1)) ? 1'b1 : 1'b0;
+assign o_tick = (counter == (COUNTER_LIMIT-1)) ? 1'b1 : 1'b0;
 
 endmodule
