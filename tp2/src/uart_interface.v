@@ -37,7 +37,7 @@ baud_rate#
 (
     .i_clk(i_clk),
     .i_reset(i_reset),
-    .o_tick_ovf(tick)
+    .o_tick(tick)
 );
 
 uart_rx #
@@ -58,7 +58,7 @@ fifo #
 (
     .NB_DATA(NB_DATA),
     .PTR_LEN(PTR_LEN)
-) fifoBufferRXUnit
+) fifoRX
 (
     .i_clk(i_clk),
     .i_reset(i_reset),
@@ -74,7 +74,7 @@ fifo #
 (
     .NB_DATA(NB_DATA),
     .PTR_LEN(PTR_LEN)
-) fifoBufferTXUnit
+) fifoTX
 (
     .i_clk(i_clk),
     .i_reset(i_reset),

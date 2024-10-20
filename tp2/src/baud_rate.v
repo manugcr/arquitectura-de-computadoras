@@ -10,9 +10,9 @@ module baud_rate #
     parameter COUNTER_LIMIT = 20     // Limit for the counter (baud rate frequency divisor)
 )
 (
-    input wire i_clk,                // Input clock signal
-    input wire i_reset,              // Asynchronous reset signal
-    output wire o_tick_ovf           // Output tick signal (1 when counter reaches limit)
+    input wire i_clk,
+    input wire i_reset,
+    output wire o_tick
 );
 
 // Internal counter register (holds the current count value)
@@ -35,9 +35,6 @@ end
 // Calculate the next value of the counter
 // If counter reaches the COUNTER_LIMIT, reset to 0; otherwise, increment
 assign counter_next = (counter == (COUNTER_LIMIT-1)) ? 0 : counter + 1;
-
-// Output tick overflow signal
-// When the counter reaches COUNTER_LIMIT-1, set o_tick_ovf to 1; otherwise, set it to 0
-assign o_tick_ovf = (counter == (COUNTER_LIMIT-1)) ? 1'b1 : 1'b0;
+assign o_tick = (counter == (COUNTER_LIMIT-1)) ? 1'b1 : 1'b0;
 
 endmodule
