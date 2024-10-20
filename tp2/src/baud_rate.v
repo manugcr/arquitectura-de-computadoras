@@ -6,8 +6,8 @@
 
 module baud_rate #
 (
-    parameter NB_COUNTER = 5,        // Width of the counter (in bits)
-    parameter COUNTER_LIMIT = 20     // Limit for the counter (baud rate frequency divisor)
+    parameter NB_COUNTER = 8,        // Width of the counter (in bits)
+    parameter COUNTER_LIMIT = 163     // Limit for the counter (baud rate frequency divisor)
 )
 (
     input wire i_clk,

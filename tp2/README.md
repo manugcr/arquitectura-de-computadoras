@@ -182,3 +182,30 @@ A continuación, se presenta el esquemático de todo el programa:
 <p align="center">
     <img src="img/image9.png" alt="bloq">
 </p>
+
+# Test Bench
+
+## tb_baudRate (tb_baudrate.v)
+
+Este test bench verifica el funcionamiento del módulo `baud_rate`.
+
+### Señales de Prueba
+
+- **i_clk**: Señal de reloj de entrada.
+- **i_reset**: Señal de reset.
+- **o_tick**: Salida que indica cuándo se genera un tick.
+
+### Funcionamiento
+
+1. **Generador de Reloj**: Alterna la señal de reloj a 50 MHz (cada 10 ns).
+2. **Proceso de Reset**: Activa el reset al inicio y lo mantiene por 30 ns.
+3. **Contador de Ciclos**: Cuenta ciclos de reloj hasta que se genera un tick, mostrando el tiempo y el conteo cada vez que ocurre.
+4. **Monitorización**: Imprime el estado del reset y el tick en cada instante relevante.
+
+### Resultado Esperado
+
+El test bench permite observar el conteo de ciclos de reloj y la generación de ticks, confirmando el correcto funcionamiento del módulo `baud_rate`.
+
+<p align="center">
+    <img src="img/image10.png" alt="bloq">
+</p>
