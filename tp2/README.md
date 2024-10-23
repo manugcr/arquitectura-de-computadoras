@@ -71,9 +71,9 @@ El truco de este protocolo es muestrear cada bit justo en la mitad de su períod
 
 #### Relación con el Clock de la Placa
 
-- Si el reloj de la placa es de **50 MHz**, significa que el reloj genera **50,000,000 ciclos** por segundo. Para determinar cuántos ciclos de reloj se necesitan para generar un tick, se puede hacer el siguiente cálculo:
+- Si el reloj de la placa es de **100 MHz**, significa que el reloj genera **100,000,000 ciclos** por segundo. Para determinar cuántos ciclos de reloj se necesitan para generar un tick, se puede hacer el siguiente cálculo:
   - Ciclos de reloj por tick = Frecuencia del reloj / Frecuencia de muestreo
-  - Ciclos de reloj por tick = 50,000,000 Hz / 307,200 ticks por segundo ≈ 163 ciclos de reloj
+  - Ciclos de reloj por tick = 100,000,000 Hz / 307,200 ticks por segundo ≈ 326 ciclos de reloj
 
 #### Generador de Baud Rate
 
@@ -168,9 +168,20 @@ A continuación, se presenta el esquemático de todo el programa:
 
 ---
 
-# Test Bench
+# Constraints
 
-## tb_baudRate (tb_baudrate.v)
+El archivo `constraints.xdc` define cómo se asignan las señales lógicas del diseño a los pines físicos de la FPGA en la tarjeta Basys 3, además de establecer otras propiedades, como la frecuencia del reloj y los estándares de entrada/salida. En este caso, los pines B18 y A18 se utilizan para la recepción y transmisión de datos, respectivamente. Los LEDs, desde V14 hasta U16 (de MSB a LSB), muestran el resultado que la ALU transmite a la computadora. El botón central se utiliza para reiniciar el sistema. A continuación, se muestra gráficamente la asignación de los pines utilizados:
+
+
+
+<p align="center">
+    <img src="img/image11.png" alt="bloq">
+</p>
+
+---
+
+# Test Bench Baud Rate
+
 
 Este test bench verifica el funcionamiento del módulo `baud_rate`.
 
