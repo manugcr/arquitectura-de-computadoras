@@ -14,7 +14,8 @@
    - Gil Cernich, Manuel 
    - Cabrera, Augusto Gabriel 
 
----------------
+---
+
 # Enunciado
 
 Implementar una interfaz de comunicación UART para la unidad
@@ -25,6 +26,7 @@ los operandos y el operador a través del puerto serie (RX), y transmitir el res
     <img src="img/image1.png" alt="bloq">
 </p>
 
+---
 
 # Marco Teorico
 
@@ -39,7 +41,6 @@ Es un protocolo simple de dos cables utilizado para intercambiar datos en serie.
 - **Bit de paridad**: Opcionalmente, se puede emplear un bit de paridad para detectar errores en un solo bit.
 
 Aunque el **UART** sigue siendo ampliamente utilizado, en los últimos años ha sido reemplazado en algunas aplicaciones por tecnologías como **SPI**, **I2C**, **USB** y **Ethernet**.
-
 
 #### Funcionamiento
 
@@ -58,15 +59,9 @@ El protocolo UART funciona de la siguiente manera, tanto para transmitir como pa
 
 El truco de este protocolo es muestrear cada bit justo en la mitad de su período. Esto asegura que no haya ambigüedades en la información. En una **FPGA**, se debe tener cuidado al muestrear, asegurándose de hacerlo justo en el flanco de subida de la señal de muestreo.
 
-
-
-
-
 ### Generación de Ticks
 
-
 **Baud Rate:** Es la velocidad de transmisión de datos, medida en símbolos por segundo. Por ejemplo, un Baud Rate de 19,200 significa que se transmiten 19,200 símbolos por segundo.
-
 
 - Para un Baud Rate de 19,200 bps, se necesitan **16 muestras** _(TICKS)_ por cada bit transmitido. Esto se hace para asegurar que se captura la señal en diferentes momentos a lo largo de cada bit, lo que permite una mejor detección de los estados de la señal.
 
@@ -96,12 +91,7 @@ El módulo `baud_rate` tiene como objetivo generar una señal de sincronización
 
 Esto asegura que el sistema UART sea capaz de leer y transmitir datos de manera precisa y confiable.
 
-
-
-
-
-
-
+---
 
 # Implementación
 
@@ -143,23 +133,16 @@ La máquina de estados está representada por un módulo de interfaz entre la AL
 
 Estos grafos reflejan la lógica de control y los eventos que conducen a los cambios de estado en cada uno de los módulos, permitiendo una comunicación efectiva y sinérgica entre la ALU y el módulo UART.
 
-
-
-
-
-
-
-
-
-
 ## Posibles Mejoras Futuras
 
 Se podrían agregar los estados **_verify_** y **_error_** en futuras versiones para mejorar la gestión del sistema:
 
 ### Estado de Error
+
 En algunos sistemas, cuando se detectan errores de paridad o se excede el tiempo de espera (_timeout_) sin recibir datos, es posible definir un estado de error o _timeout_. Este estado se utiliza para gestionar la corrección del error o iniciar un nuevo intento de transmisión.
 
 ### Estado de Verificación (Parity Bit)
+
 Si se utiliza paridad, se transmite un bit adicional para verificar la corrección de los datos enviados. Este bit de paridad puede ser par o impar, dependiendo de la configuración establecida, y permite detectar errores en los datos recibidos.
 
 
@@ -182,6 +165,8 @@ A continuación, se presenta el esquemático de todo el programa:
 <p align="center">
     <img src="img/image9.png" alt="bloq">
 </p>
+
+---
 
 # Test Bench
 
