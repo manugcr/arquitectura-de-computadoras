@@ -205,3 +205,10 @@ El test bench permite observar el conteo de ciclos de reloj y la generación de 
 <p align="center">
     <img src="img/image10.png" alt="bloq">
 </p>
+
+---
+
+# ANEXO: Video
+
+En el siguiente enlace se presenta la prueba física implementada en la FPGA para las siguientes operaciones: [Drive](https://drive.google.com/file/d/14sBGQRX6rywuFxsSzoS647pQEIHfOVoQ/view?usp=sharing)
+
