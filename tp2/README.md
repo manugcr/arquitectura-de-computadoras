@@ -91,6 +91,27 @@ El módulo `baud_rate` tiene como objetivo generar una señal de sincronización
 
 Esto asegura que el sistema UART sea capaz de leer y transmitir datos de manera precisa y confiable.
 
+### ¿Cómo modificar el clock de 100 MHz? → 🪄 ***Clock Wizard*** 🪄
+
+
+El **Clock Wizard** es una herramienta de diseño en Xilinx Vivado que ayuda a configurar y generar relojes personalizados en FPGAs de Xilinx. A continuación se presentan las principales características y pasos para modificar un reloj de 100 MHz utilizando esta herramienta:
+
+#### Características del Clock Wizard
+
+1. **División y Multiplicación de Frecuencia**:  Ajusta la frecuencia del reloj de salida mediante multiplicadores y divisores. Esto es útil para obtener frecuencias específicas que no se pueden obtener directamente del reloj principal de la FPGA.
+
+2. **Reducción del Jitter**:  Mejora la estabilidad del reloj al minimizar las variaciones en el tiempo de cada ciclo, lo cual es crucial en sistemas sensibles al tiempo.
+
+3. **Configuración de Fase**:  Modifica la fase de la señal de reloj, lo que es útil para diseños que requieren alineación precisa entre señales.
+
+4. **Salidas Múltiples**: Genera múltiples señales de reloj con diferentes configuraciones de frecuencia y fase a partir de una sola fuente de reloj.
+
+5. **Relojes Sincrónicos y Asincrónicos**:  Permite la creación de relojes sincronizados entre sí o asincrónicos cuando el diseño necesita manejar diferentes dominios de reloj.
+
+
+El Clock Wizard es una herramienta poderosa para modificar y generar relojes en FPGAs de Xilinx. Con él, puedes adaptar tus frecuencias de reloj a las necesidades específicas de tu diseño, asegurando un funcionamiento óptimo.
+
+
 ---
 
 # Implementación
@@ -103,6 +124,10 @@ Una vez que la ALU realiza la operación, el resultado se coloca en la cola FIFO
 <p align="center">
   <img src="img/image3.png" alt="bloq">
 </p>
+<p align="center">
+  <img src="img/image12.png" alt="bloq">
+</p>
+
 
 La máquina de estados está representada por un módulo de interfaz entre la ALU y el módulo UART, así como el módulo FIFO que gestiona la lectura y escritura de datos. El sistema está compuesto por cuatro máquinas de estado interrelacionadas. A continuación se describen cada una de estas máquinas:
 
