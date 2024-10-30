@@ -104,6 +104,10 @@ Una vez que la ALU realiza la operación, el resultado se coloca en la cola FIFO
   <img src="img/image3.png" alt="bloq">
 </p>
 
+<p align="center">
+  <img src="img/image12.png" alt="bloq">
+</p>
+
 La máquina de estados está representada por un módulo de interfaz entre la ALU y el módulo UART, así como el módulo FIFO que gestiona la lectura y escritura de datos. El sistema está compuesto por cuatro máquinas de estado interrelacionadas. A continuación se describen cada una de estas máquinas:
 
 1. **Máquina de Estado del Transmisor UART**: Controla el proceso de transmisión de datos a través de UART, asegurando la correcta secuenciación de los bits de datos y el control de las señales de inicio y parada.
