@@ -242,6 +242,77 @@ directamente
 </p>
 
 
+### Memoria de Instrucciones
+
+La memoria de instrucciones
+es solo de lectura, ya que el camino de datos nunca escribe instrucciones, y se trata como un elemento de
+lógica combinacional. La salida en cualquier instante refleja el contenido de la localización especificada por
+la dirección de entrada, y no se necesita ninguna señal de control de lectura (sólo se necesitará escribir en la
+memoria de las instrucciones cuando se cargue el programa; esto no es difícil de añadir, por lo que se ignora
+para simplificar). El contador de programa es un registro de 32 bits que se modifica al final de cada ciclo de
+reloj y, de esta manera, no necesita ninguna señal de control de escritura. El sumador es una ALU cableada
+para que sume siempre dos entradas de 32 bits y dé el resultado en su salida.
+
+
+<p align="center">
+    <img src="img/image20.png" alt="Formato de instrucción Tipo J">
+</p>
+
+
+El módulo implementa una memoria de instrucciones con capacidad para escribir, leer y gestionar su estado (vacía o llena).
+
+
+Cuando **`i_reset`** o **`i_clear`** están activos, la memoria y el puntero se reinician, dejando la memoria en un estado limpio.
+
+
+Si **`i_inst_write`** está activo, la instrucción proporcionada en **`i_instruction`** se escribe en la memoria en la posición indicada por **`pointer`**, y el puntero incrementa su valor en 4 bytes (una instrucción).
+
+
+La instrucción almacenada en la posición especificada por **`i_pc`** se envía como salida a través de **`o_instruction`**.
+
+
+- **`o_full_mem`**: Indica que la memoria está llena cuando el puntero alcanza la dirección máxima.
+- **`o_empty_mem`**: Indica que la memoria está vacía cuando el puntero está en 0.
+
+--- 
+#### Ejemplo práctico
+
+<p align="center">
+    <img src="img/image21.png" alt="b">
+</p>
+
+Supongamos que estamos trabajando con una memoria de 10 palabras y queremos cargar y leer algunas instrucciones.
+
+#### Paso 1: Escribir una instrucción
+
+#### Condiciones iniciales:
+- `i_reset = 1`: Se reinicia la memoria, por lo que `memory = 0` y `pointer = 0`.
+
+#### Primera instrucción:
+- `i_inst_write = 1`: Habilitamos la escritura.
+- `i_instruction = 32'b10101010101010101010101010101010`: Queremos escribir esta instrucción.
+- En el siguiente flanco positivo del reloj (`posedge i_clk`), la instrucción se almacena en los bits `[0:31]` de `memory`, y el `pointer` se incrementa a 4.
+
+
+
+#### Paso 2: Escribir otra instrucción
+
+#### Segunda instrucción:
+- `i_instruction = 32'b11110000111100001111000011110000`: Queremos escribir esta instrucción.
+- En el siguiente flanco del reloj, se escribe en los bits `[32:63]` de `memory`, y el `pointer` ahora es 8.
+
+
+
+#### Paso 3: Leer una instrucción
+
+- Supongamos que `i_pc = 1` (en bytes, equivale a la dirección 4).
+- La instrucción leída será la que está almacenada en los bits `[32:63]`, es decir, `32'b11110000111100001111000011110000`.
+
+#### Paso 4: Indicadores
+
+- Si escribimos 10 palabras (320 bits), el `pointer` alcanzará 40 bytes (`MAX_POINTER_DIR`) y `o_full_mem` será `1`.
+- Si el `pointer` está en `0`, `o_empty_mem` será `1`.
+
 
 ---
 
