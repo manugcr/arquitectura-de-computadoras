@@ -313,6 +313,21 @@ Supongamos que estamos trabajando con una memoria de 10 palabras y queremos carg
 - Si escribimos 10 palabras (320 bits), el `pointer` alcanzará 40 bytes (`MAX_POINTER_DIR`) y `o_full_mem` será `1`.
 - Si el `pointer` está en `0`, `o_empty_mem` será `1`.
 
+## Multiplexor
+
+<p align="center">
+    <img src="img/image22.png" alt="b">
+</p>
+
+El valor
+escrito en el PC puede provenir de cualquiera de los dos sumadores, el dato
+escrito en el banco de registros puede provenir de la ALU o de la memoria de
+datos, y la segunda entrada de la ALU proviene de un registro o del campo inmediato
+de la instrucción. En la práctica, estas líneas de datos no pueden conectarse
+directamente; debe añadirse un elemento que seleccione entre los múltiples orígenes
+y dirija una de estas fuentes al destino. Esta selección se realiza comúnmente
+mediante un dispositivo denominado multiplexor.
+
 
 ---
 
