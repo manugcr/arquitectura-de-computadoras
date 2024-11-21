@@ -223,6 +223,7 @@ para que sume siempre dos entradas de 32 bits y dé el resultado en su salida.
     <img src="img/image18.png" alt="Formato de instrucción Tipo J">
 </p>
 
+
 ### Program Counter
 
 Todas las
@@ -315,18 +316,31 @@ Supongamos que estamos trabajando con una memoria de 10 palabras y queremos carg
 
 ## Multiplexor
 
-<p align="center">
-    <img src="img/image22.png" alt="b">
-</p>
+<div style="display: flex; align-items: center; gap: 10px;">
+    <img src="img/image22.png" alt="b" style="width: 200px; height: auto;">
+    <p>
+        El valor escrito en el PC puede provenir de cualquiera de los dos sumadores, el dato
+        escrito en el banco de registros puede provenir de la ALU o de la memoria de
+        datos, y la segunda entrada de la ALU proviene de un registro o del campo inmediato
+        de la instrucción. En la práctica, estas líneas de datos no pueden conectarse
+        directamente; debe añadirse un elemento que seleccione entre los múltiples orígenes
+        y dirija una de estas fuentes al destino. Esta selección se realiza comúnmente
+        mediante un dispositivo denominado multiplexor.
+    </p>
+</div>
 
-El valor
-escrito en el PC puede provenir de cualquiera de los dos sumadores, el dato
-escrito en el banco de registros puede provenir de la ALU o de la memoria de
-datos, y la segunda entrada de la ALU proviene de un registro o del campo inmediato
-de la instrucción. En la práctica, estas líneas de datos no pueden conectarse
-directamente; debe añadirse un elemento que seleccione entre los múltiples orígenes
-y dirija una de estas fuentes al destino. Esta selección se realiza comúnmente
-mediante un dispositivo denominado multiplexor.
+
+## Sumador
+
+<div style="display: flex; align-items: center; gap: 10px;">
+ <img src="img/image23.png" alt="b" style="width: 200px; height: auto;">
+    <p>
+        Se necesita un sumador encargado de incrementar el PC
+        para que apunte a la dirección de la siguiente instrucción. Este sumador, que es
+        combinacional, se puede construir a partir de la ALU.
+    </p>
+   
+</div>
 
 
 ---
