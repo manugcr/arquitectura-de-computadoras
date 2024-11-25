@@ -342,6 +342,8 @@ Supongamos que estamos trabajando con una memoria de 10 palabras y queremos carg
    
 </div>
 
+## 
+
 
 ---
 
