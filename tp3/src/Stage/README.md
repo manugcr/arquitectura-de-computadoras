@@ -9,3 +9,7 @@ de las dos etapas que separan. Por ejemplo, el registro de segmentación entre l
 <p align="center">
     <img src="../../img/image24.png" alt="Logo">
 </p>
+
+Los registros de segmentación (*ETAPAS*), en color amarillo, separan cada una
+de las etapas. Los registros han de ser suficientemente anchos para almacenar todos los datos que corresponden con las líneas
+que pasan a través de ellos. 
