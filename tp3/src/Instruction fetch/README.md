@@ -33,7 +33,7 @@ de la instrucción. En la práctica, estas líneas de datos no pueden conectarse
 directamente
 
 <p align="center">
-    <img src="img/image19.png" alt="Formato de instrucción Tipo J">
+    <img src="../../img/image19.png" alt="Formato de instrucción Tipo J">
 </p>
 
 ### Memoria de Instrucciones
