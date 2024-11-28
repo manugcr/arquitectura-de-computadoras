@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module if_id
+module IF_ID
     #(
         parameter PC_SIZE          = 32,
         parameter INSTRUCTION_SIZE = 32

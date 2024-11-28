@@ -125,3 +125,84 @@ Supongamos que estamos trabajando con una memoria de 10 palabras y queremos carg
     </p>
    
 </div>
+
+###
+
+---
+
+# Modulo Instruction Fetch (IF) `(IF_Stage.v)`
+
+<p align="center">
+    <img src="../../img/image18.png" alt="Formato de instrucción Tipo J">
+</p>
+
+
+El módulo `IF_Stage` está compuesto por varios submódulos, cada uno con una función específica. A continuación, se describen:
+
+---
+
+## 1. `mux`
+### Función:
+Selecciona entre dos posibles valores para el próximo **Program Counter (PC)**:
+- **`i_next_seq_pc`:** El siguiente PC secuencial.
+- **`i_next_not_seq_pc`:** Un PC no secuencial (usado para saltos o interrupciones).
+
+### Entradas:
+- `i_next_pc_src`: Selector para elegir entre las dos opciones.
+- `i_next_seq_pc`: Valor del PC secuencial.
+- `i_next_not_seq_pc`: Valor del PC no secuencial.
+
+### Salida:
+- `next_pc`: Próximo valor del PC seleccionado.
+
+---
+
+## 2. `adder`
+### Función:
+Calcula el siguiente PC secuencial sumando el tamaño de una palabra al valor actual del PC.
+
+### Entradas:
+- `pc`: Valor actual del PC.
+- `WORD_SIZE_IN_BYTES`: Incremento basado en el tamaño de una palabra.
+
+### Salida:
+- `o_next_seq_pc`: Valor calculado del siguiente PC secuencial.
+
+---
+
+## 3. `PC`
+### Función:
+Administra el valor actual del **Program Counter (PC)**, permitiendo:
+- Incrementar el PC con el valor calculado.
+- Reiniciar (`i_reset`) o detener (`i_halt`) el PC según señales de control.
+- No cargar un nuevo valor (`i_not_load`), según se requiera.
+
+### Entradas:
+- `i_clk`: Reloj.
+- `i_reset`: Reinicio.
+- `i_halt`: Detener ejecución.
+- `i_flush`: Restablecer el PC a un estado inicial.
+- `i_not_load`: Señal para no cargar un nuevo valor.
+- `next_pc`: Próximo valor del PC calculado.
+
+### Salida:
+- `pc`: Valor actual del PC.
+
+---
+
+## 4. `Instruction_memory`
+### Función:
+Almacena las instrucciones del programa y las recupera en base al valor del PC.
+
+### Entradas:
+- `i_clk`: Reloj.
+- `i_reset`: Reinicio.
+- `i_inst_write`: Señal para escribir una instrucción en memoria.
+- `i_pc`: Dirección actual del PC.
+- `i_instruction`: Instrucción a escribir.
+- `i_clear_mem`: Señal para borrar la memoria.
+
+### Salidas:
+- `o_instruction`: Instrucción recuperada de la memoria.
+- `o_full_mem`: Indica si la memoria está llena.
+- `o_empty_mem`: Indica si la memoria está vacía.
