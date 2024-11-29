@@ -4,7 +4,7 @@
 // y sus transiciones entre diferentes estados. Permite realizar operaciones de reinicio, 
 // detención, carga condicional de un nuevo valor y limpieza del PC.
 
-module pc
+module PC
     #(
         // Parámetros configurables del módulo
         parameter PC_WIDTH = 32,                // Ancho del contador de programa en bits

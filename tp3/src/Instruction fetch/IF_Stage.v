@@ -62,7 +62,7 @@ module IF_Stage
     (
         .a (WORD_SIZE_IN_BYTES),                // Incremento basado en el tamaño de una palabra
         .b (pc),                                // Valor actual del PC
-        .sum(o_next_seq_pc)                     // Salida: próximo valor secuencial del PC
+        .result(o_next_seq_pc)                     // Salida: próximo valor secuencial del PC
     );
 
     // Contador de programa (PC) que mantiene y actualiza el valor del PC
@@ -84,7 +84,7 @@ module IF_Stage
     );
 
     // Memoria de instrucciones para almacenar y recuperar instrucciones
-    Instruction_memory 
+    Instruction_Memory 
     #(
         .WORD_WIDTH_BYTES (WORD_SIZE_IN_BYTES), // Tamaño de cada palabra en bytes
         .MEM_SIZE_WORDS (MEM_SIZE_IN_WORDS),    // Tamaño de la memoria en palabras
