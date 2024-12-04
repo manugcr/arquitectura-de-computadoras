@@ -7,3 +7,6 @@
 # Ignore all vcd
 *.vcd
 
+tp3/src/Instruction Decode/control.v
+
+

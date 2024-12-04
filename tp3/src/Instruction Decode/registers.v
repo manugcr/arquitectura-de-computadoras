@@ -12,16 +12,16 @@
         - i_clk: Señal de reloj.
         - i_reset: Señal de reinicio global para limpiar todos los registros.
         - i_flush: Señal de limpieza (flush) para borrar los registros.
-        - i_write_enable: Señal de habilitación para la escritura.
-        - i_addr_A: Dirección del registro a leer en el bus A.
-        - i_addr_B: Dirección del registro a leer en el bus B.
-        - i_addr_wr: Dirección del registro donde se escribirá el dato.
-        - i_bus_wr: Dato a escribir en el registro especificado.
+        - i_enable_wr: Señal de habilitación para la escritura.
+        - i_A: Dirección del registro a leer en el bus A.
+        - i_B: Dirección del registro a leer en el bus B.
+        - i_wr: Dirección del registro donde se escribirá el dato.
+        - i_data_wr: Dato a escribir en el registro especificado.
 
     Salidas:
-        - o_bus_A: Dato leído del registro direccionado por i_addr_A.
-        - o_bus_B: Dato leído del registro direccionado por i_addr_B.
-        - o_bus_debug: Bus de depuración que muestra el contenido completo de todos los registros.
+        - o_data_A: Dato leído del registro direccionado por i_A.
+        - o_data_B: Dato leído del registro direccionado por i_B.
+        - o_Debugging: Bus de depuración que muestra el contenido completo de todos los registros.
 
     Notas:
         - Registro 0 siempre se mantiene en 0.
@@ -38,16 +38,16 @@ module registers
         input  wire i_clk,                              // Entrada de reloj
         input  wire i_reset,                            // Entrada de reinicio
         input  wire i_flush,                            // Señal de limpieza (flush)
-        input  wire i_write_enable,                     // Señal de habilitación de escritura
-        input  wire [$clog2(NUMBER_OF_REGISTERS) - 1 : 0] i_addr_A, // Dirección para leer el registro A
-        input  wire [$clog2(NUMBER_OF_REGISTERS) - 1 : 0] i_addr_B, // Dirección para leer el registro B
-        input  wire [$clog2(NUMBER_OF_REGISTERS) - 1 : 0] i_addr_wr, // Dirección para escribir en el registro
-        input  wire [REGISTERS_SIZE - 1 : 0] i_bus_wr,  // Dato a escribir en el registro
+        input  wire i_enable_wr,                     // Señal de habilitación de escritura
+        input  wire [$clog2(NUMBER_OF_REGISTERS) - 1 : 0] i_A, // Dirección para leer el registro A
+        input  wire [$clog2(NUMBER_OF_REGISTERS) - 1 : 0] i_B, // Dirección para leer el registro B
+        input  wire [$clog2(NUMBER_OF_REGISTERS) - 1 : 0] i_wr, // Dirección para escribir en el registro
+        input  wire [REGISTERS_SIZE - 1 : 0] i_data_wr,  // Dato a escribir en el registro
 
         // Salidas
-        output wire [REGISTERS_SIZE - 1 : 0] o_bus_A,  // Dato leído del registro A
-        output wire [REGISTERS_SIZE - 1 : 0] o_bus_B,  // Dato leído del registro B
-        output wire [NUMBER_OF_REGISTERS * REGISTERS_SIZE - 1 : 0] o_bus_debug // Bus de depuración
+        output wire [REGISTERS_SIZE - 1 : 0] o_data_A,  // Dato leído del registro A
+        output wire [REGISTERS_SIZE - 1 : 0] o_data_B,  // Dato leído del registro B
+        output wire [NUMBER_OF_REGISTERS * REGISTERS_SIZE - 1 : 0] o_Debugging // Bus de depuración
     );
     
     // Declaración del banco de registros (matriz de registros)
@@ -67,27 +67,27 @@ module registers
         end
         else
         begin
-            if (i_write_enable)
+            if (i_enable_wr)
             begin
-                if (i_addr_wr != 0)
+                if (i_wr != 0)
                     // Escritura en el registro especificado
-                    registers[i_addr_wr] = i_bus_wr;
+                    registers[i_wr] = i_data_wr;
                 else
                     // Registro 0 se mantiene en 0
-                    registers[i_addr_wr] = 'b0;
+                    registers[i_wr] = 'b0;
             end
         end
     end
 
     // Asignación de datos a los buses de salida A y B
-    assign o_bus_A = registers[i_addr_A];
-    assign o_bus_B = registers[i_addr_B];
+    assign o_data_A = registers[i_A];
+    assign o_data_B = registers[i_B];
 
     // Generación del bus de depuración para mostrar el contenido de todos los registros
     generate
         genvar j;
         for (j = 0; j < NUMBER_OF_REGISTERS; j = j + 1) begin : GEN_DEBUG_BUS
-            assign o_bus_debug[(j + 1) * REGISTERS_SIZE - 1 : j * REGISTERS_SIZE] = registers[j];
+            assign o_Debugging[(j + 1) * REGISTERS_SIZE - 1 : j * REGISTERS_SIZE] = registers[j];
         end
     endgenerate
 
