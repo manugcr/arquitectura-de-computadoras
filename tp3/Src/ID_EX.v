@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 
-module IDEXRegister(
+module ID_EX(
     Clock,
     In_ControlSignal, In_ReadData1, In_ReadData2, In_PCAdder,
     In_RegRT, In_RegRD, In_RegRS,

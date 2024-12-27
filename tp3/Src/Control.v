@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module Controller(
+module Control(
     Instruction,
     ALUBMux, RegDst, ALUOp, MemRead, ByteSig, RegWrite, MemToReg
 );

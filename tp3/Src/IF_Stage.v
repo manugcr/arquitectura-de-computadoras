@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 // Módulo IFStage: Implementa la etapa de Instruction Fetch (IF) de un procesador.
-module IFStage(
+module IF_Stage(
     Clock, Reset,               // Señales del sistema
     PCWrite,                   // Control de escritura del PC (señal de control de riesgos)
     Instruction, PCAdder_Out, PCResult // Salidas del módulo
@@ -30,7 +30,7 @@ module IFStage(
     PC PC(
         .PC_In(PCAdder_Out),    // Dirección de la siguiente instrucción (PC + 4)
         .PCResult(PCResult),    // Dirección actual del PC
-        .Enable(PCWrite),       // Control de habilitación para manejar riesgos
+        .Enable(1'b1),          // Habilitación constante a 1 lógico
         .Reset(Reset),          // Señal de reinicio
         .Clock(Clock)           // Señal de reloj
     );

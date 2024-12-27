@@ -1,6 +1,14 @@
 `timescale 1ns / 1ps
 
 //FUNCIONAA!!
+/*
+
+La inicializacion usada en begin del instructionmemory.v es la correcta!, reproducir este resultado para data y linkear el .mem desde .sim NO crearlo, linkearlo de .sim
+con la configuracion planteada en instructionmemory.v se generan solos los .mem
+
+*/
+
+
 
 module tb_InstructionMemory();
 

@@ -15,7 +15,12 @@ module InstructionMemory(Address, Instruction );
 
     // Bloque inicial para cargar las instrucciones desde un archivo
     initial begin
-        $readmemh("Instruction_memory.mem", memory); // Carga el contenido desde un archivo hexadecimal
+        $readmemh("Instruction_memory.mem", memory, 0,512); // Carga el contenido desde un archivo hexadecimal
+   
+        for (integer i = 0; i < 512; i = i + 1) begin
+            memory[i] = i; // Asigna el valor i a cada posición de memoria
+        ends
+        $writememh("Instruction_memory.mem", memory, 0, 511);
     end
 
     // Bloque always para leer la instrucción y procesar las instrucciones de salto
