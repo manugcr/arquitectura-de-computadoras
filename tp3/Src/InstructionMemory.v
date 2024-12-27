@@ -19,7 +19,7 @@ module InstructionMemory(Address, Instruction );
    
         for (integer i = 0; i < 512; i = i + 1) begin
             memory[i] = i; // Asigna el valor i a cada posición de memoria
-        ends
+        end
         $writememh("Instruction_memory.mem", memory, 0, 511);
     end
 

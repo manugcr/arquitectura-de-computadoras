@@ -1,4 +1,8 @@
 
+/*
+    ESTA BIEN PLANTEANDO EL BEGIN DE registers.v para iniciar los .mem
+*/
+
 module tb_Registers;
     reg [4:0] ReadRegister1, ReadRegister2, WriteRegister;
     reg [31:0] WriteData;
