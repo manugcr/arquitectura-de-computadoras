@@ -13,10 +13,20 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData);
     output reg [31:0] ReadData; // Datos leídos de memoria (32 bits)
 
     reg [31:0] memory [0:13600]; // Memoria de datos: 13601 palabras de 32 bits
+    
+    integer i;
 
     // Inicialización de la memoria desde un archivo
     initial begin
         $readmemh("Data_memory.mem", memory,0,13600); // Archivo para valores iniciales
+        
+         for (i = 0; i < 13600; i = i + 1) begin
+            memory[i] = i;
+        end
+
+
+        // Crea o limpia el archivo registers.mem
+        $writememh("Data_memory.mem", memory);
     end
 
     // Escritura en memoria

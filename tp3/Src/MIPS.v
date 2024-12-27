@@ -79,8 +79,8 @@ module MIPS(ClockIn, Reset);
     
 
     IF_ID    IFID(.Clock(Clock), 
-                         .Flush(Flush_IF), 
-                         .Enable(Hazard_IFIDWrite), 
+                         .Flush(1'b0), 
+                         .Enable(1'b1), 
                          .In_Instruction(Instruction_IF), 
                          .In_PCAdder(PCAdder_IF),
                          .Out_Instruction(Instruction_ID), 

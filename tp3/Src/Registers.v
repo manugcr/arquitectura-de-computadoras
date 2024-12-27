@@ -17,7 +17,7 @@ module Registers(
     initial begin
         // Inicializa todos los registros a 0
         for (i = 0; i < 32; i = i + 1) begin
-            registers[i] = 0;
+            registers[i] = i;
         end
         // Inicializa el puntero de pila (registro 29)
         registers[29] = 54400;
