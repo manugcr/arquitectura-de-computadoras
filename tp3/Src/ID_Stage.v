@@ -98,7 +98,7 @@ module ID_Stage(
     
     Registers            Registers(.ReadRegister1(Instruction[25:21]), // rs
                                       .ReadRegister2(Instruction[20:16]), // rt 
-                                      .WriteRegister(WriteRegister), 
+                                      .WriteRegister(RegisterDst_EXMEM),  // OJOOOOOOOOO
                                       .WriteData(WriteData), 
                                       .RegWrite(RegWrite), 
                                       .Clock(Clock), 

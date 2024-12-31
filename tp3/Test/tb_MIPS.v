@@ -11,6 +11,10 @@ module tb_MIPS();
     wire [31:0] Instruction_ID;
     wire [31:0] ReadData1_ID;
     wire [31:0] ReadData2_ID;
+    wire [31:0] WriteRegister_ID;
+    wire [31:0] WriteRegister2_ID;
+    wire  FLAG;
+    wire [31:0] ALUResult_MEM_ID;
 
     // Instantiate the MIPS module
     MIPS uut (
@@ -23,6 +27,10 @@ module tb_MIPS();
     assign Instruction_ID = uut.Instruction_ID;
     assign ReadData1_ID = uut.ReadData1_ID;
     assign ReadData2_ID = uut.ReadData2_ID;
+    assign WriteRegister_ID = uut.RegDst_MEM;
+    assign WriteRegister2_ID = uut.RegDst_WB; 
+    assign FLAG = uut.ControlSignal_WB[2];
+    assign ALUResult_MEM_ID = uut.ALUResult_MEM;
 
     // Clock generation
     initial begin
@@ -48,7 +56,7 @@ module tb_MIPS();
 
     // Monitor key signals
     initial begin
-        $monitor($time, " PCAdder_ID: %h | Instruction_ID: %h | ReadData1_ID: %h | ReadData2_ID: %h", PCAdder_ID, Instruction_ID, ReadData1_ID, ReadData2_ID);
+        $monitor($time, " PCAdder_ID: %h | Instruction_ID: %h | ReadData1_ID: %h | ReadData2_ID: %h | WriteRegister_ID: %h | WriteRegister2_ID: %h | FLAG: %h | ALUResult_MEM: %h ", PCAdder_ID, Instruction_ID, ReadData1_ID, ReadData2_ID, WriteRegister_ID,WriteRegister2_ID , FLAG, ALUResult_MEM_ID );
     end
 
 endmodule

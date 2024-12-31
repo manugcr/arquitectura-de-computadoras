@@ -20,7 +20,7 @@ module InstructionMemory(Address, Instruction );
 
         // Inicializa la memoria
         for (i = 0; i < 512; i = i + 1) begin
-            memory[i] = 0;// Asigna el valor i a cada posición de memoria
+            memory[i] = 21710880;// Asigna el valor i a cada posición de memoria
         end
      
          memory[0] = 21710880;

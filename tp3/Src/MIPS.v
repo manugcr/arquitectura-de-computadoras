@@ -92,7 +92,7 @@ module MIPS(ClockIn, Reset);
     ID_Stage  ID_Stage(// Inputs 
                        .Clock(Clock), 
                        .Reset(Reset),    
-                       .RegWrite(ControlSignal_WB[2]), 
+                       .RegWrite(1'b1),  //ojoooooooooooo 
                        .WriteRegister(RegDst_WB), 
                        .WriteData(WriteData_WB), 
                        .Instruction(Instruction_ID), 
@@ -192,7 +192,7 @@ module MIPS(ClockIn, Reset);
     
     // Write Back Stage
     WB_Stage         WB_Stage(// Inputs
-                       .MemToReg(ControlSignal_WB[1:0]),      
+                       .MemToReg(2'b10),      // OJOOOOOOOOO
                        .ALUResult(ALUResult_WB), 
                        .MemReadData(MemReadData_WB), 
                        .PCAdder(PCAdder_WB), 

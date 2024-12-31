@@ -79,6 +79,6 @@ module EX_Stage(
                                   .inA({27'd0, RegRT}), 
                                   .inB({27'd0, RegRD}), 
                                   .inC(32'd31), 
-                                  .sel(RegDst));
+                                  .sel(2'b01)); //MODIFICAR ESTOOOOOOOO
     
 endmodule
