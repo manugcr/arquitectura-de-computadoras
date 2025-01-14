@@ -8,7 +8,8 @@ module MEM_Stage(
     MemRead,         // Señal de control para lectura de memoria
     ALUResult,       // Resultado de la ALU (dirección de memoria)
     RegRTData,       // Datos del registro RT (a escribir en memoria)    
-    MemReadData      // Datos leídos de la memoria     
+    MemReadData,      // Datos leídos de la memoria
+    ByteSig     
     );             
 
     // Reloj del sistema
@@ -24,6 +25,8 @@ module MEM_Stage(
     // Datos del registro RT para escribir en memoria
     input [31:0] RegRTData;
 
+    input [1:0] ByteSig;
+
     output wire [31:0] MemReadData;
 
 
@@ -33,7 +36,8 @@ module MEM_Stage(
         .Clock(Clock), 
         .MemWrite(MemWrite), 
         .MemRead(MemRead), 
-        .ReadData(MemReadData)
-    );
+        .ReadData(MemReadData),
+        .ByteSig(ByteSig));
+
 
 endmodule

@@ -2,46 +2,108 @@
 
 
 
-module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData);
+module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSig); 
 
-    input [31:0] Address;       // Dirección de memoria (32 bits)
-    input [31:0] WriteData;     // Datos a escribir en memoria (32 bits)
-    input Clock;                // Señal de reloj
-    input MemWrite;             // Señal de control para escritura
-    input MemRead;              // Señal de control para lectura
+    input [31:0] Address;       // Input Address 
+    input [31:0] WriteData;     // Data that needs to be written into the address 
+    input Clock;
+    input MemWrite;             // Control signal for memory write 
+    input MemRead;              // Control signal for memory read 
+    input [1:0] ByteSig;
 
-    output reg [31:0] ReadData; // Datos leídos de memoria (32 bits)
-
-    reg [31:0] memory [0:13600]; // Memoria de datos: 13601 palabras de 32 bits
+    output reg[31:0] ReadData;  // Contents of memory location at Address
     
+    reg [31:0] memory [0:13600];    // Reminder: Update stack pointer
+
+
+    
+    // Variable para inicialización
     integer i;
 
-    // Inicialización de la memoria desde un archivo
+    // Inicialización de la memoria desde un archivo y valores por defecto
     initial begin
-        $readmemh("Data_memory.mem", memory,0,13600); // Archivo para valores iniciales
+        $readmemh("Data_memory.mem", memory, 0, 13600); // Cargar datos iniciales desde archivo
         
-         for (i = 0; i < 13600; i = i + 1) begin
-            memory[i] = i;
+        // Inicializar la memoria con valores incrementales (opcional)
+        for (i = 0; i < 13600; i = i + 1) begin
+            memory[i] = 0;
         end
 
-
-        // Crea o limpia el archivo registers.mem
+        // Escribir los valores iniciales en un archivo para referencia
         $writememh("Data_memory.mem", memory);
+        
+
+        
     end
 
-    // Escritura en memoria
+    // Bloque siempre para escritura en memoria (controlado por reloj)
     always @ (posedge Clock) begin
-        if (MemWrite == 1'b1) begin
-            memory[Address[31:2]] <= WriteData; // Escritura de palabra completa
+    
+
+        if (MemWrite == 1'b1) begin // Verificar señal de escritura activa
+            // Escritura de palabra completa (sw)
+            $display("ByteSig: %b", ByteSig);
+            if (ByteSig == 2'b00) begin
+                $display("Condición ByteSig == 2'b00 cumplida");
+                memory[Address[31:2]] <= WriteData;  
+                
+            end
+
+            // Escritura de media palabra (sh)
+            else if (ByteSig == 2'b01) begin
+                if      (Address[1:0] == 2'b00) memory[Address[31:2]][15:00] <= WriteData[15:0]; // Media palabra inferior
+                else if (Address[1:0] == 2'b10) memory[Address[31:2]][31:16] <= WriteData[15:0]; // Media palabra superior
+            end
+            
+            // Escritura de byte (sb)
+            else if (ByteSig == 2'b10) begin
+                if      (Address[1:0] == 2'b00) memory[Address[31:2]][07:00] <= WriteData[7:0];  // Byte inferior
+                else if (Address[1:0] == 2'b01) memory[Address[31:2]][15:08] <= WriteData[7:0];  // Segundo byte
+                else if (Address[1:0] == 2'b10) memory[Address[31:2]][23:16] <= WriteData[7:0];  // Tercer byte
+                else if (Address[1:0] == 2'b11) memory[Address[31:2]][31:24] <= WriteData[7:0];  // Byte superior
+            end
+            
+                   // Depuración: imprimir mensaje de escritura
+                 $display("Escritura en memoria: Direccion = %h, WriteData = %h, ByteSig = %b", Address[31:2], WriteData, ByteSig);
+
+
+                $writememh("Data_memory.mem", memory);
         end
     end
 
-    // Lectura de memoria
+    // Bloque siempre para lectura de memoria (combinacional)
     always @ (*) begin
-        if (MemRead == 1'b1) begin
-            ReadData <= memory[Address[31:2]]; // Lectura de palabra completa
-        end else begin
-            ReadData <= 32'b0; // Si no se lee, salida en 0
+        ReadData <= 32'b0; // Inicializar dato leído en 0 por defecto
+        
+        if (MemRead == 1'b1) begin // Verificar señal de lectura activa
+            // Lectura de palabra completa (lw)
+            if (ByteSig == 2'b00) 
+                ReadData <= memory[Address[31:2]];
+            
+            // Lectura de media palabra (lh)
+            else if (ByteSig == 2'b01) begin
+                if      (Address[1:0] == 2'b00) 
+                    ReadData <= {{16{memory[Address[31:2]][15]}}, memory[Address[31:2]][15:00]}; // Signo extendido, mitad inferior
+                else if (Address[1:0] == 2'b10) 
+                    ReadData <= {{16{memory[Address[31:2]][31]}}, memory[Address[31:2]][31:16]}; // Signo extendido, mitad superior
+            end
+            
+            // Lectura de byte (lb)
+            else if (ByteSig == 2'b10) begin
+                if      (Address[1:0] == 2'b00) 
+                    ReadData <= {{24{memory[Address[31:2]][07]}}, memory[Address[31:2]][07:00]}; // Signo extendido, byte inferior
+                else if (Address[1:0] == 2'b01) 
+                    ReadData <= {{24{memory[Address[31:2]][15]}}, memory[Address[31:2]][15:08]}; // Signo extendido, segundo byte
+                else if (Address[1:0] == 2'b10) 
+                    ReadData <= {{24{memory[Address[31:2]][23]}}, memory[Address[31:2]][23:16]}; // Signo extendido, tercer byte
+                else if (Address[1:0] == 2'b11) 
+                    ReadData <= {{24{memory[Address[31:2]][31]}}, memory[Address[31:2]][31:24]}; // Signo extendido, byte superior
+            end
+
+             else begin
+                ReadData <= 32'b0;
+            end
+
         end
     end
 

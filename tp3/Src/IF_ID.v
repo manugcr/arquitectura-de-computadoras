@@ -2,7 +2,6 @@
 
 module IF_ID(
     Clock,         // Señal de reloj para sincronización
-    Flush,         // Señal para limpiar los registros
     Enable,        // Señal para habilitar la escritura en los registros
     In_Instruction, // Entrada de la instrucción actual
     Out_Instruction, // Salida de la instrucción almacenada
@@ -12,7 +11,7 @@ module IF_ID(
 );
 
     // Declaración de entradas
-    input        Clock, Flush, Enable;
+    input        Clock, Enable;
     input [31:0] In_Instruction;
     input [31:0] In_PCAdder;
     
@@ -29,12 +28,7 @@ module IF_ID(
 
     // Comportamiento del registro sincronizado con el flanco positivo del reloj
     always @(posedge Clock) begin
-        if (Flush) begin
-            // Si Flush está activo, limpia los registros
-            Out_Instruction = 32'd0;
-            Out_PCAdder     = 32'd0;
-        end
-        else if (Enable) begin
+         if (Enable) begin
             // Si Enable está activo, actualiza los registros con las entradas
             Out_Instruction = In_Instruction;
             Out_PCAdder     = In_PCAdder;

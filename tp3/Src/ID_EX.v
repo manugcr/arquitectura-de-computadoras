@@ -4,24 +4,25 @@
 module ID_EX(
     Clock,
     In_ControlSignal, In_ReadData1, In_ReadData2, In_PCAdder,
-    In_RegRT, In_RegRD, In_RegRS,
+    In_RegRT, In_RegRD,In_SignExtend, In_RegRS,
     
-    Out_ControlSignal, Out_ReadData1, Out_ReadData2 , Out_PCAdder,
+    Out_ControlSignal, Out_ReadData1,Out_SignExtend, Out_ReadData2 , Out_PCAdder,
     Out_RegRT, Out_RegRD, Out_RegRS
 );
 
     input        Clock;
     input [4:0]  In_RegRT, In_RegRD, In_RegRS;
-    input [31:0] In_ControlSignal, In_ReadData1, In_ReadData2, In_PCAdder;
+    input [31:0] In_ControlSignal,In_SignExtend, In_ReadData1, In_ReadData2, In_PCAdder;
     
     output reg [4:0]  Out_RegRT, Out_RegRD, Out_RegRS;
-    output reg [31:0] Out_ControlSignal, Out_ReadData1, Out_ReadData2 , Out_PCAdder;
+    output reg [31:0] Out_ControlSignal,Out_SignExtend, Out_ReadData1, Out_ReadData2 , Out_PCAdder;
 	
 	initial begin
         Out_ControlSignal <= 32'd0;
         Out_ReadData1     <= 32'd0;
         Out_ReadData2     <= 32'd0;
         Out_PCAdder       <= 32'd0;
+        Out_SignExtend    <= 32'd0;
         Out_RegRT         <= 5'd0;
         Out_RegRD         <= 5'd0;
         Out_RegRS         <= 5'd0;
@@ -32,6 +33,7 @@ module ID_EX(
         Out_ReadData1     <= In_ReadData1;
         Out_ReadData2     <= In_ReadData2;
         Out_PCAdder       <= In_PCAdder;
+        Out_SignExtend    <= In_SignExtend;
         Out_RegRT         <= In_RegRT;
         Out_RegRD         <= In_RegRD;
         Out_RegRS         <= In_RegRS;

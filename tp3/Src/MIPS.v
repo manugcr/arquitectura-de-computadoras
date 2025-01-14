@@ -14,6 +14,13 @@ module MIPS(ClockIn, Reset);
     // Wires
     //--------------------------------
     wire Clock;
+
+    // Hazard Detection
+    wire Hazard_IFIDWrite, Hazard_PCWrite;
+
+     // Forwarding
+    wire [1:0] ForwardMuxASel_EX, ForwardMuxBSel_EX;
+    wire ForwardMuxASel_ID, ForwardMuxBSel_ID;
     
     
     // Flush Register
@@ -69,7 +76,8 @@ module MIPS(ClockIn, Reset);
     IF_Stage         IF_Stage(// Inputs
                        .Clock(Clock), 
                        .Reset(Reset),          
-                       .PCWrite(Hazard_PCWrite),                
+                       .PCWrite(Hazard_PCWrite),
+                       //.PCAdder_ID(PrevPCAdder_ID), //////////////////                
                     
                        // Outputs         
                        .Instruction(Instruction_IF), 
@@ -79,8 +87,8 @@ module MIPS(ClockIn, Reset);
     
 
     IF_ID    IFID(.Clock(Clock), 
-                         .Flush(1'b0), 
-                         .Enable(1'b1), 
+                       // .Flush(Flush_IF), ///////////////////////////
+                         .Enable(Hazard_IFIDWrite), 
                          .In_Instruction(Instruction_IF), 
                          .In_PCAdder(PCAdder_IF),
                          .Out_Instruction(Instruction_ID), 
@@ -92,23 +100,27 @@ module MIPS(ClockIn, Reset);
     ID_Stage  ID_Stage(// Inputs 
                        .Clock(Clock), 
                        .Reset(Reset),    
-                       .RegWrite(1'b1),  //ojoooooooooooo 
+                       .RegWrite(ControlSignal_WB[2]),  //ojoooooooooooo 
+                       .MemRead_IDEX(ControlSignal_EX[5]),
                        .WriteRegister(RegDst_WB), 
                        .WriteData(WriteData_WB), 
                        .Instruction(Instruction_ID), 
                        .RegRT_IDEX(RegRT_IDEX),
                        .RegRD_IDEX(RegRD_IDEX), 
-                       .RegDst_IDEX(ControlSignal_EX[10:9]),
-                       .RegWrite_IDEX(ControlSignal_EX[2]), 
+                       .RegDst_IDEX(ControlSignal_EX[10:9]),   
+                       .RegWrite_IDEX(ControlSignal_EX[2]),
                        .RegWrite_EXMEM(ControlSignal_MEM[2]),
-                       .RegisterDst_EXMEM(RegDst_MEM), 
-                       .PCAdder(PCAdder_ID),              
+                       .RegisterDst_EXMEM(RegDst_MEM),
+                       .ForwardData_EXMEM(ALUResult_MEM),     
+                    //   .PCAdder(PCAdder_ID),                //////////////////////
                        .ControlSignal_Out(ControlSignal_ID), 
                        .ReadData1(ReadData1_ID), 
                        .ReadData2(ReadData2_ID), 
-                       .ImmediateValue(SignExtend_ID),   
-                       .V0(V0),
-                       .V1(V1)); 
+                       .ForwardMuxASel(ForwardMuxASel_ID),
+                       .ForwardMuxBSel(ForwardMuxBSel_ID),  
+                       .ImmediateValue(SignExtend_ID), 
+                       .PCWrite(Hazard_PCWrite),
+                       .IFIDWrite(Hazard_IFIDWrite)); 
   
     // ID / EX Register
          ID_EX    IDEX(.Clock(Clock),
@@ -116,26 +128,43 @@ module MIPS(ClockIn, Reset);
                          .In_ReadData1(ReadData1_ID), 
                          .In_ReadData2(ReadData2_ID), 
                          .In_PCAdder(PCAdder_ID),
+                         .Out_SignExtend(SignExtend_EX),
                          .In_RegRT(Instruction_ID[20:16]), 
                          .In_RegRD(Instruction_ID[15:11]), 
                          .In_RegRS(Instruction_ID[25:21]),
                          .Out_ControlSignal(ControlSignal_EX), 
                          .Out_ReadData1(ReadData1_EX), 
-                         .Out_ReadData2(ReadData2_EX), 
+                         .Out_ReadData2(ReadData2_EX),
+                         .In_SignExtend(SignExtend_ID), 
                          .Out_PCAdder(PCAdder_EX),
                          .Out_RegRT(RegRT_IDEX), 
                          .Out_RegRD(RegRD_IDEX), 
                          .Out_RegRS(RegRS_IDEX));
+
+    Forward  Forward(.RegWrite_EXMEM(ControlSignal_MEM[2]),
+                              .RegWrite_MEMWB(ControlSignal_WB[2]),  
+                              .RegDst_EXMEM(RegDst_MEM),
+                              .RegDst_MEMWB(RegDst_WB),
+                              .RegRS_IDEX(RegRS_IDEX),
+                              .RegRT_IDEX(RegRT_IDEX),
+                              .RegRS_IFID(Instruction_ID[25:21]),
+                              .RegRT_IFID(Instruction_ID[20:16]),      
+                              .ForwardMuxA_EX(ForwardMuxASel_EX),
+                              .ForwardMuxB_EX(ForwardMuxBSel_EX),
+                              .ForwardMuxA_ID(ForwardMuxASel_ID),
+                              .ForwardMuxB_ID(ForwardMuxBSel_ID));  ////???????????????????????????????????
     
 
     // Execute Stage
     EX_Stage         EX_Stage(// Inputs 
-                       .Clock(Clock), 
-                       .Reset(Reset),   
+                       .ALUBMuxSel(ControlSignal_EX[11]),
+                       .ForwardMuxASel(ForwardMuxASel_EX),
+                       .ForwardMuxBSel(ForwardMuxBSel_EX),  
                        .ALUOp(ControlSignal_EX[17:12]), 
                        .RegDst(ControlSignal_EX[10:9]),
                        .RegWrite(ControlSignal_EX[2]),      
-                       .ReadData1(ReadData1_EX), 
+                       .ReadData1(ReadData1_EX),
+                       .MemToReg_WB(WriteData_WB), 
                        .ReadData2(ReadData2_EX), 
                        .SignExtend(SignExtend_EX),  
                        .RegRT(RegRT_IDEX), 
@@ -149,6 +178,8 @@ module MIPS(ClockIn, Reset);
                        .RegDst32_Out(RegDst32_EX),  
                        .RegWrite_Out(ALURegWrite),                  
                        .ALURT(RegRTData_EX)); 
+
+        
                        
 
     // EX / MEM Register
@@ -173,6 +204,7 @@ module MIPS(ClockIn, Reset);
                               .MemRead(ControlSignal_MEM[5]),
                               .ALUResult(ALUResult_MEM),         
                               .RegRTData(RegRTData_MEM),
+                              .ByteSig(ControlSignal_MEM[8:7]),
                               .MemReadData(MemReadData_MEM));    
     
 
@@ -192,7 +224,7 @@ module MIPS(ClockIn, Reset);
     
     // Write Back Stage
     WB_Stage         WB_Stage(// Inputs
-                       .MemToReg(2'b10),      // OJOOOOOOOOO
+                       .MemToReg(ControlSignal_WB[1:0]),       // OJOOOOOOOOO
                        .ALUResult(ALUResult_WB), 
                        .MemReadData(MemReadData_WB), 
                        .PCAdder(PCAdder_WB), 

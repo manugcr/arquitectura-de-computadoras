@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module tb_MIPS();
+module tb_MIPS_I();
 
     // Inputs
     reg ClockIn;

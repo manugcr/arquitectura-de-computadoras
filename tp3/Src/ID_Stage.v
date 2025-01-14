@@ -1,122 +1,174 @@
 `timescale 1ns / 1ps
 
-
 module ID_Stage(
 
-    // --- Inputs ---
-    Clock, Reset,               // System Inputs
-    RegWrite,     // Control Signals
-    WriteRegister, WriteData,   // Write data
-    Instruction, 
-    RegRT_IDEX, RegRD_IDEX, RegDst_IDEX,
-    RegWrite_IDEX, RegWrite_EXMEM,
+    // --- Entradas ---
+    Clock, Reset,               // Entradas del sistema
+    RegWrite , MemRead_IDEX ,     // Señales de control
     RegisterDst_EXMEM,
-    PCAdder,       
-    ControlSignal_Out,  // Control Signals
-    ReadData1, ReadData2,       // Register Data
-    ImmediateValue,             // Immediate value        // Hazard Signals    
-    V0, V1 //V0 and V1
+    WriteRegister, WriteData,   // Datos para escritura
+    Instruction,                // Instrucción actual
+    ForwardData_EXMEM,          // Datos reenviados desde la etapa EX/MEM
+    RegRT_IDEX, RegRD_IDEX, RegDst_IDEX,  // Registros y control de destino
+    RegWrite_EXMEM,       // Señales de escritura
+    ForwardMuxASel,             // Selección para el multiplexor de reenvío A
+    ForwardMuxBSel,             // Selección para el multiplexor de reenvío B
+    PCWrite, IFIDWrite,
+    RegWrite_IDEX,
+    ControlSignal_Out,          // Señales de control de salida
+    ReadData1, ReadData2,       // Datos leídos de los registros
+    ImmediateValue             // Valor inmediato extendido
     );             
-          
 
-    // System Inputs
+    //--------------------------------
+    // Declaración de Entradas
+    //--------------------------------
+
+    // Entradas del sistema
     input Clock, Reset;
-          
-          
-    // Control Signals     
-    input RegWrite;
-    input RegWrite_IDEX, RegWrite_EXMEM;
+
+    // Señales de control
+    input RegWrite, MemRead_IDEX;
+
+    input RegWrite_IDEX;
+
+    // Datos reenviados
+    input [31:0] ForwardData_EXMEM;
+
+    input RegWrite_EXMEM;
+
+    input ForwardMuxASel, ForwardMuxBSel;
     
 
-    
-    input [1:0] RegDst_IDEX; 
-    
-    // Data
-    input [31:0] Instruction, PCAdder;
-    
+    // Control de registros de destino
+    input [1:0] RegDst_IDEX;
+
+    // Datos de entrada
+    input [31:0] Instruction;
     input [4:0] RegRT_IDEX, RegRD_IDEX;
-    
-    input [4:0] RegisterDst_EXMEM;
-    
-    
-    // Write Register Data
-    input [4:0]  WriteRegister;
+
+    // Datos para escritura
+    input [4:0] WriteRegister, RegisterDst_EXMEM;
     input [31:0] WriteData;
-    
+
     //--------------------------------
-    // Outputs
+    // Declaración de Salidas
     //--------------------------------
-    
 
     
-    // Control Signal
+
+    // Señales de control
     output wire [31:0] ControlSignal_Out;
-    
-    // Register Data
+
+    // Datos de los registros
     output wire [31:0] ReadData1, ReadData2;
-    
-    // Immediate value
+
+    // Valor inmediato extendido
     output wire [31:0] ImmediateValue;
 
-    
-    
-    //V0 and V1 Data
-    output wire [31:0] V0, V1;
+    // Señales de peligro (hazards)
+    output wire PCWrite, IFIDWrite;
+
 
     //--------------------------------
-    // Wires                        
+    // Declaración de Cables
     //--------------------------------
-    
-    
-    
+
+    // Hazard Signals
+    wire ControlStall;
+
+    // Control de memoria
+    wire MemWrite_Control, MemRead_Control;
+    wire [1:0] ByteSig_Control;  
+
+    // Cable para valor inmediato desplazado
     wire [31:0] ImmediateShift;
-    
-    // Execute
-    wire       ALUBMux_Control;
+
+    // Control de ejecución
+    wire ALUBMux_Control;
     wire [1:0] RegDst_Control;
     wire [5:0] ALUOp_Control;
-    
-    // Write Back
-    wire       RegWrite_Control;
+
+        // Forwarding Mux
+    wire [31:0] ReadData1Forward, ReadData2Forward;
+
+    // Control de escritura posterior
+    wire RegWrite_Control;
     wire [1:0] MemToReg_Control;
-    
-    
+
+    // Salida del bloque de extensión de signo
     wire [31:0] SignExtend_Out;
 
-    
+    wire LaMux;
+
     //--------------------------------
-    // Hardware Components
+    // Componentes de Hardware
     //--------------------------------
-    
-    
+
+    // Unidad de detección de peligros
+    Hazard HazardDetection(
+        .RegRS_IFID(Instruction[25:21]),
+        .RegRT_IFID(Instruction[20:16]),
+        .RegRT_IDEX(RegRT_IDEX),
+        .RegRD_IDEX(RegRD_IDEX),
+        .RegWrite_IDEX(RegWrite_IDEX), //////////////////////////////
+        .RegWrite_EXMEM(RegWrite_EXMEM), /////////////////////////////
+        .RegisterDst_EXMEM(RegisterDst_EXMEM),  ///////////////////////
+        .MemRead_IDEX(MemRead_IDEX),
+        .RegDst_IDEX(RegDst_IDEX),
+        .ControlStall(ControlStall),
+        .PCWrite(PCWrite),
+        .IFIDWrite(IFIDWrite)
+    );
+
+    // Módulo de control
     Control              Control(.Instruction(Instruction),
                                     .ALUBMux(ALUBMux_Control), .RegDst(RegDst_Control), 
-                                    .ALUOp(ALUOp_Control), 
-                                    .RegWrite(RegWrite_Control), .MemToReg(MemToReg_Control));
-    
-    
-    
-    Registers            Registers(.ReadRegister1(Instruction[25:21]), // rs
-                                      .ReadRegister2(Instruction[20:16]), // rt 
-                                      .WriteRegister(RegisterDst_EXMEM),  // OJOOOOOOOOO
-                                      .WriteData(WriteData), 
-                                      .RegWrite(RegWrite), 
-                                      .Clock(Clock), 
-                                      .ReadData1(ReadData1), 
-                                      .ReadData2(ReadData2),
-                                      .V0(V0),
-                                      .V1(V1));
-    
-    
-    
-    SignExtension           ImmSignExtend(.in(Instruction[15:0]), 
-                                          .out(SignExtend_Out));
+                                    .ALUOp(ALUOp_Control), .MemWrite(MemWrite_Control), 
+                                    .MemRead(MemRead_Control), .ByteSig(ByteSig_Control),
+                                    .RegWrite(RegWrite_Control), .MemToReg(MemToReg_Control),  
+                                    .Flush_IF(JumpFlush), //???
+                                    .LaMux(LaMux));
 
-    
-    ShiftLeft2              AdderShift(.inputNum(SignExtend_Out), 
-                                       .outputNum(ImmediateShift));
-    
+    // Bancos de registros
+    Registers Registers(
+        .ReadRegister1(Instruction[25:21]), // rs
+        .ReadRegister2(Instruction[20:16]), // rt 
+        .WriteRegister(WriteRegister),  // Registro de destino para escritura
+        .WriteData(WriteData), 
+        .RegWrite(RegWrite), 
+        .Clock(Clock), 
+        .ReadData1(ReadData1), 
+        .ReadData2(ReadData2)
+    );
+
+    // Extensión de signo para valores inmediatos
+    SignExtension ImmSignExtend(
+        .in(Instruction[15:0]), 
+        .out(SignExtend_Out)
+    );
+
+    // Desplazador hacia la izquierda por 2
+    ShiftLeft2 AdderShift(
+        .inputNum(SignExtend_Out), 
+        .outputNum(ImmediateShift)
+    );
+
+    Mux2to1            ControlMux(.out(ControlSignal_Out), 
+                                       .inA({14'd0, ALUOp_Control[5:0], ALUBMux_Control, RegDst_Control[1:0], 
+                                             ByteSig_Control[1:0], MemWrite_Control, MemRead_Control, 2'd0, 
+                                             RegWrite_Control, MemToReg_Control[1:0]}),
+                                       .inB(32'd0), 
+                                       .sel(ControlStall));
 
 
+
+    // Multiplexor para dirección de carga inmediata
+    Mux2to1 LoadAddressMux(
+        .out(ImmediateValue),
+        .inA(SignExtend_Out),
+        .inB({16'd0, Instruction[15:0]}),
+        .sel(LaMux)
+    );
 
 endmodule

@@ -19,11 +19,34 @@ module InstructionMemory(Address, Instruction );
         $readmemh("Instruction_memory.mem", memory, 0, 511); // Carga el contenido desde un archivo hexadecimal
 
         // Inicializa la memoria
-        for (i = 0; i < 512; i = i + 1) begin
-            memory[i] = 21710880;// Asigna el valor i a cada posición de memoria
-        end
+       // for (i = 0; i < 512; i = i + 1) begin
+        //    memory[i] = 2919759884;// Asigna el valor i a cada posición de memoria
+       // end
+
+        /*  CASO A 
+        add $t0, $t1, $t2 # 000000 01001 01010 01000 00000 100000  -> 0x012A4020 -> 19546144, Registro 08h (08d) = 13h
+        add $s1, $s2, $s3 # 000000 10010 10011 10001 00000 100000  -> 0x2538820  -> 39028768, Registro 11h (17d) = 25h
+        add $a0, $a1, $a2 # 000000 00101 00110 00100 00000 100000  -> 0xA62020   -> 10887200, Registro 04h (04d) = 0bh
+        */
      
-         memory[0] = 21710880;
+        /*
+          memory[0] = 19546144; //Registro 08h (08d) = 13h
+          memory[1] = 39028768; //Registro 11h (17d) = 25h
+          memory[2] = 10887200; //Registro 04h (04d) = 0bh */
+
+        /* CASO B
+
+          sw $t0, 4($s1) =>  sw $8, 0($17) 
+
+          Opcode (6 bits) | Base (5 bits) | Rt (5 bits) | Offset (16 bits)
+            101011            10001             01000      0000 0000 0000 0100 = 2921857028
+
+            La posición de memoria 0x15 (21d) contendrá el valor 0x08 
+        */
+        
+          memory[0] = 2921857028; 
+
+
         $writememh("Instruction_memory.mem", memory, 0, 511);
     end
 

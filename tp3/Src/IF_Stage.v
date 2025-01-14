@@ -30,7 +30,7 @@ module IF_Stage(
     PC PC(
         .PC_In(PCAdder_Out),    // Dirección de la siguiente instrucción (PC + 4)
         .PCResult(PCResult),    // Dirección actual del PC
-        .Enable(1'b1),          // Habilitación constante a 1 lógico
+        .Enable(PCWrite),          // Habilitación constante a 1 lógico
         .Reset(Reset),          // Señal de reinicio
         .Clock(Clock)           // Señal de reloj
     );

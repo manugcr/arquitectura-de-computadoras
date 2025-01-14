@@ -1,17 +1,16 @@
 `timescale 1ns / 1ps
 
 module Registers(
-    input [4:0] ReadRegister1, ReadRegister2, WriteRegister, // Direcciones de 5 bits
-    input [31:0] WriteData,                                  // Datos de escritura
-    input RegWrite,                                          // Señal de escritura habilitada
-    input Clock,                                             // Reloj
-    output reg [31:0] ReadData1, ReadData2,                  // Salidas de lectura
-    output [31:0] V0, V1                                     // Alias para registros especiales
+    input [4:0] ReadRegister1, ReadRegister2, WriteRegister,
+    input [31:0] WriteData,
+    input RegWrite, Clock,
+    output reg [31:0] ReadData1, ReadData2
 );
 
-    // Archivo de registros interno: 32 registros de 32 bits
     reg [31:0] registers [0:31];
-    
+   // reg [31:0] WriteData_reg;
+    reg [4:0] WriteRegister_reg;
+
     // Inicialización de los registros
     integer i;
     initial begin
@@ -26,23 +25,25 @@ module Registers(
         $writememh("registers.mem", registers);
     end
 
-    // Escritura sincronizada en el flanco de subida del reloj
+    // Escritura sincronizada con el flanco de subida del reloj
     always @(posedge Clock) begin
         if (RegWrite) begin
-            registers[WriteRegister] <= WriteData;
+            // Almacena las señales intermedias en registros
+           // WriteData_reg <= WriteData;
+            WriteRegister_reg <= WriteRegister;
+
+            // Escribe en el registro alineando WriteData y WriteRegister
+            registers[WriteRegister_reg] <= WriteData;
+
+            // Actualiza el archivo de memoria para depuración
+            $writememh("registers.mem", registers);
         end
-        // Actualiza el archivo registers.mem después de cada operación de escritura
-        $writememh("registers.mem", registers);
     end
 
-    // Lectura asíncrona de los registros
+    // Lectura combinacional
     always @(*) begin
         ReadData1 = registers[ReadRegister1];
         ReadData2 = registers[ReadRegister2];
     end
-
-    // Alias para los registros especiales
-    assign V0 = registers[2];
-    assign V1 = registers[3];
 
 endmodule
