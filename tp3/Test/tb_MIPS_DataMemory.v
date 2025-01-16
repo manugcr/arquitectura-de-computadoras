@@ -9,10 +9,13 @@ reg Reset;
 // Salidas para monitoreo
 wire MemWrite;
 wire MemRead;
+wire RegWrite;
 wire [31:0] MemReadData;
 wire [31:0] ALUResult_MEM;
 wire [3:0] ByteSig;
-wire [31:0] RegRTData;
+wire [31:0] RegRTData, WriteRegister_reg, WriteRegister;
+wire [31:0] WriteData;
+
 
 // Instancia del módulo principal MIPS
 MIPS uut (
@@ -27,7 +30,10 @@ assign MemReadData = uut.MEM_Stage.MemReadData;
 assign ALUResult_MEM = uut.MEM_Stage.ALUResult;
 assign ByteSig = uut.MEM_Stage.ByteSig;
 assign RegRTData = uut.MEM_Stage.RegRTData;
-
+assign RegWrite  = uut.ID_Stage.Registers.RegWrite;
+assign WriteData =  uut.ID_Stage.Registers.WriteData;
+assign WriteRegister_reg = uut.ID_Stage.Registers.WriteRegister_reg;
+assign WriteRegister = uut.ID_Stage.Registers.WriteRegister;
 // Generador de reloj
 initial begin
     ClockIn = 0;

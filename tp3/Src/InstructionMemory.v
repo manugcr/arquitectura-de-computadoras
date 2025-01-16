@@ -29,23 +29,36 @@ module InstructionMemory(Address, Instruction );
         add $a0, $a1, $a2 # 000000 00101 00110 00100 00000 100000  -> 0xA62020   -> 10887200, Registro 04h (04d) = 0bh
         */
      
-        /*
+        
           memory[0] = 19546144; //Registro 08h (08d) = 13h
           memory[1] = 39028768; //Registro 11h (17d) = 25h
-          memory[2] = 10887200; //Registro 04h (04d) = 0bh */
+          memory[2] = 10887200; //Registro 04h (04d) = 0bh 
 
         /* CASO B
 
-          sw $t0, 4($s1) =>  sw $8, 0($17) 
+          sw  $s0 , 14($s1) ->   sw 8, 14(10) 
 
           Opcode (6 bits) | Base (5 bits) | Rt (5 bits) | Offset (16 bits)
-            101011            10001             01000      0000 0000 0000 0100 = 2921857028
+            101011            10001             10000     0000 0000 0000 1110 = 2922381326
 
-            La posición de memoria 0x15 (21d) contendrá el valor 0x08 
+
+
+            La posición de memoria 0x18 (24d) contendrá el valor 0x08 
         */
         
-          memory[0] = 2921857028; 
+         // memory[0] = 2922381326; 
 
+          /* CASO C
+
+          lw  $s2 , 16 ($s3) -> 
+          100011   10011  10010  0000 0000 0001 0000 -> 2389835792
+
+
+            Cargar un valor de 32 bits (1 palabra) desde la memoria a un registro.
+        */
+      
+      // memory[0] = 2389835792; 
+      // memory[0] = 10887200;   //Registro 04h (04d) = 0bh */
 
         $writememh("Instruction_memory.mem", memory, 0, 511);
     end

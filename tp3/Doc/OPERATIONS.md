@@ -1,4 +1,4 @@
-### R-Type
+# R-Type
 Las instrucciones del tipo `R` operan exclusivamente con registros. Realizan operaciones aritméticas, lógicas o de control de flujo usando valores almacenados en los registros. No requieren acceder a la memoria ni incluyen direcciones explícitas.
 
 - **SLL (Shift Left Logical)**  
@@ -59,8 +59,33 @@ Ejemplo: `SLTU R1, R2, R3`
 
 ---
 
-### I-Type  
+# I-Type  
+
+MIPS es una máquina de arquitectura **carga-almacenamiento**: para usar un dato almacenado en memoria, primero hay que pasarlo a un registro.
+
+
+
 Las instrucciones del tipo `I` trabajan con un registro y un valor inmediato (constante) o utilizan una dirección base para acceder a la memoria. Son comunes en operaciones aritméticas, lógicas y en el acceso a datos en memoria.
+
+## LOAD
+
+Las operaciones aritméticas se producen sólo
+entre registros en las instrucciones MIPS. Así, MIPS debe incluir instrucciones que
+transfieran datos entre la memoria y los registros. Tales instrucciones son llamadas
+instrucciones de transferencia de datos. Para acceder a una palabra en memoria, la
+instrucción debe proporcionar la dirección de memoria. **La memoria es simplemente
+una gran tabla unidimensional**, y la dirección actúa como índice de esa tabla y
+empieza por 0.
+
+En MIPS, las palabras deben comenzar en direcciones múltiplos de 4. Este
+requisito se llama **restricción de la alineación**, y muchas arquitecturas la tienen.
+
+MIPS usa el extremo mayor (es un Big Endian). 
+El direccionamiento de byte también afecta al índice de la tabla (array).
+Para conseguir la dirección apropiada del byte en el código anterior, el desplazamiento que se añadirá al registro base $s3 debe ser 4 × 8, ó 32, de modo que la
+dirección cargada sea A[8] y no A[8/4]. 
+
+
 
 - **LB (Load Byte)**  
 Carga un byte desde la memoria a un registro, con signo.  
@@ -73,6 +98,8 @@ Ejemplo: `LH R1, 0(R2)`
 - **LW (Load Word)**  
 Carga una palabra (32 bits) desde la memoria a un registro.  
 Ejemplo: `LW R1, 0(R2)`
+
+<p align="center"> <img src="../img/image22.png" alt=""> </p>
 
 - **LWU (Load Word Unsigned)**  
 Carga una palabra desde la memoria a un registro, tratándola como sin signo.  
@@ -97,6 +124,8 @@ Ejemplo: `SH R1, 0(R2)`
 - **SW (Store Word)**  
 Almacena una palabra desde un registro en la memoria.  
 Ejemplo: `SW R1, 0(R2)`
+
+<p align="center"> <img src="../img/image23.png" alt=""> </p>
 
 - **ADDI (Add Immediate)**  
 Suma un valor inmediato a un registro y almacena el resultado en otro registro.  

@@ -28,6 +28,11 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
         for (i = 0; i < 13600; i = i + 1) begin
             memory[i] = 0;
         end
+            
+           memory[5] = 32'hAAAAAAAA;   //En la simulación, la dirección de memoria se está interpretando como 00000005. 
+          //Esto corresponde a la posición memory[5] debido al acceso truncado Address[31:2]
+     
+
 
         // Escribir los valores iniciales en un archivo para referencia
         $writememh("Data_memory.mem", memory);
@@ -46,6 +51,18 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
             if (ByteSig == 2'b00) begin
                 $display("Condición ByteSig == 2'b00 cumplida");
                 memory[Address[31:2]] <= WriteData;  
+
+        /*   SUPONIENDO: instruccion  sw  $s0 , 14($s1)  ->   sw 8, 14(10)           
+                ____                         
+            00  |    | 0       Address: 18H = 24d = 10d + 14d (offset) = 000110   00 (Descartado)
+            04  |    | 1       
+            08  |    | 2
+            0C  |    | 3
+            10  |    | 4
+            14  |    | 5
+            18  | 8  | 6
+                ----
+    */
                 
             end
 
@@ -71,14 +88,16 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
         end
     end
 
-    // Bloque siempre para lectura de memoria (combinacional)
-    always @ (*) begin
+
+    always @ (posedge Clock) begin
         ReadData <= 32'b0; // Inicializar dato leído en 0 por defecto
         
         if (MemRead == 1'b1) begin // Verificar señal de lectura activa
             // Lectura de palabra completa (lw)
-            if (ByteSig == 2'b00) 
+            if (ByteSig == 2'b00) begin
                 ReadData <= memory[Address[31:2]];
+                $display("LOAD en memoria: Direccion = %h, ReadData = %h, ByteSig = %b", Address[31:2], ReadData, ByteSig);
+            end
             
             // Lectura de media palabra (lh)
             else if (ByteSig == 2'b01) begin
@@ -100,9 +119,9 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
                     ReadData <= {{24{memory[Address[31:2]][31]}}, memory[Address[31:2]][31:24]}; // Signo extendido, byte superior
             end
 
-             else begin
+            /* else begin
                 ReadData <= 32'b0;
-            end
+            end*/
 
         end
     end

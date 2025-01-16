@@ -9,7 +9,7 @@ Este documento detalla todos los registros del MIPS, incluyendo su nombre, prop√
 
 ## Tabla de registros
 
-![alt text](image.png)
+<p align="center"> <img src="../img/image21.png" alt=""> </p>
 
 ### Registros de Prop√≥sito General (GPR)
 
