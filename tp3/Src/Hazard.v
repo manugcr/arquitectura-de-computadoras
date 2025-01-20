@@ -46,21 +46,30 @@ module Hazard(
         // Caso 1: Peligro de datos de carga (Load-Use Hazard)
         // Ocurre cuando una instrucción `lw` en la etapa ID/EX tiene como destino
         // un registro que se está utilizando en la etapa IF/ID.
-        if (MemRead_IDEX && 
+      /*  if (MemRead_IDEX && 
            ((RegDst_IDEX == 2'b00 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID))) || 
             (RegDst_IDEX == 2'b01 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID))))) begin
+
+                $display("PROBLEMAAAAAAAAAAAAAAAAAAAAAAAA! con valores:");
+                $display("MemRead_IDEX = %b", MemRead_IDEX);
+                $display("RegDst_IDEX = %b", RegDst_IDEX);
+                $display("RegRT_IDEX = %b, RegRS_IFID = %b, RegRT_IFID = %b", RegRT_IDEX, RegRS_IFID, RegRT_IFID);
+                $display("RegRD_IDEX = %b", RegRD_IDEX);
+                $display("Condicion 1: %b", (RegDst_IDEX == 2'b00 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID)))); //ACA ESTA
+                $display("Condicion 2: %b", (RegDst_IDEX == 2'b01 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID))));
+        
             
             PCWrite   <= 1'b0;  // Detener la actualización del PC
             IFIDWrite <= 1'b0;  // Detener la actualización del registro IF/ID
             ControlStall <= 1'b1;
         end 
-        else begin
+        else begin */
             // Caso por defecto: No hay peligro detectado.
             // Permitir que el pipeline avance normalmente.
             PCWrite   <= 1'b1;  // Permitir la actualización del PC
             IFIDWrite <= 1'b1;  // Permitir la actualización del registro IF/ID
             ControlStall <= 1'b0;
-        end
+        //end
 
     end
 

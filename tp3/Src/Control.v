@@ -31,25 +31,24 @@ module Control(Instruction,
     output reg [1:0] MemToReg;
     
     
-    localparam [5:0] OP_ZERO        = 6'b000000,   // Zero OpCode
+    localparam [5:0] OP_R           = 6'b000000,   // 
+                     OP_LW          = 6'b100011,   // LW
+                     OP_SW          = 6'b101011,   // SW
                      OP_ADDI        = 6'b001000,   // ADDI
                      OP_ADDIU       = 6'b001001,   // ADDIU
-                     OP_SLTI        = 6'b001010,   // SLTI
-                     OP_SLTIU       = 6'b001011,   // SLTUI
-                     OP_ANDI        = 6'b001100,   // ANDI
+                     LHU_TYPE       = 6'b100101,  //AGREGAR
+                     LBU_TYPE       = 6'b100100,  //AGREGAR
+                     LWU_TYPE       = 6'b100111,  //AGREGAR
+                     OP_SB          = 6'b101000,   // SB
+                     OP_SH          = 6'b101001,   // SH
                      OP_ORI         = 6'b001101,   // ORI
                      OP_XORI        = 6'b001110,   // XORI
                      OP_LUI         = 6'b001111,   // LUI
-                     OP_MADD        = 6'b011100,   // MADD, MSUB, MUL
-                     OP_SEBSEH      = 6'b011111,   // SEB, SEH
                      OP_LB          = 6'b100000,   // LB
                      OP_LH          = 6'b100001,   // LH
-                     OP_LW          = 6'b100011,   // LW
-                     OP_SB          = 6'b101000,   // SB
-                     OP_SH          = 6'b101001,   // SH
-                     OP_SW          = 6'b101011,   // SW
-                     OP_EXI         = 6'b011001,   // EH, IH, DH, EB, IB
-                     OP_LA          = 6'b011101;   // LA
+                     OP_ANDI        = 6'b001100,   // ANDI
+                     OP_SLTI        = 6'b001010,   // SLTI
+                     OP_SLTIU       = 6'b001011;   // SLTUI
     
     localparam [5:0] FUNC_ROTR      =  6'b000010,  // ROTR
                      FUNC_ROTRV     =  6'b000110,  // ROTRV
@@ -58,24 +57,24 @@ module Control(Instruction,
                      FUNC_SRLV      =  6'b000110,  // SRLV 
                      FUNC_SRAV      =  6'b000111;  // SRAV 
 
-    localparam [5:0] ALUOP_ZERO     = 6'd00,       // ZERO
-                     ALUOP_ADDIU    = 6'd01,       // ADDIU
-                     ALUOP_ADDI     = 6'd02,       // ADDI
-                     ALUOP_MUL      = 6'd03,       // MUL, MADD, MSUB
-                     ALUOP_LUI      = 6'd04,       // LUI
-                     ALUOP_ANDI     = 6'd12,       // ANDI
-                     ALUOP_ORI      = 6'd13,       // ORI
-                     ALUOP_XORI     = 6'd14,       // XORI
-                     ALUOP_SEB      = 6'd15,       // SEB
-                     ALUOP_SLTI     = 6'd16,       // SLTI
-                     ALUOP_SLTIU    = 6'd17,       // SLTIU
-                     ALUOP_SRL      = 6'd18,       // SRL
-                     ALUOP_ROTR     = 6'd19,       // ROTR
-                     ALUOP_SRLV     = 6'd20,       // SRLV
-                     ALUOP_SEH      = 6'd21,       // SEH
-                     ALUOP_ROTRV    = 6'd22,       // ROTRV
-                     ALUOP_EXI      = 6'd23,       // EH, IH, DH, EB, IB
-                     ALUOP_LA       = 6'd24;       // LA
+    localparam [5:0] ALUOP_ZERO     = 6'b000000, // ZERO
+                     ALUOP_ADDIU    = 6'b000001, // ADDIU
+                     ALUOP_ADDI     = 6'b000010, // ADDI
+                     ALUOP_MUL      = 6'b000011, // MUL, MADD, MSUB
+                     ALUOP_LUI      = 6'b000100, // LUI
+                     ALUOP_ANDI     = 6'b001100, // ANDI
+                     ALUOP_ORI      = 6'b001101, // ORI
+                     ALUOP_XORI     = 6'b001110, // XORI
+                     ALUOP_SEB      = 6'b001111, // SEB
+                     ALUOP_SLTI     = 6'b010000, // SLTI
+                     ALUOP_SLTIU    = 6'b010001, // SLTIU
+                     ALUOP_SRL      = 6'b010010, // SRL
+                     ALUOP_ROTR     = 6'b010011, // ROTR
+                     ALUOP_SRLV     = 6'b010100, // SRLV
+                     ALUOP_SEH      = 6'b010101, // SEH
+                     ALUOP_ROTRV    = 6'b010110, // ROTRV
+                     ALUOP_EXI      = 6'b010111, // EH, IH, DH, EB, IB
+                     ALUOP_LA       = 6'b011000; // LA
              
       
 
@@ -132,7 +131,7 @@ module Control(Instruction,
                 // Arithmetic  
                 //------------
             
-                OP_ZERO: begin
+                OP_R: begin
                
                     ALUBMux     <= 1'b0;
                     MemWrite    <= 1'b0;
@@ -184,18 +183,6 @@ module Control(Instruction,
                     LaMux       <= 1'b0;
                 end
                 
-                //mul, madd, msub
-                OP_MADD: begin
-                    ALUBMux     <= 1'b0;
-                    RegDst      <= 2'b01;
-                    ALUOp       <= ALUOP_MUL;
-                    ByteSig     <= 2'b00;
-                    MemWrite    <= 1'b0;
-                    MemRead     <= 1'b0;
-                    RegWrite    <= 1'b1;
-                    MemToReg    <= 2'b10; 
-                    LaMux       <= 1'b0;    
-                end 
                 
                 //------------
                 // Data
@@ -336,22 +323,7 @@ module Control(Instruction,
                     LaMux       <= 1'b0;
                 end
                 
-                //seh, seb
-                OP_SEBSEH: begin
-                    ALUBMux     <= 1'b0;
-                    RegDst      <= 2'b01;
-                    ByteSig     <= 2'b00;
-                    MemWrite    <= 1'b0;
-                    MemRead     <= 1'b0;
-                    RegWrite    <= 1'b1;
-                    MemToReg    <= 2'b10;
-                    LaMux       <= 1'b0;
-                   
-                    case (Shamt)
-                        5'b10000: ALUOp <= ALUOP_SEB; //seb
-                        5'b11000: ALUOp <= ALUOP_SEH; //seh
-                    endcase
-                end
+             
                 
                 //slti
                 OP_SLTI: begin  
@@ -379,31 +351,7 @@ module Control(Instruction,
                     LaMux       <= 1'b0;
                 end
                 
-                // EH, IH, DH, EB, IB, ABS
-                OP_EXI: begin
-                    ALUBMux     <= 1'b1;
-                    RegDst      <= 2'b00;
-                    ALUOp       <= ALUOP_EXI;
-                    ByteSig     <= 2'b00;
-                    MemWrite    <= 1'b0;
-                    MemRead     <= 1'b0;
-                    RegWrite    <= 1'b1;
-                    MemToReg    <= 2'b10;
-                    LaMux       <= 1'b0;
-                end
-
-                // LA
-                OP_LA: begin
-                    ALUBMux     <= 1'b1;
-                    RegDst      <= 2'b00;
-                    ALUOp       <= ALUOP_LA;
-                    ByteSig     <= 2'b00;
-                    MemWrite    <= 1'b0;
-                    MemRead     <= 1'b0;
-                    RegWrite    <= 1'b1;
-                    MemToReg    <= 2'b10;
-                    LaMux       <= 1'b1;
-                end
+            
 
                 default: begin
                     ALUBMux     <= 1'b0;

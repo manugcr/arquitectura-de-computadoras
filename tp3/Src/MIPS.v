@@ -114,8 +114,8 @@ module MIPS(ClockIn, Reset);
                        .ForwardData_EXMEM(ALUResult_MEM),     
                     //   .PCAdder(PCAdder_ID),                //////////////////////
                        .ControlSignal_Out(ControlSignal_ID), 
-                       .ReadData1(ReadData1_ID), 
-                       .ReadData2(ReadData2_ID), 
+                       .ReadData1_out(ReadData1_ID), 
+                       .ReadData2_out(ReadData2_ID), 
                        .ForwardMuxASel(ForwardMuxASel_ID),
                        .ForwardMuxBSel(ForwardMuxBSel_ID),  
                        .ImmediateValue(SignExtend_ID), 

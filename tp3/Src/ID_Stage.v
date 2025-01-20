@@ -14,9 +14,9 @@ module ID_Stage(
     ForwardMuxASel,             // Selección para el multiplexor de reenvío A
     ForwardMuxBSel,             // Selección para el multiplexor de reenvío B
     PCWrite, IFIDWrite,
-    RegWrite_IDEX,
+    RegWrite_IDEX, 
+    ReadData1_out,ReadData2_out,
     ControlSignal_Out,          // Señales de control de salida
-    ReadData1, ReadData2,       // Datos leídos de los registros
     ImmediateValue             // Valor inmediato extendido
     );             
 
@@ -61,7 +61,9 @@ module ID_Stage(
     output wire [31:0] ControlSignal_Out;
 
     // Datos de los registros
-    output wire [31:0] ReadData1, ReadData2;
+    output wire [31:0] ReadData1_out, ReadData2_out;
+
+    
 
     // Valor inmediato extendido
     output wire [31:0] ImmediateValue;
@@ -82,15 +84,14 @@ module ID_Stage(
     wire [1:0] ByteSig_Control;  
 
     // Cable para valor inmediato desplazado
-    wire [31:0] ImmediateShift;
+    wire [31:0] ImmediateShift, ReadData1, ReadData2;
 
     // Control de ejecución
     wire ALUBMux_Control;
     wire [1:0] RegDst_Control;
     wire [5:0] ALUOp_Control;
 
-        // Forwarding Mux
-    wire [31:0] ReadData1Forward, ReadData2Forward;
+        
 
     // Control de escritura posterior
     wire RegWrite_Control;
@@ -161,6 +162,16 @@ module ID_Stage(
                                        .inB(32'd0), 
                                        .sel(ControlStall));
 
+    Mux2to1            ForwardMuxA_ID(.out(ReadData1_out), 
+                                           .inA(ReadData1),
+                                           .inB(ForwardData_EXMEM), 
+                                           .sel(ForwardMuxASel));
+                                    
+    Mux2to1            ForwardMuxB_ID(.out(ReadData2_out), 
+                                           .inA(ReadData2),
+                                           .inB(ForwardData_EXMEM), 
+                                           .sel(ForwardMuxBSel));  
+
 
 
     // Multiplexor para dirección de carga inmediata
@@ -170,5 +181,8 @@ module ID_Stage(
         .inB({16'd0, Instruction[15:0]}),
         .sel(LaMux)
     );
+
+
+
 
 endmodule

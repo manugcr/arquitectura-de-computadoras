@@ -53,14 +53,27 @@ module Forward(
         //-----------------
         
         // ForwardMuxA: Reenvío de datos desde EX/MEM a RS en la etapa IF/ID
-        if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRS_IFID))      
+        if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRS_IFID))   begin   
             ForwardMuxA_ID <= 1'd1; // Reenvío habilitado
+
+            /*
+                RegWrite_EXMEM = 1 ->  la instrucción que se encuentra en la etapa EX/MEM escribe un valor en un registro
+                RegDst_EXMEM != 0   ->  Registro en el que se va a guardar un resultado 
+                RegRS_IFID          -> suponiendo ADD $t1, $t2, $t3,  t2 es RS
+            */
+        end
         else 
             ForwardMuxA_ID <= 1'd0; // Sin reenvío
         
         // ForwardMuxB: Reenvío de datos desde EX/MEM a RT en la etapa IF/ID
-        if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRT_IFID))      
+        if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRT_IFID))    begin   
             ForwardMuxB_ID <= 1'd1; // Reenvío habilitado
+             /*
+                RegWrite_EXMEM = 1 ->  la instrucción que se encuentra en la etapa EX/MEM escribe un valor en un registro
+                RegDst_EXMEM != 0   ->  Registro en el que se va a guardar un resultado 
+                RegRT_IFID          -> suponiendo ADD $t1, $t2, $t3,  t3 es RT
+            */
+        end
         else 
             ForwardMuxB_ID <= 1'd0; // Sin reenvío
         

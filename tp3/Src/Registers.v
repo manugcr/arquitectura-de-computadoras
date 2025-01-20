@@ -17,20 +17,18 @@ module Registers(
     integer i;
     initial begin
         // Inicializa todos los registros a 0
-        for (i = 0; i < 32; i = i + 1) begin
+       /* for (i = 0; i < 32; i = i + 1) begin
             registers[i] = i;
         end
-        // Inicializa el puntero de pila (registro 29)
+        // Inicializa el puntero de pila (registro 29)*/
 
-     /*   registers[4] = 4;
-        registers[5] = 5;
-        registers[6] = 6;
+        
 
-        registers[17] = 10;
-
-        registers[16] = 8;
-
-        registers[19] = 4; //load*/
+        registers[9] = 10;  // ah
+        registers[10] = 20; // 14h
+        registers[11] = 30; // 1eh
+        registers[12] = 40; // 28h*/
+        
 
 
         // Inicializa el puntero de pila (registro 29)
