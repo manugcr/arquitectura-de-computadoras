@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module InstructionMemory(Address, Instruction );
+module InstructionMemory(Address, Instruction ,stall );
 
     // Entradas
     input [31:0] Address; // Dirección de entrada utilizada para acceder a la memoria
@@ -13,6 +13,8 @@ module InstructionMemory(Address, Instruction );
 
     // Variable para el bucle
     integer i;
+
+    input  stall;
 
     // Bloque inicial para cargar las instrucciones desde un archivo
     initial begin
@@ -29,9 +31,11 @@ module InstructionMemory(Address, Instruction );
         add $a0, $a1, $a2 # 000000 00101 00110 00100 00000 100000  -> 0xA62020   -> 10887200, Registro 04h (04d) = 0bh
 
         CODIGO CASO A:
+            
+              memory[2] = 39028768; //Registro 11h (17d) = 25h
               memory[0] = 19546144; //Registro 08h (08d) = 13h
-              memory[1] = 39028768; //Registro 11h (17d) = 25h
-              memory[2] = 10887200; //Registro 04h (04d) = 0bh 
+              memory[1] = 10887200; //Registro 04h (04d) = 0bh //*/
+              
 
         /* CASO B: STORE
 
@@ -41,7 +45,7 @@ module InstructionMemory(Address, Instruction );
             101011            10001             10000     0000 0000 0000 1110 = 2922381326
 
             CODIGO CASO B:
-                memory[0] = 2922381326; */
+                memory[0] = 2922381326; 
 
 
         /* CASO C: LOAD
@@ -54,21 +58,48 @@ module InstructionMemory(Address, Instruction );
 
             CODIGO CASO C:
                 memory[0] = 2389835792;
-        */
+        
 
 
         /*  CASO D: RIESGO DE DATOS - LDE
 
-        ADD $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000 -> 0X14B4820
-        ADD $t4, $t1, $t2 -> 000000 01001 01010 01100 00000 100000 -> 0X12A6020
+        add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+        add $a0, $a1, $a2 -> 000000 00101 00110 00100 00000 100000  -> 0x00A62020 -> 10887200
+        add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+        add $t4, $t1, $t2 -> 000000 01001 01010 01100 00000 100000  -> 0X012A6020 -> 19554336 
+        add $t0, $t1, $t2 -> 000000 01001 01010 01000 00000 100000  -> 0x012A4020 -> 19546144
+        add $t0, $t1, $t2 -> 000000 01001 01010 01000 00000 100000  -> 0x012A4020 -> 19546144
+        add $t0, $t1, $t2 -> 000000 01001 01010 01000 00000 100000  -> 0x012A4020 -> 19546144
+        add $t0, $t1, $t2 -> 000000 01001 01010 01000 00000 100000  -> 0x012A4020 -> 19546144
+        add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+        add $t2, $t0, $t3 -> 000000 01000 01011 01010 00000 100000  -> 0x010B5020 -> 17518624
+        add $t4, $t1, $t2 -> 000000 01001 01010 01100 00000 100000  -> 0X012A6020 -> 19554336  */
 
 
-        */
+
         
-          
-          memory[0] = 21710880; // t1 = 20 + 30 = 50d = 32h
-          memory[1] = 19554336; // t4 = 50 + 20 = 70d = 46h*/
-   
+          memory[0] = 39028768; //Registro 11h (17d) = 25h
+          memory[1] = 10887200; //Registro 04h (04d) = 0bh 
+          memory[2] = 21710880; // t1 = 20 + 30 = 50d = 32h
+          memory[3] = 19554336; // t4 = 50 + 20 = 70d = 46h
+          memory[4] = 19546144; //Registro 11h (17d) = 25h
+          memory[5] = 19546144; //Registro 08h (08d) = 13h
+          memory[6] = 19546144; //Registro 08h (08d) = 13h //////////*/
+          memory[7] = 19546144;
+          memory[8] = 21710880;
+          memory[9] = 17518624;
+          memory[10] = 17518624;
+          memory[11] = 19554336;
+
+
+        
+        /*  memory[0] = 21710880; // t1 = 20 + 30 = 50d = 32h
+          //memory[1] = 19554336; // t4 = 50 + 20 = 70d = 46h
+          memory[1] = 19546144; // t0 = 50 + 20
+          memory[2] = 19546144; // t0 = 50 + 20  ERRORRRR
+          memory[3] = 19546144; // t0 = 50 + 20
+          memory[4] = 19546144; // t0 = 50 + 20*/
+       
        
 
    
@@ -82,9 +113,14 @@ module InstructionMemory(Address, Instruction );
     end
 
     // Bloque always para leer la instrucción y procesar las instrucciones de salto
-    always @ * begin
-        // Lee la instrucción desde la memoria usando la dirección proporcionada
-        Instruction = memory[Address[11:2]]; // Se ignoran los bits menos significativos
-    end 
+    always @ (*) begin
+        if (stall == 1'b0) begin
+            // Si stall es 0, leer la instrucción desde la memoria
+            Instruction = memory[Address[11:2]]; // Ignora los 2 bits menos significativos de la dirección
+        end else begin
+            // Si stall es 1, mantener la instrucción actual
+            Instruction = Instruction; // No cambiar la instrucción, mantener la actual
+        end
+    end
 
 endmodule

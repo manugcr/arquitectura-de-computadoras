@@ -13,6 +13,7 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
     input        RegWrite;                // Señal de escritura en registro
     input [5:0]  ALUControl;              // Bits de control para las operaciones de la ALU
     input [4:0]  Shamt;                   // Cantidad de desplazamiento
+
     input [31:0] A, B;                    // Entradas de datos A y B
     output reg [31:0] ALUResult;          // Resultado de la ALU
     output reg Zero;                      // Bandera que indica si el resultado es cero
@@ -79,8 +80,9 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
     
         Zero       <= 0;
         
-    
         case (ALUControl)
+
+         
         
             //------------
             // Arithmetic
@@ -172,8 +174,11 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
             end
           
             LA : ALUResult <= {8'H0, B[23:00]};
-          
+
+         
+
         endcase
+
         
         if (RegWriteClear == 1) begin
             RegWrite_Out  <= 1'b0;

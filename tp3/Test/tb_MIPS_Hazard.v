@@ -8,10 +8,10 @@ reg Reset;
 
 // Salidas para monitoreo
 
-wire RegWrite, RegWriteEXMEM,RegWriteEXSTAGE ;
-wire [31:0] ALUResult_MEM_IN,A,B,ALUResultALU;
-wire [31:0] RegRTData, WriteRegister_reg, WriteRegister, ReadData2_out,ReadData1_out;
-wire [31:0] WriteData;
+wire RegWrite, RegWriteEXMEM ;
+wire [31:0] A,B,ALUResultALU;
+wire [31:0] RegRTData, WriteRegister, ReadData2_out,ReadData1_out;
+wire [31:0] WriteData, Instruction,SEL_ForwardMuxASel,inC_MemToReg_WB,inA_ReadData1EX,inB_ALUResult_MEM;
 
 
 // Instancia del módulo principal MIPS
@@ -23,19 +23,23 @@ MIPS uut (
 // Rutas para acceder a las señales de la etapa MEM
 
 
-assign ALUResult_MEM_IN = uut.MEM_Stage.ALUResult;
+
 assign RegRTData = uut.MEM_Stage.RegRTData;
 assign RegWriteEXMEM = uut.EXMEM.Out_ControlSignal[2];
-assign RegWriteEXSTAGE = uut.EX_Stage.ALU.RegWrite_Out;
 assign A = uut.EX_Stage.ALU.A;
 assign B = uut.EX_Stage.ALU.B;
+assign Instruction = uut.ID_Stage.In_Instruction;
 assign ALUResultALU = uut.EX_Stage.ALU.ALUResult;
 assign RegWrite  = uut.ID_Stage.Registers.RegWrite;
 assign ReadData1_out  = uut.ID_Stage.ReadData1_out;
 assign ReadData2_out  = uut.ID_Stage.ReadData2_out;
-assign WriteData =  uut.ID_Stage.Registers.WriteData;
-assign WriteRegister_reg = uut.ID_Stage.Registers.WriteRegister_reg;
+assign WriteData     =  uut.ID_Stage.Registers.WriteData;
 assign WriteRegister = uut.ID_Stage.Registers.WriteRegister;
+assign SEL_ForwardMuxASel = uut.EX_Stage.ForwardMuxASel;
+assign inC_MemToReg_WB = uut.EX_Stage.MemToReg_WB;
+assign inA_ReadData1EX = uut.EX_Stage.ReadData1;
+assign inB_ALUResult_MEM = uut.EX_Stage.ALUResult_MEM;
+
 
 
 

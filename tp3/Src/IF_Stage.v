@@ -4,7 +4,7 @@
 module IF_Stage(
     Clock, Reset,               // Señales del sistema
     PCWrite,                   // Control de escritura del PC (señal de control de riesgos)
-    Instruction, PCAdder_Out, PCResult // Salidas del módulo
+    Instruction, PCAdder_Out,  PCResult // Salidas del módulo
     );             
           
     // Entradas del sistema
@@ -24,12 +24,13 @@ module IF_Stage(
     wire [31:0] TargetOffset;      // Desplazamiento objetivo (sin usar en este módulo)
     wire [31:0] TargetAddress;     // Dirección objetivo (sin usar en este módulo)
     wire [31:0] ShiftedOffset;     // Desplazamiento desplazado (sin usar en este módulo)
-    
+    wire stall;
     // Instancia del módulo PC (Program Counter)
     // Mantiene la dirección actual de la instrucción a ejecutar
     PC PC(
         .PC_In(PCAdder_Out),    // Dirección de la siguiente instrucción (PC + 4)
         .PCResult(PCResult),    // Dirección actual del PC
+        .stall(stall),
         .Enable(PCWrite),          // Habilitación constante a 1 lógico
         .Reset(Reset),          // Señal de reinicio
         .Clock(Clock)           // Señal de reloj
@@ -37,9 +38,10 @@ module IF_Stage(
                            
     // Instancia del módulo InstructionMemory
     // Obtiene la instrucción correspondiente a la dirección actual del PC
-    InstructionMemory InstructionMemory1(
+    InstructionMemory InstructionMemory(
         .Address(PCResult),     // Dirección de memoria (PC actual)
-        .Instruction(Instruction) // Instrucción obtenida de la memoria
+        .Instruction(Instruction), // Instrucción obtenida de la memoria
+        .stall(stall)
     );
     
     // Instancia del módulo Adder
@@ -47,7 +49,8 @@ module IF_Stage(
     Adder PCAdder(
         .A(PCResult),           // Dirección actual del PC
         .B(32'd4),              // Constante 4 (tamaño de instrucción en bytes)
-        .AddResult(PCAdder_Out) // Resultado del sumador (PC + 4)
+        .AddResult(PCAdder_Out), // Resultado del sumador (PC + 4)
+        .stall(stall)
     );
     
 endmodule

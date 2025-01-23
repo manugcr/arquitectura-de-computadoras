@@ -7,7 +7,7 @@ module ID_Stage(
     RegWrite , MemRead_IDEX ,     // Señales de control
     RegisterDst_EXMEM,
     WriteRegister, WriteData,   // Datos para escritura
-    Instruction,                // Instrucción actual
+    In_Instruction,                // Instrucción actual
     ForwardData_EXMEM,          // Datos reenviados desde la etapa EX/MEM
     RegRT_IDEX, RegRD_IDEX, RegDst_IDEX,  // Registros y control de destino
     RegWrite_EXMEM,       // Señales de escritura
@@ -17,6 +17,7 @@ module ID_Stage(
     RegWrite_IDEX, 
     ReadData1_out,ReadData2_out,
     ControlSignal_Out,          // Señales de control de salida
+    Out_Instruction,
     ImmediateValue             // Valor inmediato extendido
     );             
 
@@ -44,7 +45,7 @@ module ID_Stage(
     input [1:0] RegDst_IDEX;
 
     // Datos de entrada
-    input [31:0] Instruction;
+    input [31:0] In_Instruction;
     input [4:0] RegRT_IDEX, RegRD_IDEX;
 
     // Datos para escritura
@@ -59,6 +60,8 @@ module ID_Stage(
 
     // Señales de control
     output wire [31:0] ControlSignal_Out;
+
+    output wire [31:0] Out_Instruction;
 
     // Datos de los registros
     output wire [31:0] ReadData1_out, ReadData2_out;
@@ -106,10 +109,12 @@ module ID_Stage(
     // Componentes de Hardware
     //--------------------------------
 
+    assign Out_Instruction = In_Instruction;
+
     // Unidad de detección de peligros
     Hazard HazardDetection(
-        .RegRS_IFID(Instruction[25:21]),
-        .RegRT_IFID(Instruction[20:16]),
+        .RegRS_IFID(In_Instruction[25:21]),
+        .RegRT_IFID(In_Instruction[20:16]),
         .RegRT_IDEX(RegRT_IDEX),
         .RegRD_IDEX(RegRD_IDEX),
         .RegWrite_IDEX(RegWrite_IDEX), //////////////////////////////
@@ -123,7 +128,7 @@ module ID_Stage(
     );
 
     // Módulo de control
-    Control              Control(.Instruction(Instruction),
+    Control              Control(.Instruction(In_Instruction),
                                     .ALUBMux(ALUBMux_Control), .RegDst(RegDst_Control), 
                                     .ALUOp(ALUOp_Control), .MemWrite(MemWrite_Control), 
                                     .MemRead(MemRead_Control), .ByteSig(ByteSig_Control),
@@ -133,8 +138,8 @@ module ID_Stage(
 
     // Bancos de registros
     Registers Registers(
-        .ReadRegister1(Instruction[25:21]), // rs
-        .ReadRegister2(Instruction[20:16]), // rt 
+        .ReadRegister1(In_Instruction[25:21]), // rs
+        .ReadRegister2(In_Instruction[20:16]), // rt 
         .WriteRegister(WriteRegister),  // Registro de destino para escritura
         .WriteData(WriteData), 
         .RegWrite(RegWrite), 
@@ -145,7 +150,7 @@ module ID_Stage(
 
     // Extensión de signo para valores inmediatos
     SignExtension ImmSignExtend(
-        .in(Instruction[15:0]), 
+        .in(In_Instruction[15:0]), 
         .out(SignExtend_Out)
     );
 
@@ -178,7 +183,7 @@ module ID_Stage(
     Mux2to1 LoadAddressMux(
         .out(ImmediateValue),
         .inA(SignExtend_Out),
-        .inB({16'd0, Instruction[15:0]}),
+        .inB({16'd0, In_Instruction[15:0]}),
         .sel(LaMux)
     );
 

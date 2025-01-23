@@ -13,7 +13,7 @@ wire RegWrite, RegWriteEXMEM,RegWriteEXSTAGE ;
 wire [31:0] MemReadData;
 wire [31:0] ALUResult_MEM;
 wire [3:0] ByteSig;
-wire [31:0] RegRTData, WriteRegister_reg, WriteRegister;
+wire [31:0] RegRTData, WriteRegister;
 wire [31:0] WriteData;
 
 
@@ -34,7 +34,6 @@ assign RegWriteEXMEM = uut.EXMEM.Out_ControlSignal[2];
 assign RegWriteEXSTAGE = uut.EX_Stage.ALU.RegWrite_Out;
 assign RegWrite  = uut.ID_Stage.Registers.RegWrite;
 assign WriteData =  uut.ID_Stage.Registers.WriteData;
-assign WriteRegister_reg = uut.ID_Stage.Registers.WriteRegister_reg;
 assign WriteRegister = uut.ID_Stage.Registers.WriteRegister;
 
 
