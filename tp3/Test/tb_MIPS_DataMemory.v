@@ -7,14 +7,14 @@ reg ClockIn;
 reg Reset;
 
 // Salidas para monitoreo
-wire MemWrite;
-wire MemRead;
-wire RegWrite, RegWriteEXMEM,RegWriteEXSTAGE ;
-wire [31:0] MemReadData;
-wire [31:0] ALUResult_MEM;
+wire MEM_MemWrite;
+wire MEM_MemRead;
+wire ID_RegWrite ;
+wire [31:0] MEM_MemReadData, WB_MemToReg;
+wire [31:0] MEM_Address,MEM_WriteData;
 wire [3:0] ByteSig;
-wire [31:0] RegRTData, WriteRegister;
-wire [31:0] WriteData;
+wire [31:0] RegRTData, ID_WriteRegister;
+wire [31:0] ID_WriteData;
 
 
 // Instancia del módulo principal MIPS
@@ -24,17 +24,21 @@ MIPS uut (
 );
 
 // Rutas para acceder a las señales de la etapa MEM
-assign MemWrite = uut.MEM_Stage.MemWrite;
-assign MemRead = uut.MEM_Stage.MemRead;
-assign MemReadData = uut.MEM_Stage.MemReadData;
-assign ALUResult_MEM = uut.MEM_Stage.ALUResult;
+assign MEM_MemWrite = uut.MEM_Stage.MemWrite;
 assign ByteSig = uut.MEM_Stage.ByteSig;
-assign RegRTData = uut.MEM_Stage.RegRTData;
-assign RegWriteEXMEM = uut.EXMEM.Out_ControlSignal[2];
-assign RegWriteEXSTAGE = uut.EX_Stage.ALU.RegWrite_Out;
-assign RegWrite  = uut.ID_Stage.Registers.RegWrite;
-assign WriteData =  uut.ID_Stage.Registers.WriteData;
-assign WriteRegister = uut.ID_Stage.Registers.WriteRegister;
+assign ID_RegWrite  = uut.ID_Stage.Registers.RegWrite;
+
+
+
+assign MEM_MemRead = uut.MEM_Stage.MemRead;
+assign MEM_MemReadData = uut.MEM_Stage.MemReadData;
+assign MEM_Address = uut.MEM_Stage.ALUResult;
+assign MEM_WriteData = uut.MEM_Stage.RegRTData;
+
+assign WB_MemToReg = uut.WB_Stage.MemToReg_Out;
+assign ID_WriteRegister = uut.ID_Stage.Registers.WriteRegister;
+assign ID_WriteData =  uut.ID_Stage.Registers.WriteData;
+
 
 
 // Generador de reloj
@@ -56,16 +60,16 @@ initial begin
     $display("Iniciando pruebas en la etapa MEM");
 
     // Monitorear escritura en memoria
-    wait(MemWrite);
-    #1 $display("[Escritura] MemWrite = %b, ALUResult = %h, RegRTData = %h", MemWrite, ALUResult_MEM, RegRTData);
+    wait(MEM_MemWrite);
+   // #1 $display("[Escritura] MEM_MemWrite = %b, ALUResult = %h, RegRTData = %h", MEM_MemWrite, Address, RegRTData);
 
     // Monitorear lectura de memoria
-    wait(MemRead);
-    #1 $display("[Lectura] MemRead = %b, ALUResult = %h, MemReadData = %h", MemRead, ALUResult_MEM, MemReadData);
+    wait(MEM_MemRead);
+   // #1 $display("[Lectura] MemRead = %b, ALUResult = %h, MemReadData = %h", MemRead, Address, MemReadData);
 
     // Monitorear ByteSig
     #20;
-    $display("[ByteSig] ByteSig = %h", ByteSig);
+    //$display("[ByteSig] ByteSig = %h", ByteSig);
 
     // Finalizar la simulación
     #50;

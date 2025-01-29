@@ -1,5 +1,19 @@
 `timescale 1ns / 1ps
 
+/*
+        Si se cumple la condición: Mem_Read_EX && ((rt_EX == rs_ID)||(rt_EX == rt_ID))) entonces
+        se debe bloquear el pipeline por un ciclo!!!
+
+        Mem_Read_EX: La primera parte de la condición comprueba si la instrucción anterior es una carga (load), ya que
+        es la única instrucción que lee de memoria.
+        
+        ((rt_EX == rs_ID)||(rt_EX == rt_ID)): Verifican si el registro destino (rt) de
+        la carga en la etapa EX coincide con cualquiera de los dos registros fuente de la instrucción actual en
+        ID. Si la condición se cumple, la instrucción actual se bloquea por un ciclo.
+
+*/
+
+
 
 module Hazard(
     // --- Entradas ---
@@ -46,7 +60,7 @@ module Hazard(
         // Caso 1: Peligro de datos de carga (Load-Use Hazard)
         // Ocurre cuando una instrucción `lw` en la etapa ID/EX tiene como destino
         // un registro que se está utilizando en la etapa IF/ID.
-      /*  if (MemRead_IDEX && 
+        if (MemRead_IDEX && 
            ((RegDst_IDEX == 2'b00 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID))) || 
             (RegDst_IDEX == 2'b01 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID))))) begin
 
@@ -63,13 +77,13 @@ module Hazard(
             IFIDWrite <= 1'b0;  // Detener la actualización del registro IF/ID
             ControlStall <= 1'b1;
         end 
-        else begin */
+        else begin 
             // Caso por defecto: No hay peligro detectado.
             // Permitir que el pipeline avance normalmente.
             PCWrite   <= 1'b1;  // Permitir la actualización del PC
             IFIDWrite <= 1'b1;  // Permitir la actualización del registro IF/ID
             ControlStall <= 1'b0;
-        //end
+        end
 
     end
 

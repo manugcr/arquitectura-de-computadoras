@@ -16,7 +16,7 @@ module Registers(
     integer i;
     initial begin
         // Inicializa todos los registros a 0
-        for (i = 0; i < 32; i = i + 1) begin
+      /*  for (i = 0; i < 32; i = i + 1) begin
             registers[i] = i;
         end
         // Inicializa el puntero de pila (registro 29)*/
@@ -36,11 +36,16 @@ module Registers(
       //  registers[16] = 8;
        // registers[18] = 4;
 
-       // flag_end = 1'b0;
+   
 
+      registers[8]  = 12 ; 
+      registers[2]  = 2  ;  
 
-
-      //registers[19] = 4 ;  // ah
+      // registers[19]  = 4 ;  
+     //   registers[18]  = 10 ;  
+    
+        
+       
 
 
         // Crea o limpia el archivo registers.mem

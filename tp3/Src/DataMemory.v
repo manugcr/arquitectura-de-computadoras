@@ -29,10 +29,8 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
             memory[i] = 0;
         end
             
-           memory[5] = 32'hAAAAAAAA;   //En la simulación, la dirección de memoria se está interpretando como 00000005. 
-          //Esto corresponde a la posición memory[5] debido al acceso truncado Address[31:2]
-     
-
+          memory[5] = 8'h0000000A   ;   
+          memory[7] = 8'h00000008   ;
 
         // Escribir los valores iniciales en un archivo para referencia
         $writememh("Data_memory.mem", memory);
@@ -49,7 +47,7 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
             // Escritura de palabra completa (sw)
             $display("ByteSig: %b", ByteSig);
             if (ByteSig == 2'b00) begin
-                $display("Condición ByteSig == 2'b00 cumplida");
+                $display("Condición ByteSig == 2'b00 cumplida. Address: %h, WriteData: %h", Address, WriteData);
                 memory[Address[31:2]] = WriteData;  
 
         /*   SUPONIENDO: instruccion  sw  $s0 , 14($s1)  ->   sw 8, 14(10)           
