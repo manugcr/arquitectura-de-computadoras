@@ -1,4 +1,5 @@
 # MIPS Instruction Encoder
+import os
 
 # Define function codes for R-type instructions
 R_TYPE_FUNCTIONS = {
@@ -17,7 +18,6 @@ I_TYPE_OPCODES = {
     "lh": "100001", "andi": "001100", "slti": "001010", "sltiu": "001011"
 }
 
-# Function to determine instruction type
 def get_instruction_type(op):
     if op in R_TYPE_FUNCTIONS:
         return "R"
@@ -25,7 +25,6 @@ def get_instruction_type(op):
         return "I"
     return "Unknown"
 
-# Function to format binary encoding
 def format_encoding(binary):
     hex_encoding = hex(int(binary, 2))
     decimal_encoding = int(binary, 2)
@@ -43,7 +42,6 @@ def encode_i_type(op, rs, rt, offset):
     binary = f"{I_TYPE_OPCODES[op]}{rs:05b}{rt:05b}{offset & 0xFFFF:016b}"
     return format_encoding(binary)
 
-# Function to process user input
 def process_instruction(instruction):
     if len(instruction) < 4:
         print("Invalid input. Please follow the format guidelines above.")
@@ -54,7 +52,7 @@ def process_instruction(instruction):
     
     try:
         if instr_type == "R":
-            rs, rt, rd = map(int, instruction[1:4])
+            rd, rs, rt = map(int, instruction[1:4])
             binary_instruction, hex_instruction, decimal_instruction = encode_r_type(op, rs, rt, rd)
         elif instr_type == "I":
             rs, rt, offset = map(int, instruction[1:4])
@@ -75,14 +73,24 @@ def process_instruction(instruction):
     print(f"{'Hex encoding:':<18}{hex_instruction}")
     print(f"{'Dec encoding:':<18}{decimal_instruction}")
 
-# Main function
+    save_to_file(decimal_instruction)
+ 
+def save_to_file(instruction):
+    file_path = os.path.join(os.path.dirname(__file__), "../Src/Instruction_memory.mem")
+    
+    try:
+        with open(file_path, "w") as file:
+            file.write(f"{instruction}\n")
+    except Exception as e:
+        print(f"Error writing to file: {e}")
+
 def main():
     print("Usage:")
-    print("  R-Type format: <operation> <rs> <rt> <rd>")
-    print("  I-Type format: <operation> <base> <rt> <offset>")
+    print("  R-Type format: <operation> <rd> <rs> <rt>")
+    print("  I-Type format: <operation> <rs> <rt> <offset>")
     print("Examples:")
-    print("  add 1 2 3   (R-Type)")
-    print("  lw 4 5 100  (I-Type)")
+    print("  add 8 9 10  (R-Type) -> add $rd, $rs, $rt")
+    print("  sw 14 5 10  (I-Type) -> sw $s0, 14($s1)")
     
     try:
         while True:
