@@ -7,7 +7,7 @@ module IF_ID(
     Out_Instruction, // Salida de la instrucción almacenada
     In_PCAdder,     // Entrada del valor del PC sumado
     Out_PCAdder,    // Salida del valor del PC sumado almacenado
-    Out_PrevPCAdder, // Salida del valor anterior del PC sumado
+    Out_PrevPCAdder // Salida del valor anterior del PC sumado
 );
 
     // Declaración de entradas

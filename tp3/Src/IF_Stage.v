@@ -4,7 +4,7 @@
 module IF_Stage(
     Clock, Reset,               // Señales del sistema
     PCWrite,                   // Control de escritura del PC (señal de control de riesgos)
-    Instruction, PCAdder_Out,  PCResult // Salidas del módulo
+    Instruction,PCAdder_ID, PCAdder_Out,  PCResult,JumpControl, JumpAddress// Salidas del módulo
     );             
           
     // Entradas del sistema
@@ -17,18 +17,21 @@ module IF_Stage(
     output wire [31:0] Instruction;    // Instrucción obtenida de la memoria de instrucciones
     output wire [31:0] PCAdder_Out;    // Resultado del PC + 4 (dirección de la siguiente instrucción)
     output wire [31:0] PCResult;       // Dirección actual del PC
+    input [31:0] JumpAddress;
+    input JumpControl;
+    input [31:0] PCAdder_ID;
     
     // Cables internos
     wire [31:0] PCInput;           // Entrada al PC (sin usar en este módulo)
     wire [31:0] ScheduledPC;       // Dirección programada del PC (sin usar en este módulo)
     wire [31:0] TargetOffset;      // Desplazamiento objetivo (sin usar en este módulo)
     wire [31:0] TargetAddress;     // Dirección objetivo (sin usar en este módulo)
-    wire [31:0] ShiftedOffset;     // Desplazamiento desplazado (sin usar en este módulo)
+    wire [31:0] ShiftedOffset;     // Desplazamiento desplazado (sin usar en este módulo) 
     wire stall;
     // Instancia del módulo PC (Program Counter)
     // Mantiene la dirección actual de la instrucción a ejecutar
     PC PC(
-        .PC_In(PCAdder_Out),    // Dirección de la siguiente instrucción (PC + 4)
+        .PC_In(ScheduledPC),    // Dirección de la siguiente instrucción (PC + 4)
         .PCResult(PCResult),    // Dirección actual del PC
         .stall(stall),
         .Enable(PCWrite),          // Habilitación constante a 1 lógico
@@ -52,5 +55,13 @@ module IF_Stage(
         .AddResult(PCAdder_Out), // Resultado del sumador (PC + 4)
         .stall(stall)
     );
+
+
+    //MODIFY PC
+
+    Mux2to1            PCSrcMux(.out(ScheduledPC), 
+                                 .inA(PCAdder_Out),     // Nothing
+                                 .inB(JumpAddress),     // Jump
+                                 .sel(JumpControl));  
     
 endmodule

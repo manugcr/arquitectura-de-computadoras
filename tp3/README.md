@@ -455,7 +455,23 @@ add $t2 , $t1 , $v0 -> 0x1225020  -> 00000001001000100101000000100000 -> 1902595
 
 <p align="center"> <img src="img/image34.png" alt=""> </p>
 
+## Avance III: Branch & Jumps
+
+Lo que diferencia a un computador de una calculadora simple es su capacidad para tomar decisiones. En este avance, el objetivo es implementar un procesador MIPS que dé continuidad al avance II, incorporando la capacidad de realizar operaciones que afecten al contador de programa (PC) y gestionando los riesgos de control asociados.
+
+### Caso G: J
 
 
 
 
+```assembly 
+PC                 |   Instrucción   
+00000000            add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+00000100            add $a0, $a1, $a2 -> 000000 00101 00110 00100 00000 100000  -> 0x00A62020 -> 10887200
+00001000            j 00011000        -> 000010 00000 00000 00000 00000 011000  -> 0x08000018 -> 134217752
+00001100            add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000            add $t4, $t1, $t2 -> 000000 01001 01010 01100 00000 100000  -> 0X012A6020 -> 19554336 
+00010100            add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00011000            add $t2, $t0, $t3 -> 000000 01000 01011 01010 00000 100000  -> 0x010B5020 -> 17518624
+00100000            add $t4, $t1, $t2 -> 000000 01001 01010 01100 00000 100000  -> 0X012A6020 -> 19554336 
+```

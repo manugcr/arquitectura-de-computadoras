@@ -15,9 +15,11 @@ module ID_Stage(
     ForwardMuxBSel,             // Selección para el multiplexor de reenvío B
     PCWrite, IFIDWrite,
     RegWrite_IDEX, 
+    PCAdder,
     ReadData1_out,ReadData2_out,
-    ControlSignal_Out,          // Señales de control de salida
+    ControlSignal_Out,JumpControl,          // Señales de control de salida
     Out_Instruction,
+    JumpAddress,
     ImmediateValue             // Valor inmediato extendido
     );             
 
@@ -45,7 +47,7 @@ module ID_Stage(
     input [1:0] RegDst_IDEX;
 
     // Datos de entrada
-    input [31:0] In_Instruction;
+    input [31:0] In_Instruction , PCAdder;
     input [4:0] RegRT_IDEX, RegRD_IDEX;
 
     // Datos para escritura
@@ -61,6 +63,8 @@ module ID_Stage(
     // Señales de control
     output wire [31:0] ControlSignal_Out;
 
+     output wire JumpControl;
+
     output wire [31:0] Out_Instruction;
 
     // Datos de los registros
@@ -74,6 +78,9 @@ module ID_Stage(
     // Señales de peligro (hazards)
     output wire PCWrite, IFIDWrite;
 
+    // PC Addresses
+    output wire [31:0]  JumpAddress;
+
 
     //--------------------------------
     // Declaración de Cables
@@ -85,6 +92,12 @@ module ID_Stage(
     // Control de memoria
     wire MemWrite_Control, MemRead_Control;
     wire [1:0] ByteSig_Control;  
+
+    wire JumpFlush;
+
+    wire JumpMuxSel;
+
+    wire [31:0] ShiftedJumpAddress;
 
     // Cable para valor inmediato desplazado
     wire [31:0] ImmediateShift, ReadData1, ReadData2;
@@ -133,6 +146,8 @@ module ID_Stage(
                                     .ALUOp(ALUOp_Control), .MemWrite(MemWrite_Control), 
                                     .MemRead(MemRead_Control), .ByteSig(ByteSig_Control),
                                     .RegWrite(RegWrite_Control), .MemToReg(MemToReg_Control),  
+                                    .JumpMuxSel(JumpMuxSel), 
+                                    .JumpControl(JumpControl), 
                                     .Flush_IF(JumpFlush), //???
                                     .LaMux(LaMux));
 
@@ -186,6 +201,17 @@ module ID_Stage(
         .inB({16'd0, In_Instruction[15:0]}),
         .sel(LaMux)
     );
+
+    // JUMP
+
+
+        ShiftLeft2              JumpShift(.inputNum({6'b0, In_Instruction[25:0]}), 
+                                      .outputNum(ShiftedJumpAddress));
+
+        Mux2to1            JumpMux(.out(JumpAddress), 
+                                    .inA({PCAdder[31:28], ShiftedJumpAddress[27:0]}),
+                                    .inB(ReadData1_out), 
+                                    .sel(JumpMuxSel));
 
 
 

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module Control(Instruction,
-                  ALUBMux, RegDst, ALUOp, MemWrite, MemRead, ByteSig, RegWrite, MemToReg, 
+                  ALUBMux, RegDst, ALUOp, MemWrite,JumpMuxSel, JumpControl, MemRead, ByteSig, RegWrite, MemToReg, 
                   Flush_IF, LaMux);
     
     //--------------------------------
@@ -15,6 +15,8 @@ module Control(Instruction,
     //--------------------------------
     
     output reg      Flush_IF;
+
+    output reg        JumpMuxSel, JumpControl;
     
     
     // Execute
@@ -31,7 +33,9 @@ module Control(Instruction,
     output reg [1:0] MemToReg;
     
     
-    localparam [5:0] OP_R           = 6'b000000,   // 
+    localparam [5:0] OP_ZERO        = 6'b000000,   // 
+                     OP_J           = 6'b000010,   // J
+                     OP_JAL         = 6'b000011,   // JAL
                      OP_LW          = 6'b100011,   // LW
                      OP_SW          = 6'b101011,   // SW
                      OP_ADDI        = 6'b001000,   // ADDI
@@ -50,7 +54,8 @@ module Control(Instruction,
                      OP_SLTI        = 6'b001010,   // SLTI
                      OP_SLTIU       = 6'b001011;   // SLTUI
     
-    localparam [5:0] FUNC_ROTR      =  6'b000010,  // ROTR
+    localparam [5:0] FUNC_JR        =  6'b001000,  // JR   
+                     FUNC_ROTR      =  6'b000010,  // ROTR
                      FUNC_ROTRV     =  6'b000110,  // ROTRV
                      FUNC_SLL       =  6'b000000,  // SLL
                      FUNC_SRL       =  6'b000010,  // SRL 
@@ -64,6 +69,7 @@ module Control(Instruction,
                      ALUOP_LUI      = 6'b000100, // LUI
                      ALUOP_ANDI     = 6'b001100, // ANDI
                      ALUOP_ORI      = 6'b001101, // ORI
+                     ALUOP_JUMP     = 6'b001011, // J, JR, JAL
                      ALUOP_XORI     = 6'b001110, // XORI
                      ALUOP_SEB      = 6'b001111, // SEB
                      ALUOP_SLTI     = 6'b010000, // SLTI
@@ -93,6 +99,8 @@ module Control(Instruction,
         RegDst      <= 2'b00;
         ALUOp       <= 6'b000000;
         ByteSig     <= 2'b00;
+        JumpMuxSel  <= 1'b0; 
+        JumpControl <= 1'b0;
         MemWrite    <= 1'b0;
         MemRead     <= 1'b0;
         RegWrite    <= 1'b0;
@@ -113,6 +121,8 @@ module Control(Instruction,
 
         // NOP
         if (Instruction == 32'b0) begin
+            JumpMuxSel  <= 1'b0; 
+            JumpControl <= 1'b0;
             ALUBMux     <= 1'b0;
             RegDst      <= 2'b00;
             ALUOp       <= ALUOP_ZERO;
@@ -131,17 +141,33 @@ module Control(Instruction,
                 // Arithmetic  
                 //------------
             
-                OP_R: begin
+                OP_ZERO: begin
                
                     ALUBMux     <= 1'b0;
                     MemWrite    <= 1'b0;
                     MemRead     <= 1'b0;
                     ByteSig     <= 2'b00;
                     LaMux       <= 1'b0;
-                    RegWrite    <= 1'b1;
-                    RegDst      <= 2'b01;
-                    MemToReg    <= 2'b10;
-                    ALUOp       <= ALUOP_ZERO;  
+    
+                    if (Func == FUNC_JR) begin    // jr
+                        JumpMuxSel  <= 1'b1;
+                        JumpControl <= 1'b1;
+                        RegWrite    <= 1'b0;
+                        RegDst      <= 2'b00;
+                        MemToReg    <= 2'b00;
+                        ALUOp       <= ALUOP_JUMP;  
+                        
+                        Flush_IF    <= 1'b1; 
+                    end
+                
+                    else begin
+                        
+                        JumpMuxSel  <= 1'b0;
+                        JumpControl <= 1'b0;
+                        RegWrite    <= 1'b1;
+                        RegDst      <= 2'b01;
+                        MemToReg    <= 2'b10;
+                        ALUOp       <= ALUOP_ZERO;  
 
                         if (Func == FUNC_SRL && ~Bit21) begin   // srl
                             ALUOp <= ALUOP_SRL;  
@@ -154,11 +180,14 @@ module Control(Instruction,
                         else if (Func == FUNC_ROTRV &&  Bit6)  ALUOp <= ALUOP_ROTRV; // rotrv
                         else ALUOp <= ALUOP_ZERO;
                     
+                    end
 
                 end
                 
                 //addiu
                 OP_ADDIU: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDIU;
@@ -172,6 +201,8 @@ module Control(Instruction,
                 
                 //addi
                 OP_ADDI: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
@@ -190,6 +221,8 @@ module Control(Instruction,
                 
                 //lw
                 OP_LW: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
@@ -202,7 +235,9 @@ module Control(Instruction,
                 end
                 
                 //sw
-                OP_SW: begin                 
+                OP_SW: begin  
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;               
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
@@ -215,7 +250,9 @@ module Control(Instruction,
                 end
                 
                 //sb
-                OP_SB: begin                  
+                OP_SB: begin       
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;           
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
@@ -229,6 +266,8 @@ module Control(Instruction,
                 
                 //lh
                 OP_LH: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
@@ -242,6 +281,8 @@ module Control(Instruction,
                 
                 //lb
                 OP_LB: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
@@ -255,6 +296,8 @@ module Control(Instruction,
                 
                 //sh
                 OP_SH: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
@@ -267,7 +310,9 @@ module Control(Instruction,
                 end
                 
                 //lui
-                OP_LUI: begin     
+                OP_LUI: begin  
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;   
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_LUI;
@@ -278,6 +323,38 @@ module Control(Instruction,
                     MemToReg    <= 2'b10;
                     LaMux       <= 1'b0;
                 end
+
+                // j
+                OP_J: begin  
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b1;
+                    ALUBMux     <= 1'b0;
+                    RegDst      <= 2'b00;
+                    ALUOp       <= ALUOP_JUMP;
+                    ByteSig     <= 2'b00;
+                    MemWrite    <= 1'b0;
+                    MemRead     <= 1'b0;
+                    RegWrite    <= 1'b0;
+                    MemToReg    <= 2'b00;
+                    LaMux       <= 1'b0;
+                    Flush_IF    <= 1'b1; 
+                end
+                
+                // jal
+                OP_JAL: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b1;
+                    ALUBMux     <= 1'b0;
+                    RegDst      <= 2'b10;
+                    ALUOp       <= ALUOP_JUMP;
+                    ByteSig     <= 2'b00;
+                    MemWrite    <= 1'b0;
+                    MemRead     <= 1'b0;
+                    RegWrite    <= 1'b1;
+                    MemToReg    <= 2'b01;
+                    LaMux       <= 1'b0;
+                    Flush_IF    <= 1'b1; 
+                end
                 
 
                 //------------
@@ -285,7 +362,9 @@ module Control(Instruction,
                 //------------
                
                 //andi
-                OP_ANDI: begin              
+                OP_ANDI: begin      
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;        
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ANDI;
@@ -298,7 +377,9 @@ module Control(Instruction,
                 end
                 
                 //ori
-                OP_ORI: begin                   
+                OP_ORI: begin           
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;        
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ORI;
@@ -311,7 +392,9 @@ module Control(Instruction,
                 end
                 
                 //xori
-                OP_XORI: begin      
+                OP_XORI: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;      
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_XORI;
@@ -327,6 +410,8 @@ module Control(Instruction,
                 
                 //slti
                 OP_SLTI: begin  
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_SLTI;
@@ -340,6 +425,8 @@ module Control(Instruction,
                 
                 //sltiu
                 OP_SLTIU: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_SLTIU;
@@ -354,6 +441,8 @@ module Control(Instruction,
             
 
                 default: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
                     ALUBMux     <= 1'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ZERO;
