@@ -1,137 +1,197 @@
 import os
-
-# Register mapping as per the given table
-REGISTER_MAP = {
-    "$zero": 0, "$v0": 2, "$v1": 3, "$a0": 4, "$a1": 5, "$a2": 6, "$a3": 7,
-    "$t0": 8, "$t1": 9, "$t2": 10, "$t3": 11, "$t4": 12, "$t5": 13, "$t6": 14, "$t7": 15,
-    "$s0": 16, "$s1": 17, "$s2": 18, "$s3": 19, "$s4": 20, "$s5": 21, "$s6": 22, "$s7": 23,
-    "$t8": 24, "$t9": 25, "$gp": 28, "$sp": 29, "$fp": 30, "$ra": 31
-}
-
-# Define function codes for R-type instructions
-R_TYPE_FUNCTIONS = {
-    "add": "100000", "addu": "100001", "and": "100100", "jr": "001000",
-    "madd": "000000", "mfhi": "010000", "mflo": "010010", "movn": "001011",
-    "movz": "001010", "msub": "000100", "mthi": "010001", "mtlo": "010011",
-    "mul": "000010", "mult": "011000", "multu": "011001", "nor": "100111",
-    "or": "100101", "sll": "000000", "slt": "101010", "sltu": "101011",
-    "sra": "000011", "srl": "000010", "sub": "100010", "xor": "100110"
-}
-
-# Define opcodes for I-type instructions
-I_TYPE_OPCODES = {
-    "lw": "100011", "sw": "101011", "addi": "001000", "addiu": "001001",
-    "ori": "001101", "xori": "001110", "lui": "001111", "lb": "100000",
-    "lh": "100001", "andi": "001100", "slti": "001010", "sltiu": "001011"
-}
-
-# Function to encode R-type instructions
-def encode_r_type(op, rs, rt, rd, shamt=0):
-    binary = f"000000{rs:05b}{rt:05b}{rd:05b}{shamt:05b}{R_TYPE_FUNCTIONS[op]}"
-    return format_encoding(binary)
-
-# Function to encode I-type instructions
-def encode_i_type(op, rs, rt, offset):
-    binary = f"{I_TYPE_OPCODES[op]}{rs:05b}{rt:05b}{offset & 0xFFFF:016b}"
-    return format_encoding(binary)
-
-# Function to format binary encoding into hex and decimal
-def format_encoding(binary):
-    hex_encoding = format(int(binary, 2), 'x')
-    decimal_encoding = int(binary, 2)
-    return binary, hex_encoding, decimal_encoding
+from enum import Enum
 
 
-def get_instruction_type(op):
-    if op in R_TYPE_FUNCTIONS:
-        return "R"
-    elif op in I_TYPE_OPCODES:
-        return "I"
-    return "Unknown"
+class RegisterMap(Enum):
+    ZERO    = 0
+    V0      = 2
+    V1      = 3
+    A0      = 4
+    A1      = 5
+    A2      = 6
+    A3      = 7
+    T0      = 8
+    T1      = 9
+    T2      = 10
+    T3      = 11
+    T4      = 12
+    T5      = 13
+    T6      = 14
+    T7      = 15
+    S0      = 16
+    S1      = 17
+    S2      = 18
+    S3      = 19
+    S4      = 20
+    S5      = 21
+    S6      = 22
+    S7      = 23
+    T8      = 24
+    T9      = 25
+    GP      = 28
+    SP      = 29
+    FP      = 30
+    RA      = 31
 
-def parse_operands(op, operands):
 
-    if op in R_TYPE_FUNCTIONS:
-        # Example: $s1, $s2, $s3
-        # Split the operands by comma and map the registers to their respective values
-        # [$s1, $s2, $s3] -> [17, 18, 19]
-        rd, rs, rt = map(lambda reg: REGISTER_MAP[reg.strip()], operands.split(','))
-        return rd, rs, rt
-    elif op in I_TYPE_OPCODES:
-        # Example: $t0, 4($s0)
-        # Split the operands by comma, then split the second part by the opening parenthesis
-        # Then map the registers to their respective values
-        # [$t0, 4, $s0] -> [8, 4, 16]
-        rs, rt_offset = operands.split(',', 1)
-        offset, rt = rt_offset.strip('()').split('(', 1)
-        offset = int(offset)
-        rt, rs = map(lambda reg: REGISTER_MAP[reg.strip()], [rs, rt])
-        return rs, rt, offset
+class RTypeFunctions(Enum):
+    ADD     = "100000"
+    SUB     = "100010"
+    AND     = "100100"
+    OR      = "100101"
+    XOR     = "100110"
+    NOR     = "100111"
+    SLL     = "000000"
+    SRL     = "000010"
+    SRA     = "000011"
+    SLT     = "101010"
+    SLTU    = "101011"
+    JR      = "001000"
 
-def process_instruction(instruction, file):
-    # First we split the operation and operands
-    # Example: add $s1, $s2, $s3 -> ['add', '$s1, $s2, $s3']
-    # Then we get the instruction type (R, I, J) so we can handle the operands accordingly.
-    op, operands = instruction.split(' ', 1)
-    instr_type = get_instruction_type(op)
-    
-    # Once we have the instruction type, we can parse the operands accordingly
-    # We then encode the instruction and output the result
-    try:
-        if instr_type == "R":
-            rd, rs, rt = parse_operands(op, operands)
-            binary_instruction, hex_instruction, decimal_instruction = encode_r_type(op, rs, rt, rd)
-        elif instr_type == "I":
-            rs, rt, offset = parse_operands(op, operands)
-            binary_instruction, hex_instruction, decimal_instruction = encode_i_type(op, rs, rt, offset)
-        else:
-            print("Unsupported instruction type or unknown operation.")
+
+class ITypeOpcodes(Enum):
+    LW      = "100011"
+    SW      = "101011"
+    ADDI    = "001000"
+    ORI     = "001101"
+    ANDI    = "001100"
+    SLTI    = "001010"
+
+
+class InstructionEncoder:
+
+    # R-Type: add $t0, $t1, $t2
+    #   6           5   5   5   5       6       [bits]
+    #   OP_TYPE     RS  RT  RD  SHAMT   OP_CODE
+    # 
+    # I-Type: lw $t0, 4($s0)
+    #   6           5   5   16                  [bits]
+    #   OP_CODE     RS  RT  OFFSET
+    #
+    # J-Type: j 0x00400000
+    #   6           26                          [bits]
+    #   OP_CODE     ADDRESS
+
+    @staticmethod
+    def encode_r_type(op, rs, rt, rd, shamt=0):
+        binary = f"000000{rs:05b}{rt:05b}{rd:05b}{shamt:05b}{RTypeFunctions[op.upper()].value}"
+        return InstructionEncoder.format_encoding(binary)
+
+    @staticmethod
+    def encode_i_type(op, rs, rt, offset):
+        binary = f"{ITypeOpcodes[op.upper()].value}{rs:05b}{rt:05b}{offset & 0xFFFF:016b}"
+        return InstructionEncoder.format_encoding(binary)
+
+    @staticmethod
+    def format_encoding(binary):
+        hex_encoding = format(int(binary, 2), '08x')
+        return binary, hex_encoding, int(binary, 2)
+
+
+class InstructionParser:
+    @staticmethod
+    def clean_register(reg: str):
+        """Removes '$' and converts register names to uppercase for consistency."""
+        return reg.upper().replace("$", "")
+
+    @staticmethod
+    def parse_operands(op, operands):
+        operands = [o.strip() for o in operands.split(',')]
+        op_upper = op.upper()
+
+        if op_upper in RTypeFunctions.__members__:
+            rd = RegisterMap[InstructionParser.clean_register(operands[0])].value
+            rs = RegisterMap[InstructionParser.clean_register(operands[1])].value
+            rt = RegisterMap[InstructionParser.clean_register(operands[2])].value
+            print(f"[DEBUG] {op} {operands}")
+            print(f"[DEBUG] rd: {rd}, rs: {rs}, rt: {rt}")
+            return rs, rd, rt
+
+        if op_upper in ITypeOpcodes.__members__:
+            rs, rt_offset = operands
+            offset, rt = rt_offset.strip("()").split('(')
+
+            rs_value = RegisterMap[InstructionParser.clean_register(rs)].value
+            rt_value = RegisterMap[InstructionParser.clean_register(rt)].value
+            offset_value = int(offset)
+            print(f"[DEBUG] {op} {operands}")
+            print(f"[DEBUG] rs: {rs_value}, rt: {rt_value}, offset: {offset_value}")
+            return rt_value, rs_value, offset_value
+
+        print(f"[ERROR] Unknown operation: {op}")
+        return None
+
+
+class MIPSAssembler:
+    def __init__(self, input_file, output_file):
+        self.input_file = input_file
+        self.output_file = output_file
+
+    def process_instruction(self, instruction):
+        op, operands = instruction.split(' ', 1)
+        instr_type = self.get_instruction_type(op)
+        
+        print(f"[DEBUG] Instruction: {instruction}")
+
+        try:
+            parsed_operands = InstructionParser.parse_operands(op, operands)
+            print(f"[DEBUG] Parsed operands: {parsed_operands}")
+            if instr_type == "R":
+                binary, hex_encoding, decimal_encoding = InstructionEncoder.encode_r_type(op, *parsed_operands)
+            elif instr_type == "I":
+                binary, hex_encoding, decimal_encoding = InstructionEncoder.encode_i_type(op, *parsed_operands)
+            else:
+                print(f"Unsupported instruction: {instruction}")
+                return None
+            
+            print(f"[DEBUG] Hex: {hex_encoding}")
+            print(f"[DEBUG] Bin: {binary}")
+            print(f"[DEBUG] Dec: {decimal_encoding}")
+            print("-" * 50)
+            return hex_encoding
+        except Exception as e:
+            print(f"Error processing instruction: {instruction}, Error: {e}")
+            return None
+
+    def get_instruction_type(self, op):
+        if op.upper() in RTypeFunctions.__members__:
+            return "R"
+        elif op.upper() in ITypeOpcodes.__members__:
+            return "I"
+        return "Unknown"
+
+    def assemble(self):
+        if not os.path.exists(self.input_file):
+            print(f"Error: {self.input_file} not found.")
             return
-    except KeyError:
-        print("Invalid register name. Make sure the registers are correctly typed.")
-        return
-    except ValueError:
-        print("Invalid input. Ensure all operands are integers where required.")
-        return
 
-    # Output the result
-    print(f"\n{'Instruction:':<18}{instruction}")
-    print("-" * 50)
-    print(f"{'Bin encoding:':<18}{binary_instruction}")
-    print(f"{'Hex encoding:':<18}{hex_instruction}")
-    print(f"{'Dec encoding:':<18}{decimal_instruction}")
+        print(f"Processing instructions from {self.input_file} and saving to {self.output_file}...\n")
 
-    # Write the hex encoding to the file
-    file.write(hex_instruction + '\n')
+        try:
+            with open(self.input_file, 'r') as infile, open(self.output_file, 'w') as outfile:
+                written_instructions = []
+                for line in infile:
+                    instruction = line.strip()
+                    if instruction:
+                        encoded_instruction = self.process_instruction(instruction)
+                        if encoded_instruction:
+                            outfile.write(encoded_instruction + '\n')
+                            written_instructions.append(encoded_instruction)
 
-def main():
-    # Get the absolute path of the directory where the script is located
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Construct the path to code.txt in the same directory as the script
-    code_file_path = os.path.join(script_dir, "code.txt")
-    
-    # Construct the path to Instruction_memory.mem in the ../Src/ directory
-    output_dir = os.path.join(script_dir, "..", "Src")
-    os.makedirs(output_dir, exist_ok=True)
-    output_file_path = os.path.join(output_dir, "Instruction_memory.mem")
-    
-    # Check if the code.txt file exists
-    if not os.path.exists(code_file_path):
-        print(f"Error: {code_file_path} not found.")
-        return
-    
-    print(f"Processing instructions from {code_file_path} and saving to {output_file_path}...")
-    
-    try:
-        with open(code_file_path, 'r') as input_file, open(output_file_path, 'w') as output_file:
-            for line in input_file:
-                instruction = line.strip()
-                if instruction:  # Skip empty lines
-                    process_instruction(instruction, output_file)
-        print("\nInstructions have been successfully written to Instruction_memory.mem.")
-    except KeyboardInterrupt:
-        print("\nExiting...")
+                # Pad the file with '00000000' if fewer than 512 instructions
+                while len(written_instructions) < 512:
+                    outfile.write("00000000\n")
+                    written_instructions.append("00000000")
+            print("\nInstructions have been successfully written.")
+        except KeyboardInterrupt:
+            print("\nExiting...")
+
 
 if __name__ == "__main__":
-    main()
+    script_dir  = os.path.dirname(os.path.abspath(__file__))
+    input_file  = os.path.join(script_dir, "code.txt")
+    output_file = os.path.join(script_dir, "..", "Src", "Instruction_memory.mem")
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    assembler = MIPSAssembler(input_file, output_file)
+    assembler.assemble()
