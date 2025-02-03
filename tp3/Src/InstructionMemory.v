@@ -116,7 +116,7 @@ module InstructionMemory(Address, Instruction ,stall );
 
           /* CODIGO CASO F:*/
 
-        /*  memory[0] = 4364320;      //  add s3 , v0 , v0
+          memory[0] = 4364320;      //  add s3 , v0 , v0
           memory[1] = 2389835792;   //  lw  s2 , 16(s3)
           memory[2] = 2924675086 ;  //  sw  s3 , 14(s2) 
           memory[3] = 2366177296 ;  //  lw  $t1 , 16($t0)
@@ -138,6 +138,8 @@ module InstructionMemory(Address, Instruction ,stall );
             00100000   (28)         add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
            */
 
+           /* CODIGO CASO G:
+
           memory[0] = 39028768;  // Registro 11h (17d) = 25h
           memory[1] = 10887200;  // Registro 04h (04d) = 0bh 
           memory[2] = 134217734; // SALTO A instruccion memory[6]
@@ -145,7 +147,7 @@ module InstructionMemory(Address, Instruction ,stall );
           memory[4] = 23875616;  // Registro 10d  =  10  NO MODIFICADO  SINO   Registro 12d  =  15h + ah = 1F NO MODIFICADO
           memory[5] = 26040352;  // Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
           memory[6] = 28205088;  // Registro 12d  =  27d = 1Bh
-          memory[7] = 19556384;  // Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h 
+          memory[7] = 19556384;  // Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h // */
 
         
 

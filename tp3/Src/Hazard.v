@@ -93,7 +93,7 @@ module Hazard(
             PCWrite      <= 1'b0;
             IFIDWrite    <= 1'b0;
             ControlStall <= 1'b1;
-            BranchFlush  <= 1'b1;
+            BranchFlush  <= 1'b0;   // funcionaaaa
         end 
 
        // JR in ID and JAL in EX or MEM
