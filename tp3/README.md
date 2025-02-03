@@ -463,15 +463,98 @@ Lo que diferencia a un computador de una calculadora simple es su capacidad para
 
 
 
+Las instrucciones de tipo **J (jump)** en MIPS tienen el siguiente formato binario de **32 bits**:  
+
+📌 **Reglas importantes sobre la dirección de salto (`target address`)**:  
+1. La CPU de MIPS **trunca** los **2 bits menos significativos** de la dirección (`PC`), ya que las instrucciones en MIPS **siempre están alineadas a 4 bytes**.  
+2. El `target address` en la instrucción `j` **no es la dirección absoluta**, sino que representa los **26 bits superiores** de la dirección **dividida por 4**.  
+3. La dirección real de salto se reconstruye en la ejecución así:  
+
+   `Jump Address = (PC[31:28] << 28) | (target address << 2)`
+
+Como en este caso el salto es dentro del mismo segmento, no nos preocupamos por `PC[31:28]`.
+
+
+
+#### 🔹 Cálculo de la dirección de salto para `j 00011000` (PC = 24)
+
+| Paso | Descripción | Resultado |
+|------|------------|-----------|
+| 1️⃣  | Dirección objetivo en decimal | `PC = 24 (decimal)` |
+| 2️⃣  | Dividimos por 4 | `24 / 4 = 6` |
+| 3️⃣  | Convertimos `6` a binario en 26 bits | `00000000000000000000000110` |
+| 4️⃣  | Juntamos con el opcode de `j` (`000010`) | `000010 00000000000000000000000110` |
+| 5️⃣  | Convertimos a hexadecimal | **`0x08000006`** |
+
+
+
+#### 🔹 **Conclusión**  
+- **La razón por la que usamos `110` (6 en binario) es porque MIPS almacena la dirección de salto divida entre 4 en la instrucción J**.
+- **Esto se debe a que las direcciones en MIPS están alineadas a 4 bytes, por lo que los dos bits menos significativos son siempre `00` y no se almacenan en la instrucción**.
+- **El procesador reconstruye la dirección real multiplicando el `target address` por 4 durante la ejecución**.
+
+Ahora, la cuestión es la siguiente: cuando la instrucción *jump* llega a la etapa **ID**,  
+en ese instante se carga la siguiente instrucción secuencial (**PC + 4**).  
+
+Sin embargo, esta **NO** es la instrucción correcta,  
+ya que la ejecución debería continuar con la instrucción ubicada en la dirección de destino del salto.  
+
+Esto introduce un nuevo tipo de *hazard*: el **riesgo de control**.
+
+
+#### Manejo de los Riesgos de Control
+
+El **riesgo de control** ocurre cuando la instrucción en curso no puede ejecutarse en el ciclo de reloj adecuado  
+porque la instrucción que ha sido buscada no es la que se requería.  
+
+En otras palabras, el flujo de direcciones de instrucciones no es el que el *pipeline* esperaba.  
+
+La opción para manejar los riesgos de control (solo para *JUMP*) es **bloquear o detener el pipeline** (*stall*)  
+hasta que se determine cuál será la siguiente instrucción que debe leerse en la memoria durante la etapa **IF**.  
+
+
+Supongamos el siguiente Set de instrucciones:
+
+
+
+
+
 
 ```assembly 
 PC                 |   Instrucción   
-00000000            add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
-00000100            add $a0, $a1, $a2 -> 000000 00101 00110 00100 00000 100000  -> 0x00A62020 -> 10887200
-00001000            j 00011000        -> 000010 00000 00000 00000 00000 011000  -> 0x08000018 -> 134217752
-00001100            add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
-00010000            add $t4, $t1, $t2 -> 000000 01001 01010 01100 00000 100000  -> 0X012A6020 -> 19554336 
-00010100            add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
-00011000            add $t2, $t0, $t3 -> 000000 01000 01011 01010 00000 100000  -> 0x010B5020 -> 17518624
-00100000            add $t4, $t1, $t2 -> 000000 01001 01010 01100 00000 100000  -> 0X012A6020 -> 19554336 
+00000000                add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+00000100                add $a0, $a1, $a2 -> 000000 00101 00110 00100 00000 100000  -> 0x00A62020 -> 10887200
+00001000                j 00011000        -> 000010 00000 00000 00000 00000 011000  -> 0x08000018 -> 134217752
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
 ```
+
+#### Interpretación
+
+<p align="center"> <img src="img/image35.png" alt=""> </p>
+
+
+
+##### PROBLEMA ⚠️
+
+Claramente, el inconveniente surge en el momento en que se ejecuta la instrucción:  
+`IF_instruction = j 00011000`. Cuando esta instrucción avanza a la etapa **ID**, se continúa con la ejecución de la siguiente instrucción como si el salto (*JUMP*) no existiera. Por ejemplo, la instrucción `add $t1, $t2, $t3` se ejecutaría inmediatamente después del salto, ya que el control no detecta el cambio de flujo hasta la etapa **ID**. Este comportamiento puede representarse de la siguiente manera:
+
+<p align="center"> <img src="img/image36.png" alt=""> </p>
+
+
+##### SOLUCIÓN 👍  
+
+Incorporar en `Hazard.v` la señal **Flush** para limpiar los registros de segmento **IFID**,  
+permitiendo así introducir un *stall* de un solo ciclo.
+
+<p align="center"> <img src="img/image37.png" alt=""> </p>
+
+#### Resultado
+
+<p align="center"> <img src="img/image38.png" alt=""> </p>
+
+

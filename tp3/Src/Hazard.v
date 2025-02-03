@@ -17,7 +17,7 @@
 
 module Hazard(
     // --- Entradas ---
-
+    OpCode, Func,  
     RegRS_IFID, RegRT_IFID,       // Registros fuente en la etapa IF/ID
     RegRT_IDEX, RegRD_IDEX,       // Registros en la etapa ID/EX
     MemRead_IDEX,   // Señales de control en ID/EX
@@ -26,6 +26,7 @@ module Hazard(
     RegWrite_IDEX,
     RegWrite_EXMEM,
     RegisterDst_EXMEM,
+    BranchFlush,
     // --- Salidas ---  
     PCWrite, IFIDWrite            // Señales de control para manejar peligros
 );
@@ -33,6 +34,7 @@ module Hazard(
     //--------------------------------
     // Entradas
     //--------------------------------
+    input [5:0] OpCode, Func;
     input RegWrite_EXMEM,MemRead_IDEX, RegWrite_IDEX;   // Señales de control para lectura y escritura
     input [1:0] RegDst_IDEX;             // Selección del registro destino en la etapa ID/EX
     input [4:0] RegisterDst_EXMEM,RegRS_IFID, RegRT_IFID;  // Registros fuente en la etapa IF/ID
@@ -41,7 +43,7 @@ module Hazard(
     //--------------------------------
     // Salidas
     //--------------------------------
-    output reg PCWrite, IFIDWrite , ControlStall ;       // Señales para detener la ejecución (stalls)
+    output reg PCWrite, IFIDWrite ,BranchFlush,  ControlStall ;       // Señales para detener la ejecución (stalls)
 
     //--------------------------------
     // Inicialización de salidas
@@ -50,7 +52,31 @@ module Hazard(
         PCWrite   <= 1'b1;  // Inicialmente, permitir que el PC avance
         IFIDWrite <= 1'b1;  // Inicialmente, permitir que el pipeline avance
         ControlStall <= 1'b0;
+        BranchFlush  <= 1'b1;
     end
+
+    // OpCodes
+    localparam [5:0] 
+                     OP_ZERO        = 6'b000000,   // 
+                     OP_J           = 6'b000010,   // J
+                     OP_JAL         = 6'b000011,   // JAL
+                     OP_LW          = 6'b100011,   // LW
+                     OP_SW          = 6'b101011,   // SW
+                     OP_ADDI        = 6'b001000,   // ADDI
+                     OP_ADDIU       = 6'b001001,   // ADDIU
+                     LHU_TYPE       = 6'b100101,  //AGREGAR
+                     LBU_TYPE       = 6'b100100,  //AGREGAR
+                     LWU_TYPE       = 6'b100111,  //AGREGAR
+                     OP_SB          = 6'b101000,   // SB
+                     OP_SH          = 6'b101001,   // SH
+                     OP_ORI         = 6'b001101,   // ORI
+                     OP_XORI        = 6'b001110,   // XORI
+                     OP_LUI         = 6'b001111,   // LUI
+                     OP_LB          = 6'b100000,   // LB
+                     OP_LH          = 6'b100001,   // LH
+                     OP_ANDI        = 6'b001100,   // ANDI
+                     OP_SLTI        = 6'b001010,   // SLTI
+                     OP_SLTIU       = 6'b001011;   // SLTUI
     
     //--------------------------------
     // Lógica de detección de peligros
@@ -63,26 +89,28 @@ module Hazard(
         if (MemRead_IDEX && 
            ((RegDst_IDEX == 2'b00 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID))) || 
             (RegDst_IDEX == 2'b01 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID))))) begin
-
-                $display("PROBLEMAAAAAAAAAAAAAAAAAAAAAAAA! con valores:");
-                $display("MemRead_IDEX = %b", MemRead_IDEX);
-                $display("RegDst_IDEX = %b", RegDst_IDEX);
-                $display("RegRT_IDEX = %b, RegRS_IFID = %b, RegRT_IFID = %b", RegRT_IDEX, RegRS_IFID, RegRT_IFID);
-                $display("RegRD_IDEX = %b", RegRD_IDEX);
-                $display("Condicion 1: %b", (RegDst_IDEX == 2'b00 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID)))); //ACA ESTA
-                $display("Condicion 2: %b", (RegDst_IDEX == 2'b01 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID))));
-        
             
-            PCWrite   <= 1'b0;  // Detener la actualización del PC
-            IFIDWrite <= 1'b0;  // Detener la actualización del registro IF/ID
+            PCWrite      <= 1'b0;
+            IFIDWrite    <= 1'b0;
             ControlStall <= 1'b1;
+            BranchFlush  <= 1'b1;
         end 
+
+       // JR in ID and JAL in EX or MEM
+        else if ( OpCode == OP_J ) begin
+            PCWrite      <= 1'b1;
+            IFIDWrite    <= 1'b0;
+            ControlStall <= 1'b0;
+            BranchFlush  <= 1'b1;
+        end 
+        
         else begin 
             // Caso por defecto: No hay peligro detectado.
             // Permitir que el pipeline avance normalmente.
-            PCWrite   <= 1'b1;  // Permitir la actualización del PC
-            IFIDWrite <= 1'b1;  // Permitir la actualización del registro IF/ID
+            PCWrite      <= 1'b1;
+            IFIDWrite    <= 1'b1;
             ControlStall <= 1'b0;
+            BranchFlush  <= 1'b1;
         end
 
     end

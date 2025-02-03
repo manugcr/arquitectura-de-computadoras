@@ -86,7 +86,7 @@ module MIPS(ClockIn, Reset);
     
 
     IF_ID    IFID(.Clock(Clock), 
-                       // .Flush(Flush_IF), ///////////////////////////
+                        .Flush(Flush_IF), ///////////////////////////
                          .Enable(Hazard_IFIDWrite), 
                          .In_Instruction(Instruction_IF), 
                          .In_PCAdder(PCAdder_IF),
@@ -117,6 +117,7 @@ module MIPS(ClockIn, Reset);
                        .ForwardData_EXMEM(ALUResult_MEM),     
                        .ControlSignal_Out(ControlSignal_ID), 
                        .ReadData1_out(ReadData1_ID), 
+                       .Flush_IF(Flush_IF),
                        .ReadData2_out(ReadData2_ID), 
                        .ForwardMuxASel(ForwardMuxASel_ID),
                        .ForwardMuxBSel(ForwardMuxBSel_ID),  

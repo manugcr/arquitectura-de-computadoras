@@ -6,12 +6,13 @@ module IF_ID(
     In_Instruction, // Entrada de la instrucción actual
     Out_Instruction, // Salida de la instrucción almacenada
     In_PCAdder,     // Entrada del valor del PC sumado
+    Flush,
     Out_PCAdder,    // Salida del valor del PC sumado almacenado
     Out_PrevPCAdder // Salida del valor anterior del PC sumado
 );
 
     // Declaración de entradas
-    input        Clock, Enable;
+    input        Flush, Clock, Enable;
     input [31:0] In_Instruction;
     input [31:0] In_PCAdder;
     
@@ -28,6 +29,10 @@ module IF_ID(
 
     // Comportamiento del registro sincronizado con el flanco positivo del reloj
     always @(posedge Clock) begin
+         if (Flush) begin
+            Out_Instruction = 32'd0;
+            Out_PCAdder     = 32'd0;
+        end
          if (Enable) begin
             // Si Enable está activo, actualiza los registros con las entradas
             Out_Instruction = In_Instruction;

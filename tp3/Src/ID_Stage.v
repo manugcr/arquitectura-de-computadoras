@@ -16,6 +16,7 @@ module ID_Stage(
     PCWrite, IFIDWrite,
     RegWrite_IDEX, 
     PCAdder,
+    Flush_IF,
     ReadData1_out,ReadData2_out,
     ControlSignal_Out,JumpControl,          // Señales de control de salida
     Out_Instruction,
@@ -63,7 +64,9 @@ module ID_Stage(
     // Señales de control
     output wire [31:0] ControlSignal_Out;
 
-     output wire JumpControl;
+    output wire JumpControl;
+
+    output wire Flush_IF;
 
     output wire [31:0] Out_Instruction;
 
@@ -97,6 +100,8 @@ module ID_Stage(
 
     wire JumpMuxSel;
 
+    wire BranchFlush;
+
     wire [31:0] ShiftedJumpAddress;
 
     // Cable para valor inmediato desplazado
@@ -126,6 +131,8 @@ module ID_Stage(
 
     // Unidad de detección de peligros
     Hazard HazardDetection(
+            .OpCode(In_Instruction[31:26]), 
+            .Func(In_Instruction[5:0]),
         .RegRS_IFID(In_Instruction[25:21]),
         .RegRT_IFID(In_Instruction[20:16]),
         .RegRT_IDEX(RegRT_IDEX),
@@ -137,8 +144,9 @@ module ID_Stage(
         .RegDst_IDEX(RegDst_IDEX),
         .ControlStall(ControlStall),
         .PCWrite(PCWrite),
-        .IFIDWrite(IFIDWrite)
-    );
+        .IFIDWrite(IFIDWrite),
+        .BranchFlush(Flush_IF));
+    
 
     // Módulo de control
     Control              Control(.Instruction(In_Instruction),
