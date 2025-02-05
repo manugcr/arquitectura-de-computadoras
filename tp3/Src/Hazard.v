@@ -57,7 +57,7 @@ module Hazard(
 
     // OpCodes
     localparam [5:0] 
-                     OP_ZERO        = 6'b000000,   // 
+                     OP_ZERO_JR        = 6'b000000,   // 
                      OP_J           = 6'b000010,   // J
                      OP_JAL         = 6'b000011,   // JAL
                      OP_LW          = 6'b100011,   // LW
@@ -96,13 +96,24 @@ module Hazard(
             BranchFlush  <= 1'b0;   // funcionaaaa
         end 
 
-       // JR in ID and JAL in EX or MEM
-        else if ( OpCode == OP_J ) begin
+       // J    FUNCIONAA
+        else if ( OpCode == OP_J || OpCode == OP_JAL || (OpCode == OP_ZERO_JR && Func == 6'b001000) ) begin
             PCWrite      <= 1'b1;
             IFIDWrite    <= 1'b0;
             ControlStall <= 1'b0;
             BranchFlush  <= 1'b1;
         end 
+
+       /*  // Jal         VER SI FUNCIONAAAAAAAA
+        else if ( OpCode == OP_JAL  && 
+                  ((RegWrite_IDEX && RegDst_IDEX == 2'b10) || (RegWrite_EXMEM && RegisterDst_EXMEM == 5'd31)) ) begin
+        
+            PCWrite      <= 1'b0;
+            IFIDWrite    <= 1'b0;
+            ControlStall <= 1'b1;
+            BranchFlush  <= 1'b1;
+        
+        end */
         
         else begin 
             // Caso por defecto: No hay peligro detectado.

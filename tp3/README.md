@@ -524,7 +524,7 @@ Supongamos el siguiente Set de instrucciones:
 PC                 |   Instrucción   
 00000000                add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
 00000100                add $a0, $a1, $a2 -> 000000 00101 00110 00100 00000 100000  -> 0x00A62020 -> 10887200
-00001000                j 00011000        -> 000010 00000 00000 00000 00000 011000  -> 0x08000018 -> 134217752
+00001000                j 00011000        -> 000010 00000 00000 00000 00000 000110  -> 0x08000006 -> 134217752
 00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
 00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
 00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
@@ -556,5 +556,89 @@ permitiendo así introducir un *stall* de un solo ciclo.
 #### Resultado
 
 <p align="center"> <img src="img/image38.png" alt=""> </p>
+
+
+### Caso H: Jal
+
+#### `jal dir`: Jump and Link
+
+Salta a ejecutar la instrucción cuya dirección está etiquetada por `dir`, y enlaza (guarda la dirección de la siguiente instrucción en el registro `$ra`).
+
+<p align="center"> <img src="img/image39.png" alt=""> </p>
+
+
+Al ejecutar la instrucción `jal dir`, en el registro `$ra` se guarda la dirección de la siguiente instrucción y luego salta a ejecutar las instrucciones en la dirección etiquetada como `dir`. 
+
+Si al final de ese bloque se encuentra la instrucción `jr $ra`, el programa retornará a la dirección almacenada en `$ra`, continuando la ejecución desde la instrucción siguiente a `jal`.
+
+Supongamos el siguiente Set de instrucciones:
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+00000100                add $a0, $a1, $a2 -> 000000 00101 00110 00100 00000 100000  -> 0x00A62020 -> 10887200
+00001000                jal 00011000      -> 000011 00000 00000 00000 00000 000110  -> 0x0C000006 -> 201326598
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384
+```
+
+#### Interpretación
+
+<p align="center"> <img src="img/image40.png" alt=""> </p>
+
+#### Resultado
+
+<p align="center"> <img src="img/image41.png" alt=""> </p>
+
+### Caso I: JR
+
+
+La instrucción `jr $t0` (Jump Register) salta a la dirección almacenada en el registro `$t0` ($t0 = b11000 = 18h). Es decir, la ejecución del programa continuará desde la dirección contenida en `$t0`.
+
+
+A continuación, se muestra un código de ejemplo con las direcciones de memoria correspondientes:
+
+```assembly
+0x00000000  li $t0, 0x00000018  # Cargar en $t0 la dirección 0x00000018
+0x00000004  instrucción1
+0x00000008  instrucción2
+0x0000000c  jr $t0             # Saltar a la dirección en $t0 (0x00000018)
+0x00000010  instrucción3       # No se ejecuta
+0x00000014  instrucción4       # No se ejecuta
+0x00000018  instrucción5       # Se ejecuta después del salto
+0x0000001c  instrucción6
+0x00000020  instrucción7
+```
+
+
+Durante la ejecución de este código:
+- Se ejecutan todas las instrucciones hasta la instrucción `jr $t0`.
+- La instrucción `jr $t0` hace que el programa salte a la dirección contenida en `$t0` (0x00000018).
+- Las instrucciones en 0x00000000 y 0x00000014 no se ejecutan.
+- La ejecución continúa desde 0x00000018 en adelante.
+
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+00000100                add $a0, $a1, $a2 -> 000000 00101 00110 00100 00000 100000  -> 0x00A62020 -> 10887200
+00001000                jr  $t8           -> 000000 11000 00000 00000 00000 001000  -> 0x3000008  -> 50331656
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+```
+#### Interpretación
+
+<p align="center"> <img src="img/image42.png" alt=""> </p>
+
+
+#### Resultado
+
+<p align="center"> <img src="img/image43.png" alt=""> </p>
 
 

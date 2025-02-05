@@ -15,7 +15,7 @@ module IF_ID(
     input        Flush, Clock, Enable;
     input [31:0] In_Instruction;
     input [31:0] In_PCAdder;
-    
+
     // Declaración de salidas
     output reg [31:0] Out_Instruction;     // Almacena la instrucción
     output reg [31:0] Out_PrevPCAdder;     // Almacena el valor anterior del PC sumado
@@ -31,7 +31,7 @@ module IF_ID(
     always @(posedge Clock) begin
          if (Flush) begin
             Out_Instruction = 32'd0;
-            Out_PCAdder     = 32'd0;
+          //  Out_PCAdder     = 32'd0;  VER SI ESTO ROMPE ALGO ojoooooooooooo
         end
          if (Enable) begin
             // Si Enable está activo, actualiza los registros con las entradas
