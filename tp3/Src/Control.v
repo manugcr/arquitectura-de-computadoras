@@ -60,7 +60,9 @@ module Control(Instruction,
                      FUNC_SLL       =  6'b000000,  // SLL
                      FUNC_SRL       =  6'b000010,  // SRL 
                      FUNC_SRLV      =  6'b000110,  // SRLV 
-                     FUNC_SRAV      =  6'b000111;  // SRAV 
+                     FUNC_SRA       =  6'b000011,  //SRA
+                     FUNC_SRAV      =  6'b000111,  // SRAV 
+                     FUNC_SLLV      =  6'b000100;  // SLLV         //////////// VER
 
     localparam [5:0] ALUOP_ZERO     = 6'b000000, // ZERO
                      ALUOP_ADDIU    = 6'b000001, // ADDIU
@@ -174,7 +176,7 @@ module Control(Instruction,
                             ALUBMux <= 1'b0;
                         end
                         
-                        else if (Func == FUNC_SLL) ALUBMux <= 1'b0;
+                        else if (Func == FUNC_SLL || Func == FUNC_SLLV) ALUBMux <= 1'b0;
                         else if (Func == FUNC_ROTR  &&  Bit21) ALUOp <= ALUOP_ROTR;  // rotr
                         else if (Func == FUNC_SRLV  && ~Bit6)  ALUOp <= ALUOP_SRLV;  // srlv
                         else if (Func == FUNC_ROTRV &&  Bit6)  ALUOp <= ALUOP_ROTRV; // rotrv

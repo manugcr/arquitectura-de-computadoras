@@ -25,6 +25,29 @@ module InstructionMemory(Address, Instruction ,stall );
             memory[i] = 0;// Asigna el valor i a cada posición de memoria
         end
 
+          memory[0] =    542851;
+          memory[1] =    152067;
+          memory[2] =    1660995;
+          memory[3] =    745539;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         /*  CASO A: Sin riesgos, multiples instrucciones
         add $t0, $t1, $t2 # 000000 01001 01010 01000 00000 100000  -> 0x012A4020 -> 19546144, Registro 08h (08d) = 13h
         add $s1, $s2, $s3 # 000000 10010 10011 10001 00000 100000  -> 0x2538820  -> 39028768, Registro 11h (17d) = 25h
@@ -178,7 +201,7 @@ module InstructionMemory(Address, Instruction ,stall );
             00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384  */
 
 
-          memory[0] = 39028768;  // Registro 11h (17d) = 25h
+         /* memory[0] = 39028768;  // Registro 11h (17d) = 25h
           memory[1] = 10887200;  // Registro 04h (04d) = 0bh 
           memory[2] = 50331656;  // SALTO A instruccion memory[6]
           memory[3] = 21710880;  // Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO

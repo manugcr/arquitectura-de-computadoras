@@ -1,33 +1,112 @@
 # R-Type
 Las instrucciones del tipo `R` operan exclusivamente con registros. Realizan operaciones aritméticas, lógicas o de control de flujo usando valores almacenados en los registros. No requieren acceder a la memoria ni incluyen direcciones explícitas.
 
-- **SLL (Shift Left Logical)**  
-Desplaza los bits de un registro a la izquierda, llenando con ceros los bits menos significativos.  
-Ejemplo: `SLL R1, R2, 2`
+- **SLL,SLLV,SRA,SRAV,SRL,SRLV** (Instrucciones de Desplazamiento)
+    Cada instrucción desplaza el contenido de `Rs1` a la izquierda o derecha según la distancia indicada por `Rs2`, y coloca el resultado en `Rd`.
 
-- **SRL (Shift Right Logical)**  
-Desplaza los bits de un registro a la derecha, llenando con ceros los bits más significativos.  
-Ejemplo: `SRL R1, R2, 2`
+| Instrucción      | Descripción                                    | Explicación |
+|------------------|----------------------------------------------|-------------|
+| `sll $s1,$s2,10`    | Desplazamiento lógico a la izquierda         | `$s1 = $s2 << 10` (Se llenan los bits vacíos con 0) |
+| `sllv Rd, Rs1, Rs2` | Desplazamiento lógico a la izquierda variable | `Rd = Rs1 << (Rs2 % 32)` (El desplazamiento es variable) |
+| `sra Rd, Rs1, imm`  | Desplazamiento lógico a la derecha aritmético | `Rd = Rs1 >> imm` (Se llenan los bits vacíos con el bit de signo) |
+| `srav Rd, Rs1, Rs2` | Desplazamiento lógico a la derecha variable  | `Rd = Rs1 >> (Rs2 % 32)` (Conserva el signo) |
+| `srl Rd, Rs1, Rs2`  | Desplazamiento lógico a la derecha           | `Rd = Rs1 >>> Rs2` (Se llenan los bits vacíos con 0) |
+| `srlv Rd, Rs1, Rs2` | Desplazamiento lógico a la derecha variable  | `Rd = Rs1 >>> (Rs2 % 32)` (El desplazamiento es variable) |
 
-- **SRA (Shift Right Arithmetic)**  
-Desplaza los bits de un registro a la derecha, preservando el bit de signo (el bit más significativo).  
-Ejemplo: `SRA R1, R2, 2`
+**Ejemplo SLL**
 
-- **SLLV (Shift Left Logical Variable)**  
-Desplaza los bits de un registro a la izquierda por un número de posiciones especificado en otro registro.  
-Ejemplo: `SLLV R1, R2, R3`
+```assembly 
+  sll v0,v1,10 -> 000000 00000 00011 00010 01010 000000 -> 0x00031280 -> 201344
+```
+<p align="center"> <img src="../img/image45.png" alt=""> </p>
 
-- **SRLV (Shift Right Logical Variable)**  
-Desplaza los bits de un registro a la derecha por un número de posiciones especificado en otro registro.  
-Ejemplo: `SRLV R1, R2, R3`
+```assembly 
+  sll v0,v1,10 -> 000000 00000 00011 00010 01010 000000 -> 0x00031280 -> 201344
+```
+##### Conclusión
 
-- **SRAV (Shift Right Arithmetic Variable)**  
-Desplaza los bits de un registro a la derecha preservando el signo por un número de posiciones especificado en otro registro.  
-Ejemplo: `SRAV R1, R2, R3`
+- **Usa SLL** cuando la cantidad de desplazamiento es fija y conocida en tiempo de compilación.
+- **Usa SLLV** cuando la cantidad de desplazamiento es variable y depende de un valor en un registro.
+
+Ambas instrucciones son útiles para multiplicaciones por potencias de 2 sin usar `mul`, pero **SLLV** es más flexible al permitir un desplazamiento dinámico.
+
+**Ejemplo SLLV**
+
+```assembly 
+  sllv v0,v1,t2 -> 000000 01010 00011 00010 00000 000100 -> 0x1431004 -> 21172228
+```
+
+<p align="center"> <img src="../img/image46.png" alt=""> </p>
+
+**Ejemplo SRA**
+
+📝 NOTA: Recuerde que los valores negativos se almacenan en el registro utilizando la representación en complemento a 2. EJ:
+
+<p align="center"> <img src="../img/image47.png" alt=""> </p>
+
+```assembly 
+   sra $t1, $t0, 2 -> 000000 00000 01000 01001 00010 000011 -> 0x84883  -> 542851 (con t0=-16)
+   sra $t2, $v0, 8 -> 000000 00000 00010 01010 01000 000011 -> 0x25203  -> 152067 (con v0=2)
+   sra $t3, $t9, 1 -> 000000 00000 11001 01011 00001 000011 -> 0x195843 -> 1660995 (con t9=25)
+   sra $t4, $t3, 1 -> 000000 00000 01011 01100 00001 000011 -> 0xB6043  -> 745539 
+```
+##### **Interpretación SRA para sra $t1, $t0, 2**
+```assembly 
+  Relleno con signo   Bits originales desplazados
+      1 1           11111111 11111111 11111111 11110000  → Desplazar 2 a la derecha
+      └─────────────────────────────────────────────────────────┘
+                 ↓
+Resultado:   11111111 11111111 11111111 11111100 = 0xFFFFFFFC
+```
+
+<p align="center"> <img src="../img/image48.png" alt=""> </p>
+
+
+
 
 - **ADDU (Add Unsigned)**  
-Suma dos registros sin considerar desbordamientos.  
-Ejemplo: `ADDU R1, R2, R3`
+
+Suma dos registros sin considerar desbordamientos. Si la suma excediera el rango de 32 bits, el resultado simplemente se truncaría.  
+Ejemplo: **ADDU R1, [0x7FFFFFFF], [0x00000001]** , **ADDU R2, R1, [0x7FFFFFFF]**  y **ADDU R3, R1, R2** 
+
+```assembly 
+    0111 1111 1111 1111 1111 1111 1111 1111   (0x7FFFFFFF)  
+  + 0000 0000 0000 0000 0000 0000 0000 0001   (0x00000001)  
+  -------------------------------------------------------  
+    1000 0000 0000 0000 0000 0000 0000 0000   (0x80000000, en complemento a dos)  
+
+
+      0111 1111 1111 1111 1111 1111 1111 1111   (0x7FFFFFFF)
+    + 1000 0000 0000 0000 0000 0000 0000 0000   (0x80000000)
+    -------------------------------------------------------
+      1111 1111 1111 1111 1111 1111 1111 1111   (0xFFFFFFFF)
+
+       1000 0000 0000 0000 0000 0000 0000 0000   
+    + 1111 1111 1111 1111 1111 1111 1111 1111   
+    ------------------------------------------------
+      0111 1111 1111 1111 1111 1111 1111 1111
+```
+
+Aquí, el resultado es *negativo* cuando se interpreta como complemento a dos.  
+Esto causaría una excepción en **ADD**, ya que la suma de dos números positivos no debería dar un negativo.  
+
+Sin embargo, **ADDU** simplemente guarda el resultado (0x80000000) sin verificar si hay desbordamiento, almacenando este valor en **Rd** sin errores.
+
+```assembly 
+ADDU $t0,$t1,$t2 -> 000000 01001 01010 01000 00000 100001 ->  0x12A4021 -> 19546145
+ADDU $t3,$t1,$t0 -> 000000 01001 01000 01011 00000 100001 ->  0x1285821 -> 19421217
+ADDU $t4,$t0,$t3 -> 000000 01000 01011 01100 00000 100001 ->  0x10B6021 -> 17522721
+```
+**RESULTADO:**
+
+<p align="center"> <img src="../img/image44.png" alt=""> </p>
+
+
+
+
+
+
+
 
 - **SUBU (Subtract Unsigned)**  
 Resta dos registros sin considerar desbordamientos.  
