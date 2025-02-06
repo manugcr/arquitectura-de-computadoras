@@ -131,7 +131,7 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
             ROTR : ALUResult <= ((B >> Shamt) | (B << (32 - Shamt)));   // rotr
             ROTRV: ALUResult <= ((B >> A) | (B << (32 - A)));           // rotrv
             SRA  : ALUResult[31:0] <= $signed(B) >>> Shamt;           // sra   LE AGREGE SIGNADO B SACAR SI NO SIRVE
-            SRAV : ALUResult <= B >>> A;                                // srav
+            SRAV : ALUResult <= $signed(B) >>> A;                                // srav
             
             MOVN : begin
                 if (B != 0) ALUResult <= A;                          // movn

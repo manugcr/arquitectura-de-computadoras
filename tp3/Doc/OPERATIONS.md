@@ -10,8 +10,9 @@ Las instrucciones del tipo `R` operan exclusivamente con registros. Realizan ope
 | `sllv Rd, Rs1, Rs2` | Desplazamiento lógico a la izquierda variable | `Rd = Rs1 << (Rs2 % 32)` (El desplazamiento es variable) |
 | `sra Rd, Rs1, imm`  | Desplazamiento lógico a la derecha aritmético | `Rd = Rs1 >> imm` (Se llenan los bits vacíos con el bit de signo) |
 | `srav Rd, Rs1, Rs2` | Desplazamiento lógico a la derecha variable  | `Rd = Rs1 >> (Rs2 % 32)` (Conserva el signo) |
-| `srl Rd, Rs1, Rs2`  | Desplazamiento lógico a la derecha           | `Rd = Rs1 >>> Rs2` (Se llenan los bits vacíos con 0) |
+| `srl $s1,$s2,10`  | Desplazamiento lógico a la derecha           | `$s1 = $s2 >> 10` (Se llenan los bits vacíos con 0) |
 | `srlv Rd, Rs1, Rs2` | Desplazamiento lógico a la derecha variable  | `Rd = Rs1 >>> (Rs2 % 32)` (El desplazamiento es variable) |
+
 
 **Ejemplo SLL**
 
@@ -61,7 +62,38 @@ Resultado:   11111111 11111111 11111111 11111100 = 0xFFFFFFFC
 
 <p align="center"> <img src="../img/image48.png" alt=""> </p>
 
+**Ejemplo SRAV**
 
+```assembly 
+   srav $t1, $t0, $v0 -> 000000 00010 01000 01001 00000 000111 -> 0x484807  -> 4737031 (con t0=-16, V0=2)
+   srav $t2, $v0, $a3 -> 000000 00111 00010 01010 00000 000111 -> 0xE25007  -> 14831623  (con v0=2 , a3=7 )
+   srav $t3, $t9, $at -> 000000 00001 11001 01011 00000 000111 -> 0x395807  -> 3758087 (con t9=25)
+   srav $t4, $t3, $at -> 000000 00001 01011 01100 00000 000111 -> 0x2B6007  -> 2842631 
+```
+
+<p align="center"> <img src="../img/image49.png" alt=""> </p>
+
+
+**Ejemplo SRL**
+
+```assembly 
+   srl $t1, $t0, 2 -> 000000 00000 01000 01001 00010 000010 -> 0x84882  -> 542850 (con t0=-16)
+   srl $t2, $v0, 8 -> 000000 00000 00010 01010 01000 000010 -> 0x25202  -> 152066 (con v0=2)
+   srl $t3, $t9, 1 -> 000000 00000 11001 01011 00001 000010 -> 0x195842 -> 1660994 (con t9=25)
+   srl $t4, $t3, 1 -> 000000 00000 01011 01100 00001 000010 -> 0xB6042  -> 745538 
+```
+<p align="center"> <img src="../img/image50.png" alt=""> </p>
+
+**Ejemplo SRLV**
+
+```assembly 
+   srlv $t1, $t0, $v0 -> 000000 00010 01000 01001 00000 000110 -> 0x484806  -> 4737030 (con t0=-16, V0=2)
+   srlv $t2, $v0, $a3 -> 000000 00111 00010 01010 00000 000110 -> 0xE25006  -> 14831622  (con v0=2 , a3=7 )
+   srlv $t3, $t9, $at -> 000000 00001 11001 01011 00000 000110 -> 0x395806  -> 3758086 (con t9=25)
+   srlv $t4, $t3, $v0 -> 000000 00010 01011 01100 00000 000110 -> 0x4B6006  -> 4939782
+```
+
+<p align="center"> <img src="../img/image51.png" alt=""> </p>
 
 
 - **ADDU (Add Unsigned)**  

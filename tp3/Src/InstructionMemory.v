@@ -25,13 +25,21 @@ module InstructionMemory(Address, Instruction ,stall );
             memory[i] = 0;// Asigna el valor i a cada posición de memoria
         end
 
-          memory[0] =    542851;
-          memory[1] =    152067;
-          memory[2] =    1660995;
-          memory[3] =    745539;
+          memory[0] =    4737030;
+          memory[1] =    14831622;
+          memory[2] =    3758086;
+          memory[3] =    4939782;
 
 
+    /*
+   ```assembly 
+   srlv $t1, $t0, $v0 -> 000000 00010 01000 01001 00000 000110 -> 0x484806  -> 4737030 (con t0=-16, V0=2)
+   srlv $t2, $v0, $a3 -> 000000 00111 00010 01010 00000 000110 -> 0xE25006  -> 14831622  (con v0=2 , a3=7 )
+   srlv $t3, $t9, $at -> 000000 00001 11001 01011 00000 000110 -> 0x395806  -> 3758086 (con t9=25)
+   srlv $t4, $t3, $v0 -> 000000 00010 01011 01100 00000 000110 -> 0x4B6006  -> 4939782
+```
 
+    */
 
 
 
