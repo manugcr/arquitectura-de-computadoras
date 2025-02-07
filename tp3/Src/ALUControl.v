@@ -67,6 +67,7 @@ module ALUControl(Funct, ALUOp, ALUControl);
                      FUNC_SRL       =  6'b000010,   // SRL 
                      FUNC_SRLV      =  6'b000110,   // SRLV 
                      FUNC_SUB       =  6'b100010,   // SUB  
+                     FUNC_SUBU      =  6'b100011,   // SUBU     AGREGADOOO
                      FUNC_XOR       =  6'b100110,   // XOR  
                      FUNC_EH        =  6'b011000,   // EH
                      FUNC_IH        =  6'b010100,   // IH
@@ -121,7 +122,8 @@ module ALUControl(Funct, ALUOp, ALUControl);
                      EB     = 6'd41,   // EB
                      IB     = 6'd42,   // IB
                      ABS    = 6'd43,   // ABS
-                     LA     = 6'd44;   // LA
+                     LA     = 6'd44,   // LA
+                     SUBU   = 6'd45;      // Resta (SUBU);      // AGREGADOOOOOOOOOOOOOOOOOO
 
     initial begin
         ALUControl <= 6'b000000;
@@ -140,6 +142,7 @@ module ALUControl(Funct, ALUOp, ALUControl);
                     FUNC_ADD  : ALUControl <= ADD;
                     FUNC_ADDU : ALUControl <= ADDU;
                     FUNC_SUB  : ALUControl <= SUB;
+                    FUNC_SUBU : ALUControl <= SUBU;                     //AGREGADOOO
                     FUNC_AND  : ALUControl <= AND;
                     FUNC_OR   : ALUControl <= OR;
                     FUNC_XOR  : ALUControl <= XOR;

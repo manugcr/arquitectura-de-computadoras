@@ -63,7 +63,8 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
                      SLLV   = 6'd36,      // Desplazamiento lógico a la izquierda variable
                      SRLV   = 6'd37,      // Desplazamiento lógico a la derecha variable
                      ABS    = 6'd43,      // Valor absoluto
-                     LA     = 6'd44;      // Cargar dirección
+                     LA     = 6'd44,
+                     SUBU   = 6'd45;      // Resta (SUBU);      // AGREGADOOOOOOOOOOOOOOOOOO
 
     // Inicialización de variables
 
@@ -82,7 +83,7 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
         
         case (ALUControl)
 
-         
+
         
             //------------
             // Arithmetic
@@ -90,7 +91,8 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
             
             ADD  : ALUResult <= $signed(A) + $signed(B);     // add
             ADDU : ALUResult <= A + B;                       // add unsigned
-            SUB  : ALUResult <= A - B;                       // sub
+            SUB  : ALUResult <= $signed(A) - $signed(B);      // sub
+            SUBU : ALUResult <= A - B;                       // subU      AGREGADOOOO
             MUL  : ALUResult <= A * B;                       // mul
             
             MULT : begin                                    // mult

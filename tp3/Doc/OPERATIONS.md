@@ -95,6 +95,8 @@ Resultado:   11111111 11111111 11111111 11111100 = 0xFFFFFFFC
 
 <p align="center"> <img src="../img/image51.png" alt=""> </p>
 
+---
+
 
 - **ADDU (Add Unsigned)**  
 
@@ -133,24 +135,91 @@ ADDU $t4,$t0,$t3 -> 000000 01000 01011 01100 00000 100001 ->  0x10B6021 -> 17522
 
 <p align="center"> <img src="../img/image44.png" alt=""> </p>
 
+---
 
+### 📊 NOTA: Comparación entre Números Signados y No Signados en MIPS (32 bits)
 
+| Característica       | Signado (Signed) | No Signado (Unsigned) |
+|----------------------|-----------------|-----------------------|
+| **Forma de representación** | Complemento a dos | Binario puro |
+| **Rango** | -2,147,483,648 a 2,147,483,647 | 0 a 4,294,967,295 |
+| **Bit más significativo (MSB)** | 0 = positivo, 1 = negativo | Siempre parte del valor |
+| **Ejemplo de +1** | `0000 0000 0000 0000 0000 0000 0000 0001` (0x00000001) | Igual: `0000 0000 0000 0000 0000 0000 0000 0001` (0x00000001) |
+| **Ejemplo de -1** | `1111 1111 1111 1111 1111 1111 1111 1111` (0xFFFFFFFF) | No existe en no signado |
+| **Máximo valor posible** | `0111 1111 1111 1111 1111 1111 1111 1111` (0x7FFFFFFF) → 2,147,483,647 | `1111 1111 1111 1111 1111 1111 1111 1111` (0xFFFFFFFF) → 4,294,967,295 |
+| **Mínimo valor posible** | `1000 0000 0000 0000 0000 0000 0000 0000` (0x80000000) → -2,147,483,648 | `0000 0000 0000 0000 0000 0000 0000 0000` (0x00000000) → 0 |
+| **Operaciones aritméticas** | Soporta suma, resta, multiplicación y división con signo (`add`, `sub`, `mult`, `div`) | Similar, pero sin considerar signo (`addu`, `subu`, `multu`, `divu`) |
+| **Comparaciones** | Usa `slt`, `ble`, `bge`, etc. (consideran el signo) | Usa `sltu`, `bleu`, `bgeu`, etc. (no consideran el signo) |
 
+#### **Notas Importantes**
+- En instrucciones MIPS, `add` y `sub` manejan **signados**, mientras que `addu` y `subu` manejan **no signados**.
+- Al comparar números **signados** y **no signados**, pueden ocurrir resultados inesperados si no se usa la instrucción correcta.
+- Si se interpreta un número **no signado** como **signado**, puede dar valores negativos incorrectos.
 
-
-
+---
 
 - **SUBU (Subtract Unsigned)**  
-Resta dos registros sin considerar desbordamientos.  
-Ejemplo: `SUBU R1, R2, R3`
+
+Resta dos registros sin considerar desbordamientos. Coloca en `Rd` la diferencia de los enteros  
+contenidos en `Rs1` y `Rs2`. Se usa en operaciones donde se prefiere evitar el manejo de excepciones de desbordamiento.  
+
+**subu $s1, $s2, $s3** → `$s1 = $s2 - $s3`  
+Tres operandos; desbordamiento no detectado.  
+
+```assembly 
+ $t0 = 0x80000000   # Carga el menor número representable en 32 bits con signo (-2^31)
+ $t1 = 1
+ sub  $t2, $t0, $t1   # Provoca desbordamiento -> Excepción
+ subu $t3, $t0, $t1   # NO lanza excepción, el resultado es incorrecto si se interpreta como número con signo
+```
+
+##### SUB vs SUBU
+
+```assembly  
+$t2 = $t0 - $t1             |     1000 0000 0000 0000 0000 0000 0000 0000   (-2^31)
+    = (-2^31) - (1)         |   + 1111 1111 1111 1111 1111 1111 1111 1111   (-1)
+    = -2147483648 - 1       |     ------------------------------------------------
+    = -2147483649           |     0111 1111 1111 1111 1111 1111 1111 1111   (+2147483647)
+```
+
+En 32 bits, `-2147483649` no existe, ya que el mínimo representable es `-2147483648`  
+(`1000 0000 0000 0000 0000 0000 0000 0000`).  
+Cuando intentamos calcular `-2147483649`, obtenemos `+2147483647` debido al desbordamiento.  
+MIPS detecta esto y lanza una excepción con `sub`, pero no con `subu`.
+
+```assembly  
+  subu $t0, $a1, $v1 -> 000000 00101 00011 01000 00000 100011 -> 10698787
+  subu $t1 ,$v1, $a1 -> 000000 00011 00101 01001 00000 100011 -> 6637603
+  subu $t2 ,$t8, $t8 -> 000000 11000 11000 01010 00000 100011 -> 51925027
+  subu $t3, $t2, $t1 -> 000000 01010 01001 01011 00000 100011 -> 21583907
+```
+
+<p align="center"> <img src="../img/image52.png" alt=""> </p>
+
+
+
 
 - **AND**  
 Realiza una operación lógica AND entre dos registros.  
 Ejemplo: `AND R1, R2, R3`
 
+
+
 - **OR**  
 Realiza una operación lógica OR entre dos registros.  
 Ejemplo: `OR R1, R2, R3`
+
+```assembly  
+  AND $t0, $a1, $v0 -> 000000 00101 00010 01000 00000 100100 -> 10633252
+  AND $t1 ,$s0, $s0 -> 000000 10000 10000 01001 00000 100100 -> 34621476
+  AND $t2 ,$t1, $t7 -> 000000 01001 01111 01010 00000 100100 -> 19877924
+  AND $t3, $t2, $t1 -> 000000 01010 01001 01011 00000 100100 -> 21583908
+  OR  $t4, $t3, $v1 -> 000000 01011 00011 01100 00000 100101 -> 23289893
+  OR  $t5, $t4, a0  -> 000000 01100 00100 01101 00000 100101 -> 25454629
+```
+
+<p align="center"> <img src="../img/image53.png" alt=""> </p>
+
 
 - **XOR**  
 Realiza una operación lógica XOR entre dos registros.  
