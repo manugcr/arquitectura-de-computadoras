@@ -73,6 +73,7 @@ module Control(Instruction,
                      ALUOP_ORI      = 6'b001101, // ORI
                      ALUOP_JUMP     = 6'b001011, // J, JR, JAL
                      ALUOP_XORI     = 6'b001110, // XORI
+                     ALUOP_XOR      = 6'b100110,  // XOR AGREGADOOOOOOOOOOO
                      ALUOP_SEB      = 6'b001111, // SEB
                      ALUOP_SLTI     = 6'b010000, // SLTI
                      ALUOP_SLTIU    = 6'b010001, // SLTIU

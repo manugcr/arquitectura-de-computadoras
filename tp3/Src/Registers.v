@@ -23,8 +23,9 @@ module Registers(
 
    /*     registers[9] =  32'h7fffffff;
         registers[10] = 32'h00000001;*/
-
-        registers[8] = -16;
+        
+        
+       
 
         // Crea o limpia el archivo registers.mem
         $writememh("registers.mem", registers);

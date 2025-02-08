@@ -229,6 +229,17 @@ Ejemplo: `XOR R1, R2, R3`
 Realiza una operación lógica NOR entre dos registros.  
 Ejemplo: `NOR R1, R2, R3`
 
+```assembly  
+  XOR $t0, $a1, $v0 -> 000000 00101 00010 01000 00000 100110 -> 10633254
+  NOR $t1 ,$s0, $s0 -> 000000 10000 10000 01001 00000 100111 -> 34621479
+  XOR $t2 ,$t1, $t7 -> 000000 01001 01111 01010 00000 100110 -> 19877926
+  NOR $t3, $t2, $t1 -> 000000 01010 01001 01011 00000 100111 -> 21583911
+  NOR $t4, $t3, $v1 -> 000000 01011 00011 01100 00000 100111 -> 23289895
+  XOR $t5, $t4, a0  -> 000000 01100 00100 01101 00000 100110 -> 25454630
+```
+<p align="center"> <img src="../img/image54.png" alt=""> </p>
+
+
 - **SLT (Set on Less Than)**  
 Establece un registro a 1 si un registro es menor que otro; de lo contrario, lo establece a 0.  
 Ejemplo: `SLT R1, R2, R3`
@@ -236,6 +247,34 @@ Ejemplo: `SLT R1, R2, R3`
 - **SLTU (Set on Less Than Unsigned)**  
 Similar a SLT pero para números sin signo.  
 Ejemplo: `SLTU R1, R2, R3`
+
+
+ **SLT** es útil cuando los valores pueden ser negativos y se necesita comparación con signo.  
+**SLTU** es útil para comparaciones donde los valores son interpretados como sin signo, por ejemplo, en direcciones de memoria o tamaños de datos.  
+- Si trabajas con números positivos en ambos casos, **SLT** y **SLTU** darán el mismo resultado.  
+  La diferencia solo aparece cuando:
+  - Hay valores negativos (cuando se usa **SLT**).
+  - Hay valores grandes debido a la interpretación sin signo (cuando se usa **SLTU**).
+
+```assembly  
+     t0 = -5          # t0 = -5 (valor con signo)
+     t1 = 10          # t1 = 10 (valor con signo)
+     t2 = 4294967290  # t2 = 4294967290 (valor sin signo, equivalente a -6 en signo)
+     t3 = 5           # t3 = 5 (valor sin signo)
+
+    slt $t4, $t0, $t1     # $t4 = 1 si $t0 < $t1 (con signo, -5 < 10)
+    add $t6, $t4, a0
+    sltu $t5, $t2, $t3    # $t5 = 1 si $t2 < $t3 (sin signo, 4294967290 < 5)
+    add $t7, $t5, $t9
+```
+```assembly  
+  slt $t4, $t0, $t1	 -> 000000 01000 01001 01100 00000 101010 ->	0x0109602A -> 17391658
+  add $t6, $t4, $a0	 -> 000000 01100 00100 01110 00000 100000	->  0x01847020 -> 25456672
+  sltu $t5, $t2, $t3 ->	000000 01010 01011 01101 00000 101011	->  0x014B682B -> 21719083
+  add $t7, $t5, $t9	 -> 000000 01101 11001 01111 00000 100000	->  0x01B97820 -> 28932128
+```
+
+<p align="center"> <img src="../img/image55.png" alt=""> </p>
 
 ---
 
@@ -265,11 +304,42 @@ El direccionamiento de byte también afecta al índice de la tabla (array).
 Para conseguir la dirección apropiada del byte en el código anterior, el desplazamiento que se añadirá al registro base $s3 debe ser 4 × 8, ó 32, de modo que la
 dirección cargada sea A[8] y no A[8/4]. 
 
+<p align="center"> <img src="../img/image22.png" alt=""> </p>
 
+---
 
 - **LB (Load Byte)**  
 Carga un byte desde la memoria a un registro, con signo.  
-Ejemplo: `LB R1, 0(R2)`
+Ejemplo: `LB R1, 0(R2)` o `lb $t0, dir` 
+
+
+Carga en el registro `$t0` el contenido del **byte** de memoria cuya dirección es `dir`, extendiendo el signo.
+
+```assembly  
+add $s3, $v0, $v0  -> 000000 00010 00010 10011 00000 100000 -> 4364320
+LB  $s2 , 16 ($s3) -> 100000 10011 10010 0000000000010000 -> 2188509200
+LH  $s1 , 12 ($s3) -> 100001 10011 10001 0000000000001100 -> 2255552524
+add $s4 , $s1, $s2 -> 000000 10001 10010 10100 00000 100000 -> 36872224
+```
+
+(⚠️ya que solo se carga **un byte** y se extiende el signo).  
+
+ **¿Por qué se extiende con signo para LB  $s2 , 16 ($s3)?**
+La instrucción `LB` trata el byte como **un número con signo** en complemento a dos.  
+El bit más significativo (MSB) del byte indica si el número es positivo o negativo:
+
+- Si el MSB del  PRIMER BYTE de 16 ($s3)  es **0**, el número es positivo, y se rellena con ceros (`0`).
+- Si el MSB del  PRIMER BYTE 16 ($s3) es **1**, el número es negativo, y se rellena con unos (`1`).
+
+Este proceso se llama **sign extension** (extensión de signo) y se hace para que el número tenga el mismo valor en 32 bits que en 8 bits.
+
+<p align="center"> <img src="../img/image56.png" alt=""> </p>
+
+<p align="center"> <img src="../img/image57.png" alt=""> </p>
+
+ 
+---
+
 
 - **LH (Load Halfword)**  
 Carga un medio palabra (16 bits) desde la memoria a un registro, con signo.  
@@ -279,7 +349,7 @@ Ejemplo: `LH R1, 0(R2)`
 Carga una palabra (32 bits) desde la memoria a un registro.  
 Ejemplo: `LW R1, 0(R2)`
 
-<p align="center"> <img src="../img/image22.png" alt=""> </p>
+
 
 - **LWU (Load Word Unsigned)**  
 Carga una palabra desde la memoria a un registro, tratándola como sin signo.  

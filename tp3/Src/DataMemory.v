@@ -29,8 +29,9 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
             memory[i] = 0;
         end
             
-         // memory[5] = 8'hAAAAAAAA   ;   
-        //  memory[7] = 8'h00000008   ;
+          memory[5] = 32'hAAAAAAAA   ;   
+          memory[4] = 32'h00002800   ;   
+
 
         // Escribir los valores iniciales en un archivo para referencia
         $writememh("Data_memory.mem", memory);

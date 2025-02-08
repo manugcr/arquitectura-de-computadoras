@@ -106,13 +106,13 @@ module Forward(
 
             */
 
-              $display("[Time: %0t] ForwardMuxA_EX activado: Reenvío desde EX/MEM a RS en la etapa ID/EX. RegWrite_EXMEM: %b, RegDst_EXMEM: %d, RegRS_IDEX: %d", $time, RegWrite_EXMEM, RegDst_EXMEM, RegRS_IDEX);
+            //  $display("[Time: %0t] ForwardMuxA_EX activado: Reenvío desde EX/MEM a RS en la etapa ID/EX. RegWrite_EXMEM: %b, RegDst_EXMEM: %d, RegRS_IDEX: %d", $time, RegWrite_EXMEM, RegDst_EXMEM, RegRS_IDEX);
         end
         else if ((RegWrite_MEMWB && (RegDst_MEMWB != 0)) && (RegDst_MEMWB == RegRS_IDEX)) begin
             ForwardMuxA_EX <= 2'd2; // Reenvío desde MEM/WB
 
-            $display("[Time: %0t] ForwardMuxA_EX activado: Reenvío desde MEM/WB a RS en la etapa ID/EX. RegWrite_MEMWB: %b, RegDst_MEMWB: %d, RegRS_IDEX: %d", 
-             $time, RegWrite_MEMWB, RegDst_MEMWB, RegRS_IDEX);
+          //  $display("[Time: %0t] ForwardMuxA_EX activado: Reenvío desde MEM/WB a RS en la etapa ID/EX. RegWrite_MEMWB: %b, RegDst_MEMWB: %d, RegRS_IDEX: %d", 
+          //   $time, RegWrite_MEMWB, RegDst_MEMWB, RegRS_IDEX);
 
              /*
                 RegWrite_EXMEM = 1 ->  la instrucción que se encuentra en la etapa MEM/WB escribe un valor en un registro
@@ -139,13 +139,13 @@ module Forward(
         // ForwardMuxB: Reenvío de datos desde EX/MEM o MEM/WB a RT en la etapa ID/EX
         if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRT_IDEX))   begin   
             ForwardMuxB_EX <= 2'd1; // Reenvío desde EX/MEM
-            $display("[Time: %0t] ForwardMuxB_EX activado: Reenvío desde EX/MEM a RT en la etapa ID/EX. RegWrite_EXMEM: %b, RegDst_EXMEM: %d, RegRT_IDEX: %d", 
-             $time, RegWrite_EXMEM, RegDst_EXMEM, RegRT_IDEX);
+          //  $display("[Time: %0t] ForwardMuxB_EX activado: Reenvío desde EX/MEM a RT en la etapa ID/EX. RegWrite_EXMEM: %b, RegDst_EXMEM: %d, RegRT_IDEX: %d", 
+          //   $time, RegWrite_EXMEM, RegDst_EXMEM, RegRT_IDEX);
         end 
         else if ((RegWrite_MEMWB && (RegDst_MEMWB != 0)) && (RegDst_MEMWB == RegRT_IDEX)) begin
             ForwardMuxB_EX <= 2'd2; // Reenvío desde MEM/WB
-            $display("[Time: %0t] ForwardMuxB_EX activado: Reenvío desde MEM/WB a RT en la etapa ID/EX. RegWrite_MEMWB: %b, RegDst_MEMWB: %d, RegRT_IDEX: %d", 
-             $time, RegWrite_MEMWB, RegDst_MEMWB, RegRT_IDEX);
+         //   $display("[Time: %0t] ForwardMuxB_EX activado: Reenvío desde MEM/WB a RT en la etapa ID/EX. RegWrite_MEMWB: %b, RegDst_MEMWB: %d, RegRT_IDEX: %d", 
+          //   $time, RegWrite_MEMWB, RegDst_MEMWB, RegRT_IDEX);
         end
         else 
             ForwardMuxB_EX <= 2'b00; // Sin reenvío
