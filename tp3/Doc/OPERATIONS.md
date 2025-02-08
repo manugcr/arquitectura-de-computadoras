@@ -377,6 +377,8 @@ Ejemplo: `SW R1, 0(R2)`
 
 <p align="center"> <img src="../img/image23.png" alt=""> </p>
 
+----
+
 - **ADDI (Add Immediate)**  
 Suma un valor inmediato a un registro y almacena el resultado en otro registro.  
 Ejemplo: `ADDI R1, R2, 10`
@@ -400,6 +402,24 @@ Ejemplo: `XORI R1, R2, 0xFF`
 - **LUI (Load Upper Immediate)**  
 Carga un valor inmediato en los 16 bits superiores de un registro.  
 Ejemplo: `LUI R1, 0x1234`
+
+
+```assembly 
+addi $s1, $s2, 12	    001000 10010 10001 0000000000001100	    575733772 
+addi $a0, $a1, 10	    001000 00101 00100 0000000000001010	    547618826 
+addiu $t1, $t2, 28	  001001 01010 01001 0000000000011100	    625541148 
+andi $t4, $t1, 32	    001100 01001 01100 0000000000100000	    824967200 
+ori $t0, $t1, 1	      001101 01001 01000 0000000000000001	    891813889
+andi $t2, $t1, 7	    001100 01001 01010 0000000000000111	    824836103 
+xori $t3, $t1, 8	    001110 01001 01011 0000000000001000	    959119368 
+xori $t7, $t1, 9	    001110 01001 01111 0000000000001001	    959381513 
+andi $t6, $t2, 12	    001100 01010 01110 0000000000001100	    827195404
+ori $a3, $t0, 13	    001101 01000 00111 0000000000001101	    889651213
+addiu $t5, $t1, 15	  001001 01001 01101 0000000000001111	    623706127 
+```
+
+<p align="center"> <img src="../img/image58.png" alt=""> </p>
+
 
 - **SLTI (Set on Less Than Immediate)**  
 Establece un registro a 1 si un registro es menor que un valor inmediato; de lo contrario, lo establece a 0.  

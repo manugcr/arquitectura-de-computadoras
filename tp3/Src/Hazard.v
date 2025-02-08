@@ -97,7 +97,7 @@ module Hazard(
         end 
 
        // J    FUNCIONAA
-        else if ( OpCode == OP_J || OpCode == OP_JAL || (OpCode == OP_ZERO_JR && Func == 6'b001000) ) begin
+        else if ( OpCode == OP_J || OpCode == OP_JAL || (OpCode == OP_ZERO_JR && (Func == 6'b001000 || Func == 6'b001001)) ) begin
             PCWrite      <= 1'b1;
             IFIDWrite    <= 1'b0;
             ControlStall <= 1'b0;

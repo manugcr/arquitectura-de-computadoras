@@ -40,9 +40,9 @@ module Control(Instruction,
                      OP_SW          = 6'b101011,   // SW
                      OP_ADDI        = 6'b001000,   // ADDI
                      OP_ADDIU       = 6'b001001,   // ADDIU
-                     LHU_TYPE       = 6'b100101,  //AGREGAR
-                     LBU_TYPE       = 6'b100100,  //AGREGAR
-                     LWU_TYPE       = 6'b100111,  //AGREGAR
+                     OP_LHU         = 6'b100101,                    //AGREGADOO
+                     OP_LBU         = 6'b100100,                    //AGREGADOO
+                     OP_LWU         = 6'b100111,                    //AGREGADOO
                      OP_SB          = 6'b101000,   // SB
                      OP_SH          = 6'b101001,   // SH
                      OP_ORI         = 6'b001101,   // ORI
@@ -54,7 +54,8 @@ module Control(Instruction,
                      OP_SLTI        = 6'b001010,   // SLTI
                      OP_SLTIU       = 6'b001011;   // SLTUI
     
-    localparam [5:0] FUNC_JR        =  6'b001000,  // JR   
+    localparam [5:0] FUNC_JR        =  6'b001000,  // JR 
+                     FUNC_JALR      =  6'b001001,  // JALR      AGREGADOOOOOOOOOOOOOOOO
                      FUNC_ROTR      =  6'b000010,  // ROTR
                      FUNC_ROTRV     =  6'b000110,  // ROTRV
                      FUNC_SLL       =  6'b000000,  // SLL
@@ -162,6 +163,19 @@ module Control(Instruction,
                         
                         Flush_IF    <= 1'b1; 
                     end
+
+                    else if (Func == FUNC_JALR) begin    // jalr
+                        JumpMuxSel  <= 1'b1;            //
+                        JumpControl <= 1'b1;
+                        RegWrite    <= 1'b1;            //ESTO CAMBIO
+                        RegDst      <= 2'b01;
+                        MemToReg    <= 2'b01;           //
+                        ALUOp       <= ALUOP_JUMP;  
+                        
+                        Flush_IF    <= 1'b1; 
+                    end
+
+
                 
                     else begin
                         
@@ -236,6 +250,54 @@ module Control(Instruction,
                     MemToReg    <= 2'b00; 
                     LaMux       <= 1'b0;               
                 end
+
+                 /*   OP_LHU         = 6'b100101,                    //AGREGAR
+                     OP_LBU         = 6'b100100,                    //AGREGAR
+                     OP_LWU         = 6'b100111,                    //AGREGAR*/
+                
+                OP_LHU: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
+                    ALUBMux     <= 1'b1;
+                    RegDst      <= 2'b00;
+                    ALUOp       <= ALUOP_ADDI;
+                    ByteSig     <= 2'b01;
+                    MemWrite    <= 1'b0;
+                    MemRead     <= 1'b1;
+                    RegWrite    <= 1'b1;
+                    MemToReg    <= 2'b00;  
+                    LaMux       <= 1'b0;      
+                end
+
+                OP_LBU: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
+                    ALUBMux     <= 1'b1;
+                    RegDst      <= 2'b00;
+                    ALUOp       <= ALUOP_ADDI;
+                    ByteSig     <= 2'b10;
+                    MemWrite    <= 1'b0;
+                    MemRead     <= 1'b1;
+                    RegWrite    <= 1'b1;
+                    MemToReg    <= 2'b00;
+                    LaMux       <= 1'b0;
+                end
+
+                OP_LWU: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
+                    ALUBMux     <= 1'b1;
+                    RegDst      <= 2'b00;
+                    ALUOp       <= ALUOP_ADDI;
+                    ByteSig     <= 2'b00;
+                    MemWrite    <= 1'b0;
+                    MemRead     <= 1'b1;
+                    RegWrite    <= 1'b1;
+                    MemToReg    <= 2'b00; 
+                    LaMux       <= 1'b0;               
+                end
+
+                
                 
                 //sw
                 OP_SW: begin  

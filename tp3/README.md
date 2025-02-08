@@ -642,3 +642,33 @@ PC                 |   Instrucción
 <p align="center"> <img src="img/image43.png" alt=""> </p>
 
 
+
+### Caso J: JALR
+
+📖 VER **Patterson, D. A., & Hennessy, J. L.**  
+*Estructura y Diseño: La Interfaz Hardware/Software* (4ª ed.). Consultar página **866**.
+
+<p align="center"> <img src="img/image59.png" alt=""> </p>
+
+🔹 Si no se especifica **`rd`**, por defecto se usa **`$31`** (**`$ra`**, registro de retorno).  
+
+
+**NOTA:** JR y JALR son operaciones de formato R. Pero JAL no lo es.
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+00000100                add $a0, $a1, $a2 -> 000000 00101 00110 00100 00000 100000  -> 0x00A62020 -> 10887200
+00001000                jalr $t8          -> 000000 11000 00000 11111 00000 001001  -> 0x300F809  -> 50395145
+   //                   jalr $t8,$s0      -> 000000 11000 00000 10000 00000 001001  -> 0x3008009  -> 50364425
+   //                   jalr $t8,$a1      -> 000000 11000 00000 00101 00000 001001  -> 0x3002809  -> 50341897
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+```
+
+<p align="center"> <img src="img/image60.png" alt=""> </p>
+
+
