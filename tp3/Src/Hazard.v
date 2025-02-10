@@ -96,6 +96,59 @@ module Hazard(
             BranchFlush  <= 1'b0;   // funcionaaaa
         end 
 
+        /*  El problema es que en ambas situaciones, el JR está intentando leer un registro que está siendo modificado
+        por una instrucción que se ejecuta en EX o MEM (JAL o LW). Esto genera una dependencia de control o de datos
+            que necesita ser resuelta mediante el control de stall y flush para asegurar que las instrucciones se ejecuten
+            correctamente sin leer o escribir datos incorrectos.*/
+
+
+            // JR in ID and JAL in EX or MEM
+            else if ( OpCode == OP_ZERO_JR && Func == 6'b001000 && 
+                    ((RegWrite_IDEX && RegDst_IDEX == 2'b10) || (RegWrite_EXMEM && RegisterDst_EXMEM == 5'd31)) ) begin
+
+                   /* - OpCode == JR && Func == 6'b001000     -> instruccion JR
+                    - RegWrite_IDEX && RegDst_IDEX == 2'b10 -> si la instruccion que esta en EX quiere escribir 
+                                        y el valor que se guardara en ese registro viene del resultado de la ALU
+                    - (RegWrite_EXMEM && RegisterDst_EXMEM == 5'd31) -> si la instruccion que esta en MEM quiere escribir 
+                                        y el valor que se guardara es en el registro 31 (ra)   */                  
+                
+
+                PCWrite      <= 1'b0;
+                IFIDWrite    <= 1'b0;
+                ControlStall <= 1'b1;
+                BranchFlush  <= 1'b1;
+            
+            end
+            
+            // JR in ID and lw in EX or MEM
+            else if ( OpCode == OP_ZERO_JR && Func == 6'b001000 && 
+                    ((RegWrite_IDEX && (RegRT_IDEX == RegRS_IFID || RegRD_IDEX == RegRS_IFID)) || 
+                    (RegWrite_EXMEM && RegisterDst_EXMEM == RegRS_IFID)) ) begin
+
+                    /*       - OpCode == JR && Func == 6'b001000     -> instruccion JR
+                    - RegWrite_IDEX -> si la instruccion que esta en EX quiere escribir 
+                    - RegRT_IDEX == RegRS_IFID -> Si la instrucción en IDEX escribe en un registro 
+                        (por ejemplo, el registro de destino de un LW o SW) y la instrucción en IFID está 
+                        intentando leer ese mismo registro, entonces esa condición se cumple.    
+                    - RegRD_IDEX == RegRS_IFID -> La instrucción en IDEX escribe en un registro (RD), y la 
+                    instrucción en IFID usa el mismo registro como fuente (RS). Esto implica que la instrucción
+                    en IFID depende de un valor que aún no ha sido escrito por la instrucción en IDEX.                 
+                    - (RegWrite_EXMEM && RegisterDst_EXMEM == RegRS_IFID) -> si la instruccion que esta en MEM quiere escribir 
+                                        y el valor que se guardara es en el registro RegRS_IFID (ra) 
+                                    ESTE ELSE RESUELVE EL CASO:  add $v0, $t2, $t6               
+                                                                 jr  $v0       
+                                        */  
+                                                          
+
+
+                PCWrite      <= 1'b0;
+                IFIDWrite    <= 1'b0;
+                ControlStall <= 1'b1;
+                BranchFlush  <= 1'b0;
+                
+        
+            end 
+
        // J    FUNCIONAA
         else if ( OpCode == OP_J || OpCode == OP_JAL || (OpCode == OP_ZERO_JR && (Func == 6'b001000 || Func == 6'b001001)) ) begin
             PCWrite      <= 1'b1;
@@ -104,16 +157,6 @@ module Hazard(
             BranchFlush  <= 1'b1;
         end 
 
-       /*  // Jal         VER SI FUNCIONAAAAAAAA
-        else if ( OpCode == OP_JAL  && 
-                  ((RegWrite_IDEX && RegDst_IDEX == 2'b10) || (RegWrite_EXMEM && RegisterDst_EXMEM == 5'd31)) ) begin
-        
-            PCWrite      <= 1'b0;
-            IFIDWrite    <= 1'b0;
-            ControlStall <= 1'b1;
-            BranchFlush  <= 1'b1;
-        
-        end */
         
         else begin 
             // Caso por defecto: No hay peligro detectado.

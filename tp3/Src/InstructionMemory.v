@@ -206,7 +206,7 @@ module InstructionMemory(Address, Instruction ,stall );
             00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
             00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
             ``` */
-
+          /*
           memory[0] = 39028768;  // Registro 11h (17d) = 25h
           memory[1] = 10887200;  // Registro 04h (04d) = 0bh 
           memory[2] = 50395145;  // SALTO A instruccion memory[6] con DS en ra$
@@ -216,9 +216,37 @@ module InstructionMemory(Address, Instruction ,stall );
           memory[4] = 23875616;  // Registro 10d  =  10  NO MODIFICADO  SINO   Registro 12d  =  15h + ah = 1F NO MODIFICADO
           memory[5] = 26040352;  // Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
           memory[6] = 28205088;  // Registro 12d  =  27d = 1Bh
-          memory[7] = 19556384;  // Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h // */
+          memory[7] = 19556384;  // Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h */ 
 
 
+
+          
+          /*  CASO J: JR con Hazard de datos */
+
+
+           /*  RECORDAR t8 = 11000 (lit no se shiftea)
+
+            ```assembly 
+              PC                 |   Instrucción   
+              00000000                add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+              00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x00A62020 -> 21893152
+              00001000                jr  $v0           -> 000000 00010 00000 00000 00000 001000  -> 0x400008  -> 4194312
+              00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+              00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+              00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+              00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+              00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+              ``` */
+
+          /*
+          memory[0] = 39028768;  // Registro 11h (17d) = 25h
+          memory[1] = 21893152;  // Registro 04h (04d) = 0bh 
+          memory[2] = 4194312;  // SALTO A instruccion memory[6] con DS en ra$
+          memory[3] = 21710880;  // Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[4] = 23875616;  // Registro 10d  =  10  NO MODIFICADO  SINO   Registro 12d  =  15h + ah = 1F NO MODIFICADO
+          memory[5] = 26040352;  // Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[6] = 28205088;  // Registro 12d  =  27d = 1Bh
+          memory[7] = 19556384;  // Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h */ 
 
 
         $writememh("Instruction_memory.mem", memory, 0, 511);

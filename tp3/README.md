@@ -672,3 +672,32 @@ PC                 |   Instrucción
 <p align="center"> <img src="img/image60.png" alt=""> </p>
 
 
+### Caso K: JR con Riesgo de Datos
+
+En este caso, el **JR** está intentando leer un registro que está siendo modificado por una instrucción que se ejecuta en las etapas **EX** (Execution) o **MEM** (Memory), como las instrucciones **JAL** o **LW**. Esto genera una dependencia de control o de datos que debe resolverse mediante el control de **stall** (retraso) y **flush** (descartar) para asegurar que las instrucciones se ejecuten correctamente, evitando la lectura o escritura de datos incorrectos.
+
+La solución a este problema consiste en colocar la nueva condición de dependencia en el módulo `hazard.v`, lo que permite controlar el flujo y la ejecución de las instrucciones de manera adecuada.
+
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x00A62020 -> 21893152
+00001000                jr  $v0           -> 000000 00010 00000 00000 00000 001000  -> 0x3000008  -> 4194312
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+```
+
+
+#### Interpretación
+
+<p align="center"> <img src="img/image61.png" alt=""> </p>
+
+
+#### Resultado
+
+<p align="center"> <img src="img/image62.png" alt=""> </p>
+
