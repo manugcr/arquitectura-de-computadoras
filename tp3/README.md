@@ -703,5 +703,37 @@ PC                 |   Instrucción
 
 
 
-## Avance IV: Jumps
+## Avance IV: Branch
 
+En la arquitectura **MIPS**, las instrucciones de tipo *branch* (saltos condicionales) permiten modificar el flujo de ejecución del programa en función de una condición. Estas instrucciones se clasifican en diferentes categorías según el tipo de comparación que realizan.
+
+Para este avance, nos enfocaremos en las instrucciones de *comparación de igualdad y desigualdad*, que son:
+
+- **BEQ** (*Branch if Equal*): Realiza un salto si dos registros contienen el mismo valor.
+- **BNE** (*Branch if Not Equal*): Realiza un salto si dos registros contienen valores diferentes.
+
+El objetivo es implementar el funcionamiento de estas instrucciones dentro de **MIPS**, continuando con el **Avance III** y solucionando los riesgos de control respectivos a los *branch*.
+
+
+
+###  Riesgo de Control
+
+El riesgo de control surge de la necesidad de tomar una decisión basada en los resultados de una instrucción mientras otras aún se están ejecutando.
+
+Existen dos soluciones para mitigar estos riesgos:
+
+#### 1️⃣ Bloqueo (*Stall*)
+
+Consiste en operar de manera secuencial hasta que la primera carga esté lista, repitiendo el proceso hasta alcanzar la ejecución correcta.  
+Esta técnica fue implementada en el **Avance III** para la instrucción **JUMP**.  
+
+Sin embargo, para el caso de los *branch*, se implementará una solución más óptima.
+
+#### 2️⃣ Predicción de Saltos
+
+Cuando la predicción es acertada, el rendimiento del *pipeline* no se ve afectado. Sin embargo, si la predicción falla, se deben descartar las instrucciones erróneas y rehacer la ejecución.
+
+Las computadoras modernas utilizan la **predicción de saltos** para optimizar la ejecución.  
+Una estrategia sencilla es predecir que el salto *no será tomado*. Si la predicción es correcta, el *pipeline* opera a máxima velocidad.
+
+Consulta el documento [BRANCH_PREDICTION.md](DOC/BRANCH_PREDICTION.md) para el respaldo teórico.  
