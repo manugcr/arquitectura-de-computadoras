@@ -455,7 +455,7 @@ add $t2 , $t1 , $v0 -> 0x1225020  -> 00000001001000100101000000100000 -> 1902595
 
 <p align="center"> <img src="img/image34.png" alt=""> </p>
 
-## Avance III: Branch & Jumps
+## Avance III: Jumps
 
 Lo que diferencia a un computador de una calculadora simple es su capacidad para tomar decisiones. En este avance, el objetivo es implementar un procesador MIPS que dé continuidad al avance II, incorporando la capacidad de realizar operaciones que afecten al contador de programa (PC) y gestionando los riesgos de control asociados.
 
