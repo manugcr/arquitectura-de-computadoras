@@ -2,7 +2,7 @@
 
 module Control(Instruction,
                   ALUBMux, RegDst, ALUOp, MemWrite,JumpMuxSel, JumpControl, MemRead, ByteSig, RegWrite, MemToReg, 
-                  Flush_IF, LaMux);
+                  Flush_IF,BranchComp, LaMux);
     
     //--------------------------------
     // Inputs
@@ -15,6 +15,8 @@ module Control(Instruction,
     //--------------------------------
     
     output reg      Flush_IF;
+
+    output reg [2:0]  BranchComp;
 
     output reg        JumpMuxSel, JumpControl;
     
@@ -43,6 +45,8 @@ module Control(Instruction,
                      OP_LHU         = 6'b100101,                    //AGREGADOO
                      OP_LBU         = 6'b100100,                    //AGREGADOO
                      OP_LWU         = 6'b100111,                    //AGREGADOO
+                     OP_BEQ         = 6'b000100,   // BEQ
+                     OP_BNE         = 6'b000101,   // BNE
                      OP_SB          = 6'b101000,   // SB
                      OP_SH          = 6'b101001,   // SH
                      OP_ORI         = 6'b001101,   // ORI
@@ -70,6 +74,8 @@ module Control(Instruction,
                      ALUOP_ADDI     = 6'b000010, // ADDI
                      ALUOP_MUL      = 6'b000011, // MUL, MADD, MSUB
                      ALUOP_LUI      = 6'b000100, // LUI
+                     ALUOP_BEQ      = 6'b000110,       // BEQ
+                     ALUOP_BNE      = 6'b000111,       // BNE
                      ALUOP_ANDI     = 6'b001100, // ANDI
                      ALUOP_ORI      = 6'b001101, // ORI
                      ALUOP_JUMP     = 6'b001011, // J, JR, JAL
@@ -86,6 +92,9 @@ module Control(Instruction,
                      ALUOP_EXI      = 6'b010111, // EH, IH, DH, EB, IB
                      ALUOP_LA       = 6'b011000; // LA
              
+                                             
+    localparam [2:0] BRANCH_BEQ  = 3'd1,
+                     BRANCH_BNE  = 3'd6;     
       
 
     reg Bit21, Bit16, Bit6;
@@ -106,6 +115,7 @@ module Control(Instruction,
         JumpMuxSel  <= 1'b0; 
         JumpControl <= 1'b0;
         MemWrite    <= 1'b0;
+        BranchComp  <= 3'b0;
         MemRead     <= 1'b0;
         RegWrite    <= 1'b0;
         MemToReg    <= 2'b00;
@@ -129,6 +139,7 @@ module Control(Instruction,
             JumpControl <= 1'b0;
             ALUBMux     <= 1'b0;
             RegDst      <= 2'b00;
+            BranchComp  <= 3'b0;
             ALUOp       <= ALUOP_ZERO;
             ByteSig     <= 2'b00;
             MemWrite    <= 1'b0;
@@ -150,6 +161,7 @@ module Control(Instruction,
                     ALUBMux     <= 1'b0;
                     MemWrite    <= 1'b0;
                     MemRead     <= 1'b0;
+                    BranchComp  <= 3'b0;
                     ByteSig     <= 2'b00;
                     LaMux       <= 1'b0;
     
@@ -206,6 +218,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDIU;
                     ByteSig     <= 2'b00;
@@ -221,6 +234,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
                     ByteSig     <= 2'b00;
@@ -241,6 +255,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
                     ByteSig     <= 2'b00;
@@ -259,6 +274,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
                     ByteSig     <= 2'b01;
@@ -273,6 +289,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
                     ByteSig     <= 2'b10;
@@ -287,6 +304,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
                     ByteSig     <= 2'b00;
@@ -304,6 +322,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;               
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
                     ByteSig     <= 2'b00;
@@ -317,7 +336,8 @@ module Control(Instruction,
                 //sb
                 OP_SB: begin       
                     JumpMuxSel  <= 1'b0; 
-                    JumpControl <= 1'b0;           
+                    JumpControl <= 1'b0;  
+                    BranchComp  <= 3'b0;         
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
@@ -334,6 +354,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
                     ByteSig     <= 2'b01;
@@ -349,6 +370,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
                     ByteSig     <= 2'b10;
@@ -364,6 +386,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ADDI;
                     ByteSig     <= 2'b01;
@@ -379,6 +402,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;   
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_LUI;
                     ByteSig     <= 2'b00;
@@ -389,12 +413,45 @@ module Control(Instruction,
                     LaMux       <= 1'b0;
                 end
 
+                //beq
+                OP_BEQ: begin 
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
+                    BranchComp  <= BRANCH_BEQ;
+                    ALUBMux     <= 1'b0;
+                    RegDst      <= 2'b00;
+                    ALUOp       <= ALUOP_BEQ;
+                    ByteSig     <= 2'b00;
+                    MemWrite    <= 1'b0;
+                    MemRead     <= 1'b0;
+                    RegWrite    <= 1'b0;
+                    MemToReg    <= 2'b00;
+                    LaMux       <= 1'b0;
+                end
+                
+                //bne
+                OP_BNE: begin
+                    JumpMuxSel  <= 1'b0; 
+                    JumpControl <= 1'b0;
+                    BranchComp  <= BRANCH_BNE;
+                    ALUBMux     <= 1'b0;
+                    RegDst      <= 2'b00;
+                    ALUOp       <= ALUOP_BNE;
+                    ByteSig     <= 2'b00;
+                    MemWrite    <= 1'b0;
+                    MemRead     <= 1'b0;
+                    RegWrite    <= 1'b0;
+                    MemToReg    <= 2'b00;
+                    LaMux       <= 1'b0;
+                end
+
                 // j
                 OP_J: begin  
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b1;
                     ALUBMux     <= 1'b0;
                     RegDst      <= 2'b00;
+                    BranchComp  <= 3'b0;
                     ALUOp       <= ALUOP_JUMP;
                     ByteSig     <= 2'b00;
                     MemWrite    <= 1'b0;
@@ -410,6 +467,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b1;
                     ALUBMux     <= 1'b0;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b10;
                     ALUOp       <= ALUOP_JUMP;
                     ByteSig     <= 2'b00;
@@ -431,6 +489,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;        
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ANDI;
                     ByteSig     <= 2'b00;
@@ -444,7 +503,8 @@ module Control(Instruction,
                 //ori
                 OP_ORI: begin           
                     JumpMuxSel  <= 1'b0; 
-                    JumpControl <= 1'b0;        
+                    JumpControl <= 1'b0;  
+                    BranchComp  <= 3'b0;      
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ORI;
@@ -460,6 +520,7 @@ module Control(Instruction,
                 OP_XORI: begin
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;      
+                    BranchComp  <= 3'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_XORI;
@@ -478,6 +539,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b1;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_SLTI;
                     ByteSig     <= 2'b00;
@@ -492,6 +554,7 @@ module Control(Instruction,
                 OP_SLTIU: begin
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
+                    BranchComp  <= 3'b0;
                     ALUBMux     <= 1'b1;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_SLTIU;
@@ -509,6 +572,7 @@ module Control(Instruction,
                     JumpMuxSel  <= 1'b0; 
                     JumpControl <= 1'b0;
                     ALUBMux     <= 1'b0;
+                    BranchComp  <= 3'b0;
                     RegDst      <= 2'b00;
                     ALUOp       <= ALUOP_ZERO;
                     ByteSig     <= 2'b00;

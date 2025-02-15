@@ -24,17 +24,20 @@ module MIPS(ClockIn, Reset);
     
     // Flush Register
     wire Flush_IF;
+
+    wire BrachflagIFID;
+
     
     // Instructions
     wire [31:0] Instruction_IF, Instruction_ID, Instruction_IDStage;
 
-    
+    wire BranchIF;
     
     // Program Counter Adder
     wire [31:0] PCAdder_IF, PCAdder_ID, PCAdder_EX, PCAdder_MEM, PCAdder_WB;
     
  
-    wire [31:0] PrevPCAdder_ID;
+    wire [31:0] BrachAddress;
     
     // Control Signal
     wire [31:0] ControlSignal_ID, ControlSignal_EX, ControlSignal_MEM, ControlSignal_WB;
@@ -76,12 +79,15 @@ module MIPS(ClockIn, Reset);
                        .PCWrite(Hazard_PCWrite),
                        .JumpAddress(JumpAddress), 
                        .JumpControl(JumpControl), 
-                       .PCAdder_ID(PrevPCAdder_ID), //////////////////                
+                       .BrachAddress(BrachAddress), //////////////////
+                       .BranchFlagID(BrachflagIFID),                
                     
                        // Outputs         
                        .Instruction(Instruction_IF), 
                        .PCAdder_Out(PCAdder_IF),
-                       .PCResult(PCResult));   
+                       .PCResult(PCResult),
+                       .isBranch(BranchIF)
+                       );   
     
     
 
@@ -90,9 +96,11 @@ module MIPS(ClockIn, Reset);
                          .Enable(Hazard_IFIDWrite), 
                          .In_Instruction(Instruction_IF), 
                          .In_PCAdder(PCAdder_IF),
+                         .In_Branch(BranchIF),
                          .Out_Instruction(Instruction_ID), 
                          .Out_PCAdder(PCAdder_ID),
-                         .Out_PrevPCAdder(PrevPCAdder_ID));
+                         .Out_BrachAddress(BrachAddress)
+                         );
  
     
     // Instruction Decode Stage
@@ -102,6 +110,7 @@ module MIPS(ClockIn, Reset);
                        .RegWrite(ControlSignal_WB[2]), 
                        .MemRead_IDEX(ControlSignal_EX[5]),
                        .WriteRegister(RegDst_WB), 
+                       .BranchFlag(BrachflagIFID),
                        .WriteData(WriteData_WB), 
                        .JumpControl(JumpControl),
                        .JumpAddress(JumpAddress),

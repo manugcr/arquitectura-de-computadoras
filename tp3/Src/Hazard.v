@@ -55,6 +55,15 @@ module Hazard(
         BranchFlush  <= 1'b1;
     end
 
+        // OpCodes
+    localparam [5:0] JR     = 6'b000000,
+                     BGEZ   = 6'b000001,
+                     BLTZ   = 6'b000001,
+                     BEQ    = 6'b000100,
+                     BNE    = 6'b000101,
+                     BLEZ   = 6'b000110,
+                     BGTZ   = 6'b000111;
+
     // OpCodes
     localparam [5:0] 
                      OP_ZERO_JR        = 6'b000000,   // 
@@ -89,6 +98,8 @@ module Hazard(
         if (MemRead_IDEX && 
            ((RegDst_IDEX == 2'b00 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID))) || 
             (RegDst_IDEX == 2'b01 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID))))) begin
+
+             
             
             PCWrite      <= 1'b0;
             IFIDWrite    <= 1'b0;
@@ -111,7 +122,7 @@ module Hazard(
                                         y el valor que se guardara en ese registro viene del resultado de la ALU
                     - (RegWrite_EXMEM && RegisterDst_EXMEM == 5'd31) -> si la instruccion que esta en MEM quiere escribir 
                                         y el valor que se guardara es en el registro 31 (ra)   */                  
-                
+            
 
                 PCWrite      <= 1'b0;
                 IFIDWrite    <= 1'b0;
@@ -121,7 +132,7 @@ module Hazard(
             end
             
             // JR in ID and lw in EX or MEM
-            else if ( OpCode == OP_ZERO_JR && Func == 6'b001000 && 
+            else if ( OpCode == OP_ZERO_JR && (Func == 6'b001000 || Func == 6'b001001) && 
                     ((RegWrite_IDEX && (RegRT_IDEX == RegRS_IFID || RegRD_IDEX == RegRS_IFID)) || 
                     (RegWrite_EXMEM && RegisterDst_EXMEM == RegRS_IFID)) ) begin
 
@@ -139,7 +150,7 @@ module Hazard(
                                                                  jr  $v0       
                                         */  
                                                           
-
+            
 
                 PCWrite      <= 1'b0;
                 IFIDWrite    <= 1'b0;
@@ -157,6 +168,48 @@ module Hazard(
             BranchFlush  <= 1'b1;
         end 
 
+        /////////////
+
+        // Branch (just rs): RegWrite in EX and depedency in ID
+        else if ( (OpCode == BGEZ || OpCode == BGTZ || OpCode == BLEZ || OpCode == BLTZ) && 
+                  RegWrite_IDEX && (( RegDst_IDEX == 2'b0 && RegRT_IDEX == RegRS_IFID ) || 
+                                    ( RegDst_IDEX == 2'b1 && RegRD_IDEX == RegRS_IFID )) ) begin
+            
+            PCWrite      <= 1'b0;
+            IFIDWrite    <= 1'b0;
+            ControlStall <= 1'b1;
+            BranchFlush  <= 1'b0;
+        
+        end
+
+        // Branch (rs and rt): RegWrite in EX and depedency in ID
+        else if ( (OpCode == BEQ || OpCode == BNE) && 
+                  RegWrite_IDEX && (( RegDst_IDEX == 2'b0 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID)) ) || 
+                                    ( RegDst_IDEX == 2'b1 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID)) )) ) begin
+            
+            PCWrite      <= 1'b0;
+            IFIDWrite    <= 1'b0;
+            ControlStall <= 1'b1;
+            BranchFlush  <= 1'b0;
+        
+        end
+
+
+        ///////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         
         else begin 
             // Caso por defecto: No hay peligro detectado.
@@ -164,7 +217,7 @@ module Hazard(
             PCWrite      <= 1'b1;
             IFIDWrite    <= 1'b1;
             ControlStall <= 1'b0;
-            BranchFlush  <= 1'b1;
+            BranchFlush  <= 1'b0;   //VER ESTO!
         end
 
     end

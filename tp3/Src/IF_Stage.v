@@ -4,7 +4,8 @@
 module IF_Stage(
     Clock, Reset,               // Señales del sistema
     PCWrite,                   // Control de escritura del PC (señal de control de riesgos)
-    Instruction,PCAdder_ID, PCAdder_Out,  PCResult,JumpControl, JumpAddress// Salidas del módulo
+    Instruction,BrachAddress, PCAdder_Out,  PCResult,JumpControl, JumpAddress,// Salidas del módulo
+    isBranch, BranchFlagID
     );             
           
     // Entradas del sistema
@@ -19,7 +20,14 @@ module IF_Stage(
     output wire [31:0] PCResult;       // Dirección actual del PC
     input [31:0] JumpAddress;
     input JumpControl;
-    input [31:0] PCAdder_ID;
+    input [31:0] BrachAddress;
+
+    input BranchFlagID;
+
+
+    output wire isBranch;      
+
+    
     
     // Cables internos
     wire [31:0] PCInput;           // Entrada al PC (sin usar en este módulo)
@@ -41,9 +49,11 @@ module IF_Stage(
                            
     // Instancia del módulo InstructionMemory
     // Obtiene la instrucción correspondiente a la dirección actual del PC
-    InstructionMemory InstructionMemory(
+     InstructionMemory InstructionMemory(
         .Address(PCResult),     // Dirección de memoria (PC actual)
         .Instruction(Instruction), // Instrucción obtenida de la memoria
+        .TargetOffset(TargetOffset),
+        .Branch(isBranch),
         .stall(stall)
     );
     
@@ -56,12 +66,18 @@ module IF_Stage(
         .stall(stall)
     );
 
+    
+
 
     //MODIFY PC
 
-    Mux2to1            PCSrcMux(.out(ScheduledPC), 
+    Mux3to1            PCSrcMux(.out(ScheduledPC), 
                                  .inA(PCAdder_Out),     // Nothing
                                  .inB(JumpAddress),     // Jump
-                                 .sel(JumpControl));  
+                                 .inC(BrachAddress),
+                                 .sel({BranchFlagID, JumpControl}));
+
+
+
     
 endmodule

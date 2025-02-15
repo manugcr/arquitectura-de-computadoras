@@ -20,7 +20,7 @@ module ID_Stage(
     ReadData1_out,ReadData2_out,
     ControlSignal_Out,JumpControl,          // Señales de control de salida
     Out_Instruction,
-    JumpAddress,
+    JumpAddress, BranchFlag,
     ImmediateValue             // Valor inmediato extendido
     );             
 
@@ -40,6 +40,7 @@ module ID_Stage(
     input [31:0] ForwardData_EXMEM;
 
     input RegWrite_EXMEM;
+    
 
     input ForwardMuxASel, ForwardMuxBSel;
     
@@ -74,6 +75,7 @@ module ID_Stage(
     output wire [31:0] ReadData1_out, ReadData2_out;
 
     
+    wire [2:0] BranchComp;
 
     // Valor inmediato extendido
     output wire [31:0] ImmediateValue;
@@ -83,6 +85,8 @@ module ID_Stage(
 
     // PC Addresses
     output wire [31:0]  JumpAddress;
+
+    output wire BranchFlag;
 
 
     //--------------------------------
@@ -112,6 +116,10 @@ module ID_Stage(
     wire [1:0] RegDst_Control;
     wire [5:0] ALUOp_Control;
 
+    wire FlushJump;
+
+    wire BranchControl;
+
         
 
     // Control de escritura posterior
@@ -129,6 +137,8 @@ module ID_Stage(
 
     assign Out_Instruction = In_Instruction;
 
+    assign BranchFlag = BranchControl;
+
     // Unidad de detección de peligros
     Hazard HazardDetection(
             .OpCode(In_Instruction[31:26]), 
@@ -145,7 +155,7 @@ module ID_Stage(
         .ControlStall(ControlStall),
         .PCWrite(PCWrite),
         .IFIDWrite(IFIDWrite),
-        .BranchFlush(Flush_IF));
+        .BranchFlush(FlushJump));
     
 
     // Módulo de control
@@ -155,6 +165,7 @@ module ID_Stage(
                                     .MemRead(MemRead_Control), .ByteSig(ByteSig_Control),
                                     .RegWrite(RegWrite_Control), .MemToReg(MemToReg_Control),  
                                     .JumpMuxSel(JumpMuxSel), 
+                                    .BranchComp(BranchComp),
                                     .JumpControl(JumpControl), 
                                     .Flush_IF(JumpFlush), //???
                                     .LaMux(LaMux));
@@ -220,6 +231,23 @@ module ID_Stage(
                                     .inA({PCAdder[31:28], ShiftedJumpAddress[27:0]}),
                                     .inB(ReadData1_out), 
                                     .sel(JumpMuxSel));
+
+    //BRANCH
+
+        Comparator              BranchCompare(.InA(ReadData1_out), 
+                                          .InB(ReadData2_out), 
+                                          .Result(BranchControl), 
+                                          .Control(BranchComp));                       
+
+
+        Or                  FlushOr(.InA(BranchControl), 
+                                    .InB(FlushJump), 
+                                    .Out(Flush_IF));
+    
+/*
+        And                 BranchHDUOr(.InA(JBPFlush),
+                                        .InB(BranchFlush),
+                                        .Out(Flush_IF));*/
 
 
 

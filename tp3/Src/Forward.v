@@ -68,7 +68,7 @@ module Forward(
         if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRS_IFID))   begin   
             ForwardMuxA_ID <= 1'd1; // Reenvío habilitado
 
-
+          
             /*
                 RegWrite_EXMEM = 1 ->  la instrucción que se encuentra en la etapa EX/MEM escribe un valor en un registro
                 RegDst_EXMEM != 0   ->  Registro en el que se va a guardar un resultado 
@@ -82,6 +82,8 @@ module Forward(
         // ForwardMuxB: Reenvío de datos desde EX/MEM a RT en la etapa IF/ID
         if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRT_IFID))    begin   
             ForwardMuxB_ID <= 1'd1; // Reenvío habilitado
+
+         
              /*
                 RegWrite_EXMEM = 1 ->  la instrucción que se encuentra en la etapa EX/MEM escribe un valor en un registro
                 RegDst_EXMEM != 0   ->  Registro en el que se va a guardar un resultado 
@@ -100,6 +102,8 @@ module Forward(
         // ForwardMuxA: Reenvío de datos desde EX/MEM o MEM/WB a RS en la etapa ID/EX
         if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRS_IDEX)) begin     
             ForwardMuxA_EX <= 2'd1; // Reenvío desde EX/MEM
+
+        
             /*
                 RegWrite_EXMEM = 1 ->  la instrucción que se encuentra en la etapa EX/MEM escribe un valor en un registro
                 RegDst_EXMEM != 0   ->  Registro en el que se va a guardar un resultado 
@@ -108,6 +112,8 @@ module Forward(
          end
         else if ((RegWrite_MEMWB && (RegDst_MEMWB != 0)) && (RegDst_MEMWB == RegRS_IDEX)) begin
             ForwardMuxA_EX <= 2'd2; // Reenvío desde MEM/WB
+
+        
 
              /*
                 RegWrite_EXMEM = 1 ->  la instrucción que se encuentra en la etapa MEM/WB escribe un valor en un registro
@@ -123,10 +129,14 @@ module Forward(
         // ForwardMuxB: Reenvío de datos desde EX/MEM o MEM/WB a RT en la etapa ID/EX
         if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRT_IDEX))   begin   
             ForwardMuxB_EX <= 2'd1; // Reenvío desde EX/MEM
+
+      
            
         end 
         else if ((RegWrite_MEMWB && (RegDst_MEMWB != 0)) && (RegDst_MEMWB == RegRT_IDEX)) begin
             ForwardMuxB_EX <= 2'd2; // Reenvío desde MEM/WB
+
+        
             
         end
         else 

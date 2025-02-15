@@ -716,24 +716,158 @@ El objetivo es implementar el funcionamiento de estas instrucciones dentro de **
 
 
 
-###  Riesgo de Control
+### Riesgo de Control y su Mitigación
 
-El riesgo de control surge de la necesidad de tomar una decisión basada en los resultados de una instrucción mientras otras aún se están ejecutando.
 
-Existen dos soluciones para mitigar estos riesgos:
+El **riesgo de control** surge de la necesidad de tomar una decisión basada en los resultados de una instrucción mientras otras aún se están ejecutando.
 
-#### 1️⃣ Bloqueo (*Stall*)
+#### Soluciones para Mitigar el Riesgo de Control  
 
-Consiste en operar de manera secuencial hasta que la primera carga esté lista, repitiendo el proceso hasta alcanzar la ejecución correcta.  
-Esta técnica fue implementada en el **Avance III** para la instrucción **JUMP**.  
+#### Predicción de Saltos  
+Para evitar bloqueos en los saltos, se suele implementar la estrategia de **suponer que el salto no será tomado** y continuar con la ejecución secuencial de instrucciones.  
 
-Sin embargo, para el caso de los *branch*, se implementará una solución más óptima.
+- Si el salto es tomado, las instrucciones que se estaban buscando y decodificando deben descartarse.  
+- Si aproximadamente la mitad de los saltos no se toman y descartar instrucciones cuesta poco, esta optimización **reduce el costo del riesgo de control a la mitad**.  
 
-#### 2️⃣ Predicción de Saltos
+#### Descarte de Instrucciones  
+Para descartar instrucciones, se cambian las señales de control a **cero**, similar a cómo se bloquean instrucciones para evitar riesgos de datos tipo **load-use**.  
 
-Cuando la predicción es acertada, el rendimiento del *pipeline* no se ve afectado. Sin embargo, si la predicción falla, se deben descartar las instrucciones erróneas y rehacer la ejecución.
+- En el registro **IF/ID**, se dispone del valor del **PC** y del campo inmediato.  
+- Basta con **mover el sumador de direcciones** desde la etapa **MEM** a la etapa **ID**.  
 
-Las computadoras modernas utilizan la **predicción de saltos** para optimizar la ejecución.  
-Una estrategia sencilla es predecir que el salto *no será tomado*. Si la predicción es correcta, el *pipeline* opera a máxima velocidad.
+### Mover la Verificación de Saltos a la Etapa ID  
+Esto requiere nueva circuitería para **detectar riesgos** y **anticipar resultados**, asegurando que las instrucciones *branch* que dependen de resultados previos funcionen correctamente.  
 
-Consulta el documento [BRANCH_PREDICTION.md](DOC/BRANCH_PREDICTION.md) para el respaldo teórico.  
+- Si los valores de una comparación de salto se producen en etapas posteriores a **ID**, puede ocurrir un **riesgo de datos**, generando bloqueos.  
+- Ejemplo:  
+  - Si una instrucción **ALU** produce un operando requerido por un **salto inmediato posterior**, se genera un bloqueo.  
+  - Si una **carga** es seguida por un **salto condicional** que chequea su resultado, se produce un bloqueo de **dos ciclos** (*Control Stall*).  
+
+#### Eliminación de Instrucciones en IF  
+Para eliminar instrucciones en la etapa **IF**, se introduce una señal de control llamada **IF.Flush** (Usado en el avance anterior), que pone a **cero** el campo de instrucción del registro de segmentación **IF/ID**.  
+
+- Esto convierte la instrucción leída en un **NOP** (*No Operation*), asegurando que no afecte el estado del procesador.  
+
+
+
+
+
+---
+
+### Prueba Piloto, Avance IV: Optimización para Evitar Bloqueos en Saltos  
+
+
+Bloquear el procesador hasta que se complete el salto es **demasiado lento**.  
+
+#### Estrategia: Suponer que el Salto No Será Tomado  
+Para evitar bloqueos en los saltos, se implementa una mejora que consiste en **asumir que el salto no será tomado** y continuar la ejecución siguiendo el flujo secuencial de instrucciones.  
+
+- Si el salto **no es tomado**, la ejecución continúa sin interrupciones.  
+- Si el salto **sí es tomado**, se deben **descartar** las instrucciones que se estaban buscando y decodificando en ese momento.  
+- La ejecución se reanuda a partir del **destino del salto**.  
+
+#### Beneficio de esta Optimización  
+Si aproximadamente el **50% de los saltos no se toman**, y si descartar instrucciones es un proceso eficiente, entonces:  
+✅ **Se reduce el costo del riesgo de control a la mitad**.  
+
+
+
+### Caso L: BEQ sin HAZARD
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $t2, $t6 -> 000000 01010 01110 10001 00000 100000  -> 0x14E8820  -> 21923872
+00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+00001000                BEQ t8,t8, 00011000  -> 000100 11000 11000 0000000000011000 -> 0x13180018 -> 320339992  -> SALTAR a add $t4, $t5, $t6
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+``` 
+
+Considerando que `$t8=24d=18h` NO se produce hazard en la instruccion de salto ya que este solo necesita t8 el cual ya fue cargado con anterioridad
+
+
+#### Interpretación
+
+<p align="center"> <img src="img/image69.png" alt=""> </p>
+
+
+#### Resultado
+
+<p align="center"> <img src="img/image70.png" alt=""> </p>
+
+
+<p align="center"> <img src="img/image72.png" alt=""> </p>
+
+
+
+#### BEQ sin HAZARD (CONDICIÓN ERRONEA)
+
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $t2, $t6 -> 000000 01010 01110 10001 00000 100000  -> 0x14E8820  -> 21923872
+00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+00001000                BEQ t1,t8, 00011000  -> 000100 01001 11000 0000000000011000 -> 0x11380018 -> 288882712  -> NO SALTAR 
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+``` 
+
+
+#### Resultado
+
+<p align="center"> <img src="img/image71.png" alt=""> </p>
+
+
+
+
+
+### Caso M: BEQ con HAZARD
+
+```assembly 
+            PC                 |   Instrucción   
+            00000000                add $s1, $t2, $t6 -> 000000 01010 01110 10001 00000 100000  -> 0x14E8820  -> 21923872
+            00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+            00001000                BEQ v0,s1, 00011000  -> 000100 10001 00010 0000000000011000 -> 0x12220018 -> 304218136  -> SALTAR a add $t4, $t5, $t6
+            00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+            00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+            00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+            00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+            00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+
+``` 
+
+#### Resultado
+
+<p align="center"> <img src="img/image73.png" alt=""> </p>
+
+<p align="center"> <img src="img/image74.png" alt=""> </p>
+
+
+
+#### BEQ con HAZARD (CONDICIÓN ERRONEA)
+
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $t1, $t6 -> 000000 01001 01110 10001 00000 100000  -> 0x12E8820  -> 19826720
+00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+00001000                BEQ v0,s1, 00011000  -> 000100 10001 00010 0000000000011000 -> 0x12220018 -> 304218136  -> NO SALTAR
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+``` 
+
+#### Resultado
+
+<p align="center"> <img src="img/image75.png" alt=""> </p>
+
+**COMO EN EL CASO ANTERIOR:** Espero 1 ciclo para obtener el valor actualizado de $v0, ya que recién entra en la etapa de ejecución (EX) cuando se lo solicita en la etapa de decodificación (ID). Por lo tanto, la espera del dato se retrasa un ciclo adicional.
+

@@ -1,12 +1,16 @@
 `timescale 1ns / 1ps
 
-module InstructionMemory(Address, Instruction ,stall );
+module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
 
     // Entradas
     input [31:0] Address; // Dirección de entrada utilizada para acceder a la memoria
 
     // Salidas
     output reg [31:0] Instruction;   // Instrucción de 32 bits leída desde la memoria
+
+
+    output reg [31:0] TargetOffset;
+    output reg Branch;
 
     // Memoria de instrucciones de 32 bits, con capacidad para 512 palabras
     reg [31:0] memory [0:511]; // Cambiado a 0:511 para evitar indices inválidos
@@ -79,8 +83,8 @@ module InstructionMemory(Address, Instruction ,stall );
 
 
         
-         /*  CODIGO CASO D: 
-          memory[0] = 39028768; //Registro 11h (17d) = 25h
+        //   CODIGO CASO D: 
+        /*  memory[0] = 39028768; //Registro 11h (17d) = 25h
           memory[1] = 10887200; //Registro 04h (04d) = 0bh 
           memory[2] = 21710880; // t1 = 20 + 30 = 50d = 32h
           memory[3] = 19554336; // t4 = 50 + 20 = 70d = 46h
@@ -91,7 +95,7 @@ module InstructionMemory(Address, Instruction ,stall );
           memory[8] = 21710880;
           memory[9] = 17518624;
           memory[10] = 17518624;
-          memory[11] = 19554336; //*/
+          memory[11] = 19554336; //
 
           /*  CASO E: LOAD USE HAZARD
             CON v0 = 2d
@@ -218,6 +222,40 @@ module InstructionMemory(Address, Instruction ,stall );
           memory[6] = 28205088;  // Registro 12d  =  27d = 1Bh
           memory[7] = 19556384;  // Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h */ 
 
+          
+
+          /* PLUS: JAL con HAZARD:   ///////////////
+
+
+
+           /*  RECORDAR t8 = 11000 (lit no se shiftea)
+
+            ```assembly 
+            PC                 |   Instrucción   
+            00000000                add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+            00000100                add $a0, $t4, $t4 -> 000000 01100 01100 00100 00000 100000  -> 0x00A62020 -> 25960480
+            00001000                jalr $a0          -> 000000 00100 00000 11111 00000 001001  -> 0x300F809  -> 8452105
+              //                    jalr $t8,$s0      -> 000000 11000 00000 10000 00000 001001  -> 0x3008009  -> 50364425
+              //                    jalr $t8,$a1      -> 000000 11000 00000 00101 00000 001001  -> 0x3002809  -> 50341897
+            00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+            00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+            00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+            00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+            00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+            ``` */
+          
+        /* memory[0] = 39028768;  // Registro 11h (17d) = 25h
+          memory[1] = 25960480;  // Registro 04h (04d) = 0bh 
+          memory[2] = 8452105;  // SALTO A instruccion memory[6] con DS en ra$         VER ESTE HAZARDDD DOCUMENTARRRRRRRRR
+          //memory[2] = 50364425;  // SALTO A instruccion memory[6] con DS en s0$
+          //memory[2] = 50341897;  // SALTO A instruccion memory[6] con DS en a1$
+          memory[3] = 21710880;  // Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[4] = 23875616;  // Registro 10d  =  10  NO MODIFICADO  SINO   Registro 12d  =  15h + ah = 1F NO MODIFICADO
+          memory[5] = 26040352;  // Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[6] = 28205088;  // Registro 12d  =  27d = 1Bh
+          memory[7] = 19556384;  // Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h */ 
+
+
 
 
           
@@ -238,25 +276,167 @@ module InstructionMemory(Address, Instruction ,stall );
               00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
               ``` */
 
-          /*
-          memory[0] = 39028768;  // Registro 11h (17d) = 25h
+          
+        /*  memory[0] = 39028768;  // Registro 11h (17d) = 25h
           memory[1] = 21893152;  // Registro 04h (04d) = 0bh 
           memory[2] = 4194312;  // SALTO A instruccion memory[6] con DS en ra$
           memory[3] = 21710880;  // Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
           memory[4] = 23875616;  // Registro 10d  =  10  NO MODIFICADO  SINO   Registro 12d  =  15h + ah = 1F NO MODIFICADO
           memory[5] = 26040352;  // Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
           memory[6] = 28205088;  // Registro 12d  =  27d = 1Bh
-          memory[7] = 19556384;  // Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h */ 
+          memory[7] = 19556384;  // Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
+
+
+           /*  CASO K: BEQ sin Hazard */
+
+
+           /*  RECORDAR t8 = 11000 (lit no se shiftea)
+
+            ```assembly 
+            PC                 |   Instrucción   
+            00000000                add $s1, $t2, $t6 -> 000000 01010 01110 10001 00000 100000  -> 0x14E8820  -> 21923872
+            00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+            00001000                BEQ t8,t8, 00011000  -> 000100 11000 11000 0000000000011000 -> 0x13180018 -> 320339992  -> SALTAR a add $t4, $t5, $t6
+            00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+            00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+            00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+            00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+            00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+            ```  */
+
+      
+          
+          /*memory[0] = 21923872;  // add $s1, $t2, $t6 
+          memory[1] = 21893152;  // add $v0, $t2, $t6
+          memory[2] = 320339992; // BEQ t8,t8, 00011000
+          memory[3] = 21710880;  // add $t1, $t2, $t3
+          memory[4] = 23875616;  // add $t2, $t3, $t4  Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[5] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[6] = 28205088;  // add $t4, $t5, $t6  Registro 12d  =  27d = 1Bh
+          memory[7] = 19556384;  // add $t5, $t1, $t2  Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
+
+
+         /* #### BEQ sin HAZARD (CONDICIÓN ERRONEA)
+
+          ```assembly 
+          PC                 |   Instrucción   
+          00000000                add $s1, $t2, $t6 -> 000000 01010 01110 10001 00000 100000  -> 0x14E8820  -> 21923872
+          00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+          00001000                BEQ t1,t8, 00011000  -> 000100 01001 11000 0000000000011000 -> 0x11380018 -> 288882712  -> NO SALTAR 
+          00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+          00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+          00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+          00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+          00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+          ```  */
+
+          
+         /* memory[0] = 21923872;  // add $s1, $t2, $t6 
+          memory[1] = 21893152;  // add $v0, $t2, $t6
+          memory[2] = 288882712; // BEQ t8,t1, 00011000
+          memory[3] = 21710880;  // add $t1, $t2, $t3
+          memory[4] = 23875616;  // add $t2, $t3, $t4  Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[5] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[6] = 28205088;  // add $t4, $t5, $t6  Registro 12d  =  27d = 1Bh
+          memory[7] = 19556384;  // add $t5, $t1, $t2  Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
+
+
+
+
+          /*  CASO M: BEQ con Hazard */
+
+
+         /* ```assembly 
+            PC                 |   Instrucción   
+            00000000                add $s1, $t2, $t6 -> 000000 01010 01110 10001 00000 100000  -> 0x14E8820  -> 21923872
+            00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+            00001000                BEQ v0,s1, 00011000  -> 000100 10001 00010 0000000000011000 -> 0x12220018 -> 304218136  -> SALTAR a add $t4, $t5, $t6
+            00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+            00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+            00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+            00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+            00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+            ``` */
+
+        /*  memory[0] = 21923872;  // add $s1, $t2, $t6 
+          memory[1] = 21893152;  // add $v0, $t2, $t6
+          memory[2] = 304218136; // BEQ t8,t1, 00011000
+          memory[3] = 21710880;  // add $t1, $t2, $t3
+          memory[4] = 23875616;  // add $t2, $t3, $t4  Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[5] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[6] = 28205088;  // add $t4, $t5, $t6  Registro 12d  =  27d = 1Bh
+          memory[7] = 19556384;  // add $t5, $t1, $t2  Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
+          
+
+
+         /* #### BEQ con HAZARD (CONDICIÓN ERRONEA)
+
+          ```assembly 
+          PC                 |   Instrucción   
+          00000000                add $s1, $t1, $t6 -> 000000 01001 01110 10001 00000 100000  -> 0x12E8820  -> 19826720
+          00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+          00001000                BEQ v0,s1, 00011000  -> 000100 10001 00010 0000000000011000 -> 0x12220018 -> 304218136  -> NO SALTAR
+          00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+          00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+          00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+          00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+          00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+          ```  */
+
+
+          memory[0] = 19826720;  // add $s1, $t2, $t6 
+          memory[1] = 21893152;  // add $v0, $t2, $t6
+          memory[2] = 304218136; // BEQ t8,t1, 00011000
+          memory[3] = 21710880;  // add $t1, $t2, $t3
+          memory[4] = 23875616;  // add $t2, $t3, $t4  Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[5] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+          memory[6] = 28205088;  // add $t4, $t5, $t6  Registro 12d  =  27d = 1Bh
+          memory[7] = 19556384;  // add $t5, $t1, $t2  Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
+          
 
 
         $writememh("Instruction_memory.mem", memory, 0, 511);
     end
 
-    // Bloque always para leer la instrucción y procesar las instrucciones de salto
+        // Bloque always para leer la instrucción y procesar las instrucciones de salto
     always @ (*) begin
         if (stall == 1'b0) begin
             // Si stall es 0, leer la instrucción desde la memoria
             Instruction = memory[Address[11:2]]; // Ignora los 2 bits menos significativos de la dirección
+        
+             // Verificar si la instrucción es de tipo branch
+             //                     BEQ                                 BNE
+        if (Instruction[31:26] == 6'b000100 || Instruction[31:26] == 6'b000101) begin
+
+            Branch <= 1'b1;     // Flag que indica que es un branch 
+
+            /* beq  y bne  utilizan
+             un desplazamiento de 16 bits (Instruction[15:0]). Este desplazamiento es un valor con signo 
+             en complemento a dos, lo que significa que si Instruction[15] es 1, el número es negativo; 
+             si es 0, el número es positivo.
+             
+              ej: 0x00400010 : beq $t0, $t1, target
+                  0x00400014 : addi $t2, $zero, 1
+                  0x00400018 : j end
+                  0x0040001C : target: addi $t2, $zero, 2
+                                                                                         signo
+               beq $t0, $t1, target  # opcode = 000100, rs = 01000, rt = 01001, offset = (0)000000000000011 
+             */
+
+            if (Instruction[15] == 1) 
+                TargetOffset <= {16'hFFFF, Instruction[15:0]};  // Desplazamiento con signo
+            else  
+                TargetOffset <= {16'h0000, Instruction[15:0]};  // Desplazamiento sin signo
+            
+        end
+        else begin
+            Branch <= 1'b0;
+            TargetOffset <= 32'd0;
+        end
+
+        
+        
+        
         end else begin
             // Si stall es 1, mantener la instrucción actual
             Instruction = Instruction; // No cambiar la instrucción, mantener la actual
@@ -264,3 +444,4 @@ module InstructionMemory(Address, Instruction ,stall );
     end
 
 endmodule
+

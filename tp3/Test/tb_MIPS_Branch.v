@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module tb_MIPS_Datapath;
+module tb_MIPS_Branch;
 
 // Entradas del sistema
 reg ClockIn;
@@ -10,10 +10,8 @@ reg Reset;
 
 
 
-wire [31:0] IF_PC,IF_Instruction,IFID_Instruction,IDEX_ReadData1,IDEX_ReadData2;
-wire ID_Stall,IFID_Flush;
-wire [31:0] EX_ALUResult,EXMEM_AluResult,MEMWB_AluResult,WB_MemToReg ;
-
+wire [31:0]  EX_ALUResult,IF_PC,IF_Instruction,IFID_Instruction,IDEX_ReadData1,IDEX_ReadData2,WriteData;
+wire IFID_Flush;
 
 
 // Instancia del módulo principal MIPS
@@ -31,15 +29,20 @@ assign IF_Instruction = uut.IF_Stage.InstructionMemory.Instruction;
 assign IFID_Instruction = uut.IFID.Out_Instruction;
 assign IDEX_ReadData1 = uut.IDEX.Out_ReadData1;
 assign IDEX_ReadData2 = uut.IDEX.Out_ReadData2;
-assign EXMEM_AluResult = uut.EXMEM.Out_ALUResult;
-assign MEMWB_AluResult = uut.MEMWB.Out_ALUResult;
-assign WB_MemToReg = uut.WB_Stage.MemToReg_Out;
-assign ID_Stall = uut.ID_Stage.HazardDetection.ControlStall;
+
+assign IF_PCsel = IF_Stage.PCSrcMux.sel;
+assign IF_PCinA = IF_Stage.PCSrcMux.inA;
+assign IF_PCinB = IF_Stage.PCSrcMux.inB;
+assign IF_PCinB = IF_Stage.PCSrcMux.inC;
+
 
 assign EX_ALUResult = uut.EX_Stage.ALU.ALUResult;
-assign EX_RegWrite_Out = uut.EX_Stage.ALU.RegWrite_Out;
-assign EX_Zero = uut.EX_Stage.ALU.Zero;
+
+
 assign IFID_Flush = uut.IFID.Flush;
+
+
+
 
 
 
