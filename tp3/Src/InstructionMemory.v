@@ -384,7 +384,7 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
           ```  */
 
 
-          memory[0] = 19826720;  // add $s1, $t2, $t6 
+        /*  memory[0] = 19826720;  // add $s1, $t2, $t6 
           memory[1] = 21893152;  // add $v0, $t2, $t6
           memory[2] = 304218136; // BEQ t8,t1, 00011000
           memory[3] = 21710880;  // add $t1, $t2, $t3
@@ -392,6 +392,10 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
           memory[5] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
           memory[6] = 28205088;  // add $t4, $t5, $t6  Registro 12d  =  27d = 1Bh
           memory[7] = 19556384;  // add $t5, $t1, $t2  Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
+
+
+
+          
           
 
 
