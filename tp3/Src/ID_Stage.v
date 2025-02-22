@@ -15,6 +15,7 @@ module ID_Stage(
     ForwardMuxBSel,             // Selección para el multiplexor de reenvío B
     PCWrite, IFIDWrite,
     RegWrite_IDEX, 
+    ForwardData_MEMWB,
     PCAdder,
     Flush_IF,
     ReadData1_out,ReadData2_out,
@@ -40,9 +41,11 @@ module ID_Stage(
     input [31:0] ForwardData_EXMEM;
 
     input RegWrite_EXMEM;
+
+    input [31:0] ForwardData_MEMWB; // SOLO UTIL PARA HAZARD DE BRANCH
     
 
-    input ForwardMuxASel, ForwardMuxBSel;
+    input [1:0] ForwardMuxASel, ForwardMuxBSel;
     
 
     // Control de registros de destino
@@ -120,6 +123,8 @@ module ID_Stage(
 
     wire BranchControl;
 
+    wire itsHazardBranch, NotifyCompare;
+
         
 
     // Control de escritura posterior
@@ -130,6 +135,8 @@ module ID_Stage(
     wire [31:0] SignExtend_Out;
 
     wire LaMux;
+
+    wire HazardCompareBranch;
 
     //--------------------------------
     // Componentes de Hardware
@@ -147,6 +154,7 @@ module ID_Stage(
         .RegRT_IFID(In_Instruction[20:16]),
         .RegRT_IDEX(RegRT_IDEX),
         .RegRD_IDEX(RegRD_IDEX),
+        .HazardCompareBranch(HazardCompareBranch),
         .RegWrite_IDEX(RegWrite_IDEX), //////////////////////////////
         .RegWrite_EXMEM(RegWrite_EXMEM), /////////////////////////////
         .RegisterDst_EXMEM(RegisterDst_EXMEM),  ///////////////////////
@@ -154,6 +162,7 @@ module ID_Stage(
         .RegDst_IDEX(RegDst_IDEX),
         .ControlStall(ControlStall),
         .PCWrite(PCWrite),
+        .RegDst_MEMWB(WriteRegister),   //PARA HAZARD DE BRANCH en etapa MEMWB
         .IFIDWrite(IFIDWrite),
         .BranchFlush(FlushJump));
     
@@ -201,14 +210,16 @@ module ID_Stage(
                                        .inB(32'd0), 
                                        .sel(ControlStall));
 
-    Mux2to1            ForwardMuxA_ID(.out(ReadData1_out), 
+    Mux3to1            ForwardMuxA_ID(.out(ReadData1_out), 
                                            .inA(ReadData1),
                                            .inB(ForwardData_EXMEM), 
+                                           .inC(ForwardData_MEMWB),           //SOLO PARA HAZARD BRANCH    
                                            .sel(ForwardMuxASel));
                                     
-    Mux2to1            ForwardMuxB_ID(.out(ReadData2_out), 
+    Mux3to1            ForwardMuxB_ID(.out(ReadData2_out), 
                                            .inA(ReadData2),
                                            .inB(ForwardData_EXMEM), 
+                                           .inC(ForwardData_MEMWB),   //SOLO PARA HAZARD BRANCH
                                            .sel(ForwardMuxBSel));  
 
 
@@ -236,18 +247,24 @@ module ID_Stage(
 
         Comparator              BranchCompare(.InA(ReadData1_out), 
                                           .InB(ReadData2_out), 
-                                          .Result(BranchControl), 
+                                          .Result(BranchControl),
+                                          .CompareFlag(NotifyCompare),
                                           .Control(BranchComp));                       
 
 
         Or                  FlushOr(.InA(BranchControl), 
                                     .InB(FlushJump), 
                                     .Out(Flush_IF));
+
+         Or                  HazardBranchCompareFlagOr(.InA(ForwardMuxASel[1]), 
+                                    .InB(ForwardMuxBSel[1]), 
+                                    .Out(itsHazardBranch));
+      
+        Or                  CompareFlagOr(.InA(itsHazardBranch), 
+                                        .InB(HazardCompareBranch), 
+                                        .Out(NotifyCompare));                              
     
-/*
-        And                 BranchHDUOr(.InA(JBPFlush),
-                                        .InB(BranchFlush),
-                                        .Out(Flush_IF));*/
+
 
 
 

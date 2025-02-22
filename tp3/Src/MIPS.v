@@ -19,7 +19,7 @@ module MIPS(ClockIn, Reset);
 
      // Forwarding
     wire [1:0] ForwardMuxASel_EX, ForwardMuxBSel_EX;
-    wire ForwardMuxASel_ID, ForwardMuxBSel_ID;
+    wire [1:0] ForwardMuxASel_ID, ForwardMuxBSel_ID;
     
     
     // Flush Register
@@ -32,6 +32,8 @@ module MIPS(ClockIn, Reset);
     wire [31:0] Instruction_IF, Instruction_ID, Instruction_IDStage;
 
     wire BranchIF;
+
+    wire isBranchID;
     
     // Program Counter Adder
     wire [31:0] PCAdder_IF, PCAdder_ID, PCAdder_EX, PCAdder_MEM, PCAdder_WB;
@@ -99,6 +101,7 @@ module MIPS(ClockIn, Reset);
                          .In_Branch(BranchIF),
                          .Out_Instruction(Instruction_ID), 
                          .Out_PCAdder(PCAdder_ID),
+                         .Out_Branch(isBranchID),
                          .Out_BrachAddress(BrachAddress)
                          );
  
@@ -127,6 +130,7 @@ module MIPS(ClockIn, Reset);
                        .ControlSignal_Out(ControlSignal_ID), 
                        .ReadData1_out(ReadData1_ID), 
                        .Flush_IF(Flush_IF),
+                       .ForwardData_MEMWB(ALUResult_WB),
                        .ReadData2_out(ReadData2_ID), 
                        .ForwardMuxASel(ForwardMuxASel_ID),
                        .ForwardMuxBSel(ForwardMuxBSel_ID),  
@@ -147,6 +151,7 @@ module MIPS(ClockIn, Reset);
                          .Out_ControlSignal(ControlSignal_EX), 
                          .Out_ReadData1(ReadData1_EX), 
                          .Out_ReadData2(ReadData2_EX),
+                         .In_isBranch(isBranchID),
                          .In_SignExtend(SignExtend_ID), 
                          .Out_PCAdder(PCAdder_EX),
                          .Out_RegRT(RegRT_IDEX), 
@@ -160,6 +165,7 @@ module MIPS(ClockIn, Reset);
                               .RegDst_MEMWB(RegDst_WB),
                               .RegRS_IDEX(RegRS_IDEX),
                               .RegRT_IDEX(RegRT_IDEX),
+                              .isBranch(isBranchID),
                               .RegRS_IFID(Instruction_ID[25:21]),
                               .RegRT_IFID(Instruction_ID[20:16]),      
                               .ForwardMuxA_EX(ForwardMuxASel_EX),

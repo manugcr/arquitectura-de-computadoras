@@ -25,7 +25,9 @@ module Hazard(
     ControlStall,
     RegWrite_IDEX,
     RegWrite_EXMEM,
+    RegDst_MEMWB,
     RegisterDst_EXMEM,
+    HazardCompareBranch,
     BranchFlush,
     // --- Salidas ---  
     PCWrite, IFIDWrite            // Señales de control para manejar peligros
@@ -34,16 +36,18 @@ module Hazard(
     //--------------------------------
     // Entradas
     //--------------------------------
+
+
     input [5:0] OpCode, Func;
     input RegWrite_EXMEM,MemRead_IDEX, RegWrite_IDEX;   // Señales de control para lectura y escritura
     input [1:0] RegDst_IDEX;             // Selección del registro destino en la etapa ID/EX
-    input [4:0] RegisterDst_EXMEM,RegRS_IFID, RegRT_IFID;  // Registros fuente en la etapa IF/ID
+    input [4:0] RegisterDst_EXMEM,RegRS_IFID, RegRT_IFID,RegDst_MEMWB;  // Registros fuente en la etapa IF/ID
     input [4:0] RegRT_IDEX, RegRD_IDEX;  // Registros destino en la etapa ID/EX
 
     //--------------------------------
     // Salidas
     //--------------------------------
-    output reg PCWrite, IFIDWrite ,BranchFlush,  ControlStall ;       // Señales para detener la ejecución (stalls)
+    output reg PCWrite, IFIDWrite ,BranchFlush,  ControlStall, HazardCompareBranch ;       // Señales para detener la ejecución (stalls)
 
     //--------------------------------
     // Inicialización de salidas
@@ -53,6 +57,7 @@ module Hazard(
         IFIDWrite <= 1'b1;  // Inicialmente, permitir que el pipeline avance
         ControlStall <= 1'b0;
         BranchFlush  <= 1'b1;
+        HazardCompareBranch <= 1'b0;
     end
 
         // OpCodes
@@ -99,8 +104,9 @@ module Hazard(
            ((RegDst_IDEX == 2'b00 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID))) || 
             (RegDst_IDEX == 2'b01 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID))))) begin
 
+
              
-            
+            HazardCompareBranch <= 1'b0;
             PCWrite      <= 1'b0;
             IFIDWrite    <= 1'b0;
             ControlStall <= 1'b1;
@@ -121,9 +127,10 @@ module Hazard(
                     - RegWrite_IDEX && RegDst_IDEX == 2'b10 -> si la instruccion que esta en EX quiere escribir 
                                         y el valor que se guardara en ese registro viene del resultado de la ALU
                     - (RegWrite_EXMEM && RegisterDst_EXMEM == 5'd31) -> si la instruccion que esta en MEM quiere escribir 
-                                        y el valor que se guardara es en el registro 31 (ra)   */                  
+                                        y el valor que se guardara es en el registro 31 (ra)   */   
+          
             
-
+                 HazardCompareBranch <= 1'b0;
                 PCWrite      <= 1'b0;
                 IFIDWrite    <= 1'b0;
                 ControlStall <= 1'b1;
@@ -151,7 +158,7 @@ module Hazard(
                                         */  
                                                           
             
-
+                 HazardCompareBranch <= 1'b0;
                 PCWrite      <= 1'b0;
                 IFIDWrite    <= 1'b0;
                 ControlStall <= 1'b1;
@@ -166,6 +173,8 @@ module Hazard(
             IFIDWrite    <= 1'b0;
             ControlStall <= 1'b0;
             BranchFlush  <= 1'b1;
+             HazardCompareBranch <= 1'b0;
+
         end 
 
         /////////////
@@ -179,6 +188,8 @@ module Hazard(
             IFIDWrite    <= 1'b0;
             ControlStall <= 1'b1;
             BranchFlush  <= 1'b0;
+             HazardCompareBranch <= 1'b0;
+
         
         end
 
@@ -191,6 +202,14 @@ module Hazard(
             IFIDWrite    <= 1'b0;
             ControlStall <= 1'b1;
             BranchFlush  <= 1'b0;
+
+            if(RegDst_MEMWB != RegRS_IFID && RegDst_MEMWB != RegRT_IFID) begin 
+            HazardCompareBranch <= 1'b1;
+            end
+            else begin
+                HazardCompareBranch <= 1'b0;
+            end 
+
         
         end
 
@@ -214,10 +233,12 @@ module Hazard(
         else begin 
             // Caso por defecto: No hay peligro detectado.
             // Permitir que el pipeline avance normalmente.
+
             PCWrite      <= 1'b1;
             IFIDWrite    <= 1'b1;
             ControlStall <= 1'b0;
             BranchFlush  <= 1'b0;   //VER ESTO!
+            HazardCompareBranch <= 1'b0;
         end
 
     end

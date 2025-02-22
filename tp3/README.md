@@ -871,3 +871,65 @@ PC                 |   Instrucción
 
 **COMO EN EL CASO ANTERIOR:** Espero 1 ciclo para obtener el valor actualizado de $v0, ya que recién entra en la etapa de ejecución (EX) cuando se lo solicita en la etapa de decodificación (ID). Por lo tanto, la espera del dato se retrasa un ciclo adicional.
 
+
+### Caso N: BNE sin HAZARD
+
+**BNE** (*Branch if Not Equal*): Realiza un salto si dos registros contienen valores diferentes.
+
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $t2, $t6 -> 000000 01010 01110 10001 00000 100000  -> 0x14E8820  -> 21923872
+00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+00001000                BNE t8,t7, 00011000  -> 000101 11000 10111 0000000000011000 -> 0x17170018 -> 387383320  -> SALTAR a add $t4, $t5, $t6
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+``` 
+
+Considerando que `$t8=24d=18h` y `$t7=23d=17h ` NO se produce hazard en la instruccion de salto ya que este solo necesita t8 y t7 el cual ya fue cargado con anterioridad
+
+#### Resultado
+
+<p align="center"> <img src="img/image76.png" alt=""> </p>
+
+
+#### BNE sin HAZARD (CONDICIÓN ERRONEA)
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $t2, $t6 -> 000000 01010 01110 10001 00000 100000  -> 0x14E8820  -> 21923872
+00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
+00001000                BNE t8,t8, 00011000  -> 000101 11000 11000  0000000000011000 -> 0x17180018 -> 387448856  -> NO SALTAR 
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+``` 
+
+Considerando que `$t8=24d=18h` NO se produce hazard en la instruccion de salto ya que este solo necesita t8 el cual ya fue cargado con anterioridad
+
+<p align="center"> <img src="img/image77.png" alt=""> </p>
+
+
+
+### Caso O: BNE con HAZARD
+
+
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add $s1, $s2, $s3 -> 000000 10010 10011 10001 00000 100000  -> 0x02538820 -> 39028768
+00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x00A62020 -> 21893152
+00001000                BNE v0,s1, 00011000  -> 000101 10001 00010  0000000000011000 -> 0x16220018-> 371327000  -> NO SALTAR 
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+```
+
+La complicacion aparece en la siguiente secuencia de instrucciones:
