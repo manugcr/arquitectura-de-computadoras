@@ -716,55 +716,43 @@ El objetivo es implementar el funcionamiento de estas instrucciones dentro de **
 
 
 
-### Riesgo de Control y su Mitigación
+## Riesgo de Control y su Mitigación
 
 
 El **riesgo de control** surge de la necesidad de tomar una decisión basada en los resultados de una instrucción mientras otras aún se están ejecutando.
 
-#### Soluciones para Mitigar el Riesgo de Control  
+### ¿Mitigar el Riesgo de Control ?
 
-#### Predicción de Saltos  
+#### Suponer salto NO TOMADO 
 Para evitar bloqueos en los saltos, se suele implementar la estrategia de **suponer que el salto no será tomado** y continuar con la ejecución secuencial de instrucciones.  
 
-- Si el salto es tomado, las instrucciones que se estaban buscando y decodificando deben descartarse.  
+- Si el salto es tomado, las instrucciones que se estaban buscando y decodificando **DEBEN DESCARTARSE**🚮.  
 - Si aproximadamente la mitad de los saltos no se toman y descartar instrucciones cuesta poco, esta optimización **reduce el costo del riesgo de control a la mitad**.  
 
-#### Descarte de Instrucciones  
+#### Descarte de Instrucciones 🚮 
 Para descartar instrucciones, se cambian las señales de control a **cero**, similar a cómo se bloquean instrucciones para evitar riesgos de datos tipo **load-use**.  
 
 - En el registro **IF/ID**, se dispone del valor del **PC** y del campo inmediato.  
-- Basta con **mover el sumador de direcciones** desde la etapa **MEM** a la etapa **ID**.  
+ 
+ ### 🚀 Mejora de Performance: Adelantar una Etapa el Cortocircuito (MEM -> ID)
+**Optimización:** Mover la verificación de saltos a la etapa **ID**.  
 
-### Mover la Verificación de Saltos a la Etapa ID  
+- ✅ Ventajas: Mayor optimización del rendimiento.
+
+- ⚠️ Desventajas: Aumento en el costo de hardware.  
+
 Esto requiere nueva circuitería para **detectar riesgos** y **anticipar resultados**, asegurando que las instrucciones *branch* que dependen de resultados previos funcionen correctamente.  
 
 - Si los valores de una comparación de salto se producen en etapas posteriores a **ID**, puede ocurrir un **riesgo de datos**, generando bloqueos.  
 - Ejemplo:  
-  - Si una instrucción **ALU** produce un operando requerido por un **salto inmediato posterior**, se genera un bloqueo.  
+  - Si una instrucción **ALU** produce un operando requerido por un **salto inmediato posterior**, se genera un bloqueo.
+    - CASO: `Add $v0,$v1,$v2 -> BEQ $v0,$t1,JUMP`  
   - Si una **carga** es seguida por un **salto condicional** que chequea su resultado, se produce un bloqueo de **dos ciclos** (*Control Stall*).  
 
-#### Eliminación de Instrucciones en IF  
+#### Eliminación de Instrucciones en IF  🚮
 Para eliminar instrucciones en la etapa **IF**, se introduce una señal de control llamada **IF.Flush** (Usado en el avance anterior), que pone a **cero** el campo de instrucción del registro de segmentación **IF/ID**.  
 
 - Esto convierte la instrucción leída en un **NOP** (*No Operation*), asegurando que no afecte el estado del procesador.  
-
-
-
-
-
----
-
-### Prueba Piloto, Avance IV: Optimización para Evitar Bloqueos en Saltos  
-
-
-Bloquear el procesador hasta que se complete el salto es **demasiado lento**.  
-
-#### Estrategia: Suponer que el Salto No Será Tomado  
-Para evitar bloqueos en los saltos, se implementa una mejora que consiste en **asumir que el salto no será tomado** y continuar la ejecución siguiendo el flujo secuencial de instrucciones.  
-
-- Si el salto **no es tomado**, la ejecución continúa sin interrupciones.  
-- Si el salto **sí es tomado**, se deben **descartar** las instrucciones que se estaban buscando y decodificando en ese momento.  
-- La ejecución se reanuda a partir del **destino del salto**.  
 
 #### Beneficio de esta Optimización  
 Si aproximadamente el **50% de los saltos no se toman**, y si descartar instrucciones es un proceso eficiente, entonces:  
@@ -828,6 +816,16 @@ PC                 |   Instrucción
 
 
 ### Caso M: BEQ con HAZARD
+
+Hasta ahora, nos hemos limitado a analizar peligros relacionados con operaciones aritméticas y transferencias de datos. Sin embargo, también existen peligros en el pipeline relacionados con las instrucciones de branch.  Para mantener el flujo del pipeline, se debe buscar una nueva instrucción en cada ciclo de reloj.
+
+#### Asumir que la branch No se Toma
+
+Detener el pipeline hasta que se complete el branch es demasiado lento. Una mejora sobre esta estrategia es predecir que el branch no se tomará y continuar ejecutando las instrucciones de manera secuencial. Si el branch efectivamente se toma, las instrucciones que se estaban buscando y decodificando deben ser descartadas, y la ejecución continúa en la dirección objetivo de la branch. Si las bifurcaciones no se toman la mitad del tiempo y el costo de descartar instrucciones es bajo, esta optimización reduce a la mitad el costo de los peligros de control.
+
+Para descartar instrucciones, simplemente cambiamos los valores originales de control a ceros (STALL), de manera similar a como lo hicimos para detener el pipeline en un peligro de datos tipo LOAD-USE. La diferencia es que, en el caso de los peligros de control, debemos modificar las tres instrucciones en las etapas IF, ID y EX cuando la branch alcanza la etapa MEM. En cambio, para los peligros de carga-uso, solo cambiamos los valores de control en la etapa ID y dejamos que las instrucciones se propaguen por el pipeline. Descartar instrucciones, entonces, implica poder vaciar las etapas IF, ID y EX del pipeline.
+
+Esta sección sobre los peligros de control es más breve que las secciones anteriores sobre peligros de datos. Las razones son que los peligros de control son relativamente fáciles de entender, ocurren con menor frecuencia que los peligros de datos, y no existe una técnica tan efectiva contra los peligros de control como el reenvío (forwarding) lo es para los peligros de datos. Por lo tanto, utilizamos estrategias más simples. En este apartado, analizaremos dos métodos para resolver peligros de control y una optimización para mejorar estas estrategias.
 
 ```assembly 
             PC                 |   Instrucción   

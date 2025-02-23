@@ -97,10 +97,46 @@ module Hazard(
     //--------------------------------
     always @(*) begin
 
+
+         // Branch (rs and rt): RegWrite in EX and depedency in ID
+        if ( (OpCode == BEQ || OpCode == BNE) && 
+                  RegWrite_IDEX && (( RegDst_IDEX == 2'b0 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID)) ) || 
+                                    ( RegDst_IDEX == 2'b1 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID)) )) ) begin
+            
+            PCWrite      <= 1'b0;
+            IFIDWrite    <= 1'b0;
+            ControlStall <= 1'b1;
+            BranchFlush  <= 1'b0;
+
+            $display("HOLAAAAAAA1");
+
+            if(RegDst_MEMWB != RegRS_IFID && RegDst_MEMWB != RegRT_IFID) begin 
+            HazardCompareBranch <= 1'b1;
+            $display("HOLAAAAAAA2");
+            end
+            else begin
+                $display("HOLAAAAAAA3");
+                HazardCompareBranch <= 1'b0;
+            end 
+
+        
+        end
+
+        else if (OpCode == BEQ || OpCode == BNE) begin
+
+            // CASO  BEQ t8,t8, 00011000 con t8 sin hazard
+
+            PCWrite      <= 1'b1;
+            IFIDWrite    <= 1'b1;
+            ControlStall <= 1'b0;
+            BranchFlush  <= 1'b0;   
+            HazardCompareBranch <= 1'b1;
+        end 
+
         // Caso 1: Peligro de datos de carga (Load-Use Hazard)
         // Ocurre cuando una instrucción `lw` en la etapa ID/EX tiene como destino
         // un registro que se está utilizando en la etapa IF/ID.
-        if (MemRead_IDEX && 
+        else if (MemRead_IDEX && 
            ((RegDst_IDEX == 2'b00 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID))) || 
             (RegDst_IDEX == 2'b01 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID))))) begin
 
@@ -176,58 +212,6 @@ module Hazard(
              HazardCompareBranch <= 1'b0;
 
         end 
-
-        /////////////
-
-        // Branch (just rs): RegWrite in EX and depedency in ID
-        else if ( (OpCode == BGEZ || OpCode == BGTZ || OpCode == BLEZ || OpCode == BLTZ) && 
-                  RegWrite_IDEX && (( RegDst_IDEX == 2'b0 && RegRT_IDEX == RegRS_IFID ) || 
-                                    ( RegDst_IDEX == 2'b1 && RegRD_IDEX == RegRS_IFID )) ) begin
-            
-            PCWrite      <= 1'b0;
-            IFIDWrite    <= 1'b0;
-            ControlStall <= 1'b1;
-            BranchFlush  <= 1'b0;
-             HazardCompareBranch <= 1'b0;
-
-        
-        end
-
-        // Branch (rs and rt): RegWrite in EX and depedency in ID
-        else if ( (OpCode == BEQ || OpCode == BNE) && 
-                  RegWrite_IDEX && (( RegDst_IDEX == 2'b0 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID)) ) || 
-                                    ( RegDst_IDEX == 2'b1 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID)) )) ) begin
-            
-            PCWrite      <= 1'b0;
-            IFIDWrite    <= 1'b0;
-            ControlStall <= 1'b1;
-            BranchFlush  <= 1'b0;
-
-            if(RegDst_MEMWB != RegRS_IFID && RegDst_MEMWB != RegRT_IFID) begin 
-            HazardCompareBranch <= 1'b1;
-            end
-            else begin
-                HazardCompareBranch <= 1'b0;
-            end 
-
-        
-        end
-
-
-        ///////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         
         else begin 

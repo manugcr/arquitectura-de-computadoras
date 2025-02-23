@@ -10,7 +10,7 @@ reg Reset;
 
 
 
-wire [31:0] IF_PC,IF_Instruction,IFID_Instruction,IDEX_ReadData1,IDEX_ReadData2;
+wire [31:0] IF_PC,IF_Instruction,ID_ReadData1,ID_ReadData2,IFID_Instruction,IDEX_ReadData1,IDEX_ReadData2;
 wire ID_Stall,IFID_Flush;
 wire [31:0] EX_ALUResult,EXMEM_AluResult,MEMWB_AluResult,WB_MemToReg ;
 
@@ -35,6 +35,10 @@ assign EXMEM_AluResult = uut.EXMEM.Out_ALUResult;
 assign MEMWB_AluResult = uut.MEMWB.Out_ALUResult;
 assign WB_MemToReg = uut.WB_Stage.MemToReg_Out;
 assign ID_Stall = uut.ID_Stage.HazardDetection.ControlStall;
+
+assign ID_ReadData1 = uut.ID_Stage.ReadData1_out;
+assign ID_ReadData2 = uut.ID_Stage.ReadData2_out;
+
 
 assign EX_ALUResult = uut.EX_Stage.ALU.ALUResult;
 assign EX_RegWrite_Out = uut.EX_Stage.ALU.RegWrite_Out;
