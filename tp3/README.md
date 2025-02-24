@@ -716,7 +716,7 @@ El objetivo es implementar el funcionamiento de estas instrucciones dentro de **
 
 
 
-## Riesgo de Control y su Mitigación
+### Riesgo de Control y su Mitigación
 
 
 El **riesgo de control** surge de la necesidad de tomar una decisión basada en los resultados de una instrucción mientras otras aún se están ejecutando.
@@ -781,6 +781,20 @@ Considerando que `$t8=24d=18h` NO se produce hazard en la instruccion de salto y
 
 <p align="center"> <img src="img/image69.png" alt=""> </p>
 
+Cuando `BEQ` entra en la etapa de **Instruction Fetch (IF)**, el procesador todavía no sabe si el salto será tomado o no.  
+Por lo tanto, en el siguiente ciclo, ya ha comenzado a cargar la instrucción: `add $t1, $t2, $t3` asumiendo que el salto NO se tomará.  
+
+Sin embargo, en la etapa **Instruction Decode (ID)**, `BEQ` evalúa la condición `$t8 == $t8`, que es verdadera, y decide que el programa DEBE saltar a `0x00011000` en lugar de continuar con `0x00001100`.  
+
+Esto significa que la instrucción: `add $t1, $t2, $t3` que ya estaba en el pipeline es incorrecta y debe eliminarse.  
+
+#### ¿Cómo se soluciona?
+
+Para solucionar esto, el procesador introduce un **bubble** (flush) en ID en el pipeline.  
+
+Un **bubble** es un ciclo vacío donde no se ejecuta ninguna instrucción real, lo que da tiempo al procesador para descartar la instrucción incorrecta (`add $t1, $t2, $t3`) y cargar la correcta: `add $t4, $t5, $t6  # En la dirección 0x00011000`
+
+
 
 #### Resultado
 
@@ -811,21 +825,73 @@ PC                 |   Instrucción
 
 <p align="center"> <img src="img/image71.png" alt=""> </p>
 
+<p align="center"> <img src="img/image80.png" alt=""> </p>
+
+En este caso, como el salto **NO** se realiza porque `$t1` es diferente de `$t8`, no es necesario insertar una burbuja. La ejecución continuará normalmente con la siguiente instrucción en la secuencia.
+
+Si `$t1` es diferente de `$t8` y el salto no ocurre, **no debería haber una burbuja**, ya que no hay necesidad de esperar por la resolución de una instrucción de salto.
+
+
+### Branch y Hazard de Datos
+
+#### Fuentes recomendadas  
+- [Video: Branch Hazards (YouTube)](https://www.youtube.com/watch?v=cOWxinc5oRk)  
+- [Video: Data Hazards (YouTube)](https://www.youtube.com/watch?v=EW9vtuthFJY)  
+
+Hasta ahora, nos hemos limitado a analizar peligros relacionados con operaciones aritméticas y transferencias de datos. Sin embargo, también existen **hazards** en el **pipeline** relacionados con las instrucciones de **branch**.  
+
+Para mantener el flujo del **pipeline**, es necesario buscar una nueva instrucción en cada ciclo de reloj. Sin embargo, las instrucciones de **branch** pueden alterar el flujo de ejecución, generando retrasos y afectando el rendimiento del procesador.  
+
+
+#### Asumir que la branch No se Toma
+
+Para descartar instrucciones, simplemente cambiamos los valores originales de control a ceros (STALL), de manera similar a como lo hicimos para detener el pipeline en un peligro de datos tipo LOAD-USE (Avance anterior). La diferencia es que, en el caso de los peligros de control, debemos modificar las tres instrucciones en las etapas IF, ID y EX cuando la branch alcanza la etapa MEM. En cambio, para los peligros de carga-uso, solo cambiamos los valores de control en la etapa ID y dejamos que las instrucciones se propaguen por el pipeline. Descartar instrucciones, entonces, implica poder vaciar las etapas IF, ID y EX del pipeline.
+
+Las razones son que los peligros de control son relativamente fáciles de entender, ocurren con **menor** frecuencia que los peligros de datos, y no existe una técnica tan efectiva contra los peligros de control como el reenvío (forwarding) lo es para los peligros de datos. 
+
+#### Ejemplo de Branch + Hazard de datos
+
+Supongamos el siguiente ejemplo  
+(Ejemplo inspirado en *"5-Stage Pipeline Processor Execution Example"*)  
+
+🔗 [Ver video en YouTube](https://www.youtube.com/watch?v=EW9vtuthFJY)
+
+##### CASO 1: BRANCH INCORRECTO, NO SE DEBE TOMAR EL SALTO.
+
+
+<p align="center"> <img src="img/image78.png" alt=""> </p>
+
+
+
+En la instrucción `add $v0, $t2, $t6`, el valor de `$v0` se actualiza y estará disponible después de la etapa de ejecución (inmediatamente después de la etapa `EX/MEM`). 
+
+Sin embargo, en la instrucción de branch `BNE $v0, $s1, 00011000`, que se encuentra justo después, hay una dependencia de datos con `$v0`. Esta instrucción intenta decodificarse, pero aún no puede obtener el valor correcto de `$v0`, ya que este aún se encuentra en proceso de ejecución en la ALU.
+
+Para resolver este problema, se requiere un mecanismo de **reenvío de datos** y **stall** en el pipeline. En este caso, la instrucción de rama se debe detener un ciclo en la etapa de **decodificación (ID)** hasta que el resultado de `$v0` esté disponible. Esto introduce un retraso en la ejecución de la siguiente instrucción: `add $t1, $t2, $t3`
+
+Esta instrucción deberá esperar en la etapa de **búsqueda de instrucciones (IF)** hasta que la rama pueda continuar.
+
+Una vez que la dependencia se resuelve mediante el reenvío y la burbuja, la instrucción de rama puede continuar su ejecución normalmente, permitiendo que la siguiente instrucción también progrese en el pipeline.
+
+
+##### CASO 2: BRANCH CORRECTO,  SE DEBE TOMAR EL SALTO.
+
+
+<p align="center"> <img src="img/image79.png" alt=""> </p>
+
+
+
+La primera instrucción (`add $v0, $t2, $t6`) escribe su resultado en `$v0`, pero su valor solo estará disponible en la etapa **EXMEM inmediatamente**. La siguiente instrucción (`BNE $v0, $s1, offset`) necesita leer `$v0` en la etapa **ID**, pero aún no ha sido escrito, lo que genera una dependencia de datos. Para evitar errores, el procesador detiene la ejecución de `BNE` en la etapa **ID**, provocando un **stall** de un ciclo de reloj.  
+
+Este retraso impide que la siguiente instrucción (`add $t1, $t2, $t3`) sea decodificada a tiempo. Sin embargo, el procesador ya ha comenzado a buscar la instrucción `add`, lo que significa que cuando finalmente se resuelve la branch, la instrucción `add` ya ha sido cargada en el pipeline. Cuando el procesador detecta que la branch sí se debe tomar, se da cuenta de que la instrucción `add $t1, $t2, $t3` no es válida y la convierte en un `NOP`, introduciendo una burbuja en el pipeline.  
+
+Finalmente, después de resolver la bifurcación, el procesador comienza a buscar la instrucción correcta (`add $t4, $t5, $t6`) y la ejecución continúa con normalidad. Este retraso y la burbuja en el pipeline son consecuencia de no haber predicho correctamente la bifurcación y de la dependencia de datos con `$v0`.  
 
 
 
 
 ### Caso M: BEQ con HAZARD
 
-Hasta ahora, nos hemos limitado a analizar peligros relacionados con operaciones aritméticas y transferencias de datos. Sin embargo, también existen peligros en el pipeline relacionados con las instrucciones de branch.  Para mantener el flujo del pipeline, se debe buscar una nueva instrucción en cada ciclo de reloj.
-
-#### Asumir que la branch No se Toma
-
-Detener el pipeline hasta que se complete el branch es demasiado lento. Una mejora sobre esta estrategia es predecir que el branch no se tomará y continuar ejecutando las instrucciones de manera secuencial. Si el branch efectivamente se toma, las instrucciones que se estaban buscando y decodificando deben ser descartadas, y la ejecución continúa en la dirección objetivo de la branch. Si las bifurcaciones no se toman la mitad del tiempo y el costo de descartar instrucciones es bajo, esta optimización reduce a la mitad el costo de los peligros de control.
-
-Para descartar instrucciones, simplemente cambiamos los valores originales de control a ceros (STALL), de manera similar a como lo hicimos para detener el pipeline en un peligro de datos tipo LOAD-USE. La diferencia es que, en el caso de los peligros de control, debemos modificar las tres instrucciones en las etapas IF, ID y EX cuando la branch alcanza la etapa MEM. En cambio, para los peligros de carga-uso, solo cambiamos los valores de control en la etapa ID y dejamos que las instrucciones se propaguen por el pipeline. Descartar instrucciones, entonces, implica poder vaciar las etapas IF, ID y EX del pipeline.
-
-Esta sección sobre los peligros de control es más breve que las secciones anteriores sobre peligros de datos. Las razones son que los peligros de control son relativamente fáciles de entender, ocurren con menor frecuencia que los peligros de datos, y no existe una técnica tan efectiva contra los peligros de control como el reenvío (forwarding) lo es para los peligros de datos. Por lo tanto, utilizamos estrategias más simples. En este apartado, analizaremos dos métodos para resolver peligros de control y una optimización para mejorar estas estrategias.
 
 ```assembly 
             PC                 |   Instrucción   
@@ -840,11 +906,18 @@ Esta sección sobre los peligros de control es más breve que las secciones ante
 
 ``` 
 
+
+
+#### Interpretación
+
+<p align="center"> <img src="img/image81.png" alt=""> </p>
+
 #### Resultado
+
 
 <p align="center"> <img src="img/image73.png" alt=""> </p>
 
-<p align="center"> <img src="img/image74.png" alt=""> </p>
+
 
 
 
@@ -891,7 +964,7 @@ Considerando que `$t8=24d=18h` y `$t7=23d=17h ` NO se produce hazard en la instr
 
 #### Resultado
 
-<p align="center"> <img src="img/image76.png" alt=""> </p>
+<p align="center"> <img src="img/image82.png" alt=""> </p>
 
 
 #### BNE sin HAZARD (CONDICIÓN ERRONEA)
@@ -908,9 +981,13 @@ PC                 |   Instrucción
 00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
 ``` 
 
-Considerando que `$t8=24d=18h` NO se produce hazard en la instruccion de salto ya que este solo necesita t8 el cual ya fue cargado con anterioridad
+Considerando que `$t8=24d=18h` NO se produce hazard en la instruccion de salto ya que este solo necesita t8 el cual ya fue cargado con anterioridad.
 
-<p align="center"> <img src="img/image77.png" alt=""> </p>
+#### Resultado
+
+<p align="center"> <img src="img/image83.png" alt=""> </p>
+
+
 
 
 
@@ -930,4 +1007,6 @@ PC                 |   Instrucción
 00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
 ```
 
-La complicacion aparece en la siguiente secuencia de instrucciones:
+#### Resultado
+
+<p align="center"> <img src="img/image84.png" alt=""> </p>

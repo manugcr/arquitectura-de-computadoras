@@ -10,7 +10,7 @@ reg Reset;
 
 
 
-wire [31:0] IF_PC,IF_Instruction,ID_ReadData1,ID_ReadData2,IFID_Instruction,IDEX_ReadData1,IDEX_ReadData2;
+wire [31:0] IF_PC,IF_Instruction,IFID_Instruction,ID_ReadData1,ID_ReadData2,IDEX_ReadData1,IDEX_ReadData2;
 wire ID_Stall,IFID_Flush;
 wire [31:0] EX_ALUResult,EXMEM_AluResult,MEMWB_AluResult,WB_MemToReg ;
 

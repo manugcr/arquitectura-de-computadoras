@@ -308,7 +308,7 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
 
       
           
-       /*   memory[0] = 21923872;  // add $s1, $t2, $t6 
+         /* memory[0] = 21923872;  // add $s1, $t2, $t6 
           memory[1] = 21893152;  // add $v0, $t2, $t6
           memory[2] = 320339992; // BEQ t8,t8, 00011000
           memory[3] = 21710880;  // add $t1, $t2, $t3
@@ -353,6 +353,7 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
             00000000                add $s1, $t2, $t6 -> 000000 01010 01110 10001 00000 100000  -> 0x14E8820  -> 21923872
             00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
             00001000                BEQ v0,s1, 00011000  -> 000100 10001 00010 0000000000011000 -> 0x12220018 -> 304218136  -> SALTAR a add $t4, $t5, $t6
+                  //                BEQ s1,v0, 00011000  -> 000100 00010 10001 0000000000011000 -> 0x10510018 -> 273743896  -> SALTAR a add $t4, $t5, $t6
             00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
             00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
             00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
@@ -360,9 +361,10 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
             00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
             ``` */
 
-        /* memory[0] = 21923872;  // add $s1, $t2, $t6 
+      /*    memory[0] = 21923872;  // add $s1, $t2, $t6 
           memory[1] = 21893152;  // add $v0, $t2, $t6
-          memory[2] = 304218136; // BEQ t8,t1, 00011000
+      //    memory[2] = 304218136; // BEQ v0,s1, 00011000
+          memory[2] = 273743896; // BEQ s1,v0, 00011000
           memory[3] = 21710880;  // add $t1, $t2, $t3
           memory[4] = 23875616;  // add $t2, $t3, $t4  Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
           memory[5] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
@@ -386,9 +388,9 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
           ```  */
 
 
-        /*  memory[0] = 19826720;  // add $s1, $t2, $t6 
-          memory[1] = 21893152;  // add $v0, $t2, $t6
-          memory[2] = 304218136; // BEQ t8,t1, 00011000
+         /* memory[0] = 19826720;  //  add $s1, $t1, $t6 
+          memory[1] = 21893152;  // add $v0, $t2, $t6 
+          memory[2] = 304218136; // BEQ v0,s1, 00011000
           memory[3] = 21710880;  // add $t1, $t2, $t3
           memory[4] = 23875616;  // add $t2, $t3, $t4  Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
           memory[5] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
@@ -422,7 +424,7 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
                 00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
                 ```  */
 
-                /*  memory[0] = 21923872;  // add $s1, $t2, $t6 
+               /* memory[0] = 21923872;  // add $s1, $t2, $t6 
                   memory[1] = 21893152;  // add $v0, $t2, $t6
                   memory[2] = 387383320; // BNE t8,t7, 00011000
                   memory[3] = 21710880;  // add $t1, $t2, $t3
@@ -447,7 +449,7 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
           ``` */
 
 
-           /*       memory[0] = 21923872;  // add $s1, $t2, $t6 
+              /*    memory[0] = 21923872;  // add $s1, $t2, $t6 
                   memory[1] = 21893152;  // add $v0, $t2, $t6
                   memory[2] = 387448856; //  BNE t8,t8, 00011000
                   memory[3] = 21710880;  // add $t1, $t2, $t3
@@ -464,7 +466,7 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
             PC                 |   Instrucción   
             00000000                add $s1, $t1, $t6 -> 000000 01001 01110 10001 00000 100000  -> 0x12E8820  -> 19826720
             00000100                add $v0, $t2, $t6 -> 000000 01010 01110 00010 00000 100000  -> 0x14E1020  -> 21893152
-            00001000                BNE v1,s1, 00011000  -> 000101 10001 00011 0000000000011000 -> 0x16220018 -> 371327000  -> SALTAR a add $t4, $t5, $t6
+            00001000                BNE v0,s1, 00011000  -> 000101 10001 00010 0000000000011000 -> 0x16220018 -> 371327000  -> SALTAR a add $t4, $t5, $t6
             00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
             00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
             00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
@@ -473,9 +475,9 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
             ``` */
 
                   
-               memory[0] = 19826720;  // add $s1, $t1, $t6
+             /*  memory[0] = 19826720;  // add $s1, $t1, $t6
                   memory[1] = 21893152;  // add $v0, $t2, $t6
-                  memory[2] = 371392536; //  BNE v0,s1, 00011000
+                  memory[2] = 371327000; //  BNE v0,s1, 00011000
                   memory[3] = 21710880;  // add $t1, $t2, $t3
                   memory[4] = 23875616;  // add $t2, $t3, $t4  Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
                   memory[5] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
