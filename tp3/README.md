@@ -1010,3 +1010,7 @@ PC                 |   Instrucción
 #### Resultado
 
 <p align="center"> <img src="img/image84.png" alt=""> </p>
+
+
+### Caso J: Branch & LOAD, HAZARD
+

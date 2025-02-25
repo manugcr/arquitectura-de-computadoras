@@ -102,13 +102,17 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
           add s3, v0, v0 -> 0x00439020 -> 000000 00010 00010 10011 00000 100000  -> 4364320     -> s3 = 2d + 2d = 4d
           lw s2, 16(s3)  -> 0x8E520010 -> 10001110011100100000000000010000       -> 2389835792  -> s2 = 10d (16d nivel 5)
           add v1,s2,s3   -> 0x02531820 -> 000000 10010 10011 00011 00000 100000  -> 39000096    -> v1 = 10 + 4 = 14d = Eh
+          add a0,s2,s3   -> 0x02531820 -> 000000 10010 10011 00100 00000 100000  -> 39002144    -> v1 = 10 + 4 = 14d = Eh
+          add a1,s2,s3   -> 0x02531820 -> 000000 10010 10011 00101 00000 100000  -> 39004192    -> v1 = 10 + 4 = 14d = Eh
          
       
          
           CODIGO CASO E:
          memory[0] = 4364320;  //     add s3,v0,v0
          memory[1] = 2389835792;    //    lw  $s2 , 16 ($s3)
-         memory[2] = 39000096 ;     //    add v1,s2,s3*/
+         memory[2] = 39000096 ;     //    add v1,s2,s3
+        memory[3] = 39002144 ;     //    add a0,s2,s3
+        memory[4] = 39004192 ;     //    add a1,s2,s3
   
 
          /* CASO F: RIESGOS, LOAD Y STORE

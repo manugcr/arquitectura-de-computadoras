@@ -29,8 +29,8 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
             memory[i] = 0;
         end
             
-          memory[5] = 32'hAAAAAAAA   ;   
-          memory[4] = 32'h00002800   ;   
+          memory[5] = 32'h0000000A   ;   
+          //memory[4] = 32'h00002800   ;   
 
 
         // Escribir los valores iniciales en un archivo para referencia
