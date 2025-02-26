@@ -26,6 +26,7 @@ module Hazard(
     RegWrite_IDEX,
     RegWrite_EXMEM,
     RegDst_MEMWB,
+    MemRead_EXMEM,      //SOLO SIRVE PARA EL CASO DE BRANCH HAZARD LOAD
     RegisterDst_EXMEM,
     HazardCompareBranch,
     BranchFlush,
@@ -39,7 +40,7 @@ module Hazard(
 
 
     input [5:0] OpCode, Func;
-    input RegWrite_EXMEM,MemRead_IDEX, RegWrite_IDEX;   // Señales de control para lectura y escritura
+    input RegWrite_EXMEM,MemRead_IDEX, RegWrite_IDEX, MemRead_EXMEM;   // Señales de control para lectura y escritura
     input [1:0] RegDst_IDEX;             // Selección del registro destino en la etapa ID/EX
     input [4:0] RegisterDst_EXMEM,RegRS_IFID, RegRT_IFID,RegDst_MEMWB;  // Registros fuente en la etapa IF/ID
     input [4:0] RegRT_IDEX, RegRD_IDEX;  // Registros destino en la etapa ID/EX
@@ -121,6 +122,62 @@ module Hazard(
 
         
         end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+             // CASO HAZARD BRAND LOAD
+        else if ( (OpCode == BEQ || OpCode == BNE) && MemRead_EXMEM && 
+           ((((RegisterDst_EXMEM == RegRS_IFID) || (RegisterDst_EXMEM == RegRT_IFID))))) begin
+
+             $display("Detectado BEQ/BNE con riesgo: OpCode=%b, MemRead_EXMEM=%b, RegisterDst_EXMEM=%d, RegRS_IFID=%d, RegRT_IFID=%d", 
+             OpCode, MemRead_EXMEM, RegisterDst_EXMEM, RegRS_IFID, RegRT_IFID);
+            
+            PCWrite      <= 1'b0;
+            IFIDWrite    <= 1'b0;
+            ControlStall <= 1'b1;
+            BranchFlush  <= 1'b0;
+            HazardCompareBranch <= 1'b0;
+
+            /*$display("HOLAAAAAAA1");
+
+            if(RegDst_MEMWB != RegRS_IFID && RegDst_MEMWB != RegRT_IFID) begin 
+            HazardCompareBranch <= 1'b1;
+            $display("HOLAAAAAAA2");
+            end
+            else begin
+                $display("HOLAAAAAAA3");
+                HazardCompareBranch <= 1'b0;
+            end  */
+
+        
+        end 
+
+
+
+
+
+
+
+
+
+
+
 
         else if (OpCode == BEQ || OpCode == BNE) begin
 

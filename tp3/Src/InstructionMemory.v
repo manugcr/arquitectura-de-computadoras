@@ -35,9 +35,9 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
         add $s1, $s2, $s3 # 000000 10010 10011 10001 00000 100000  -> 0x2538820  -> 39028768, Registro 11h (17d) = 25h
         add $a0, $a1, $a2 # 000000 00101 00110 00100 00000 100000  -> 0xA62020   -> 10887200, Registro 04h (04d) = 0bh
 
-        CODIGO CASO A:
+        CODIGO CASO A:*/
             
-              memory[2] = 39028768; //Registro 11h (17d) = 25h
+          /*    memory[2] = 39028768; //Registro 11h (17d) = 25h
               memory[0] = 19546144; //Registro 08h (08d) = 13h
               memory[1] = 10887200; //Registro 04h (04d) = 0bh //*/
               
@@ -479,7 +479,7 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
             ``` */
 
                   
-             /*  memory[0] = 19826720;  // add $s1, $t1, $t6
+            /*   memory[0] = 19826720;  // add $s1, $t1, $t6
                   memory[1] = 21893152;  // add $v0, $t2, $t6
                   memory[2] = 371327000; //  BNE v0,s1, 00011000
                   memory[3] = 21710880;  // add $t1, $t2, $t3
@@ -488,6 +488,27 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
                   memory[6] = 28205088;  // add $t4, $t5, $t6  Registro 12d  =  27d = 1Bh
                   memory[7] = 19556384;  // add $t5, $t1, $t2  Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
 
+              /*  CASO J: Branch & LOAD*/
+
+         /*   PC                 |   Instrucción   
+              00000000                add s3 , v0 , v0    -> 0x00429820 -> 00000000010000101001100000100000 -> 4364320     -> s3 = 2d + 2d = 4d
+              00000100                lw  s2 , 16(s3)     -> 0x8E520010 -> 10001110011100100000000000010000 -> 2389835792  -> s2 = 10d (16d nivel 5)
+              00001000                BEQ t2,s2, 00011000  -> 000100 10010 01010   0000000000011000 -> 0x11520018 -> 290586648  
+              00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+              00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+              00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+              00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+              00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+            ``` */
+
+                  memory[0] = 4364320;  // add $s1, $t1, $t6
+                  memory[1] = 2389835792;  // add $v0, $t2, $t6
+                  memory[2] = 306839576; //  BEQ t2,s2, 00011000
+                  memory[3] = 21710880;  // add $t1, $t2, $t3
+                  memory[4] = 23875616;  // add $t2, $t3, $t4  Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+                  memory[5] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
+                  memory[6] = 28205088;  // add $t4, $t5, $t6  Registro 12d  =  27d = 1Bh
+                  memory[7] = 19556384;  // add $t5, $t1, $t2  Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
 
 
 

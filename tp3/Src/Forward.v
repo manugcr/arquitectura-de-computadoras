@@ -12,6 +12,7 @@ module Forward(
     RegRS_IDEX, RegRT_IDEX,             // Direcciones de registros fuente desde la etapa ID/EX
     RegRS_IFID, RegRT_IFID,             // Direcciones de registros fuente desde la etapa IF/ID
     isBranch,
+    isLoad,
 
     /* 
             NOTA: Se agrega la señal DelayHazardAlu porque, al ocurrir un hazard de datos, hay un ciclo 
@@ -30,7 +31,7 @@ module Forward(
     // Entradas
     //--------------------------------
 
-    input       isBranch;     
+    input       isBranch, isLoad;     
     input       RegWrite_EXMEM, RegWrite_MEMWB;   // Señales de escritura habilitada para las etapas EX/MEM y MEM/WB
     input [4:0] RegDst_EXMEM, RegDst_MEMWB;       // Direcciones de registros destino desde las etapas EX/MEM y MEM/WB
     input [4:0] RegRS_IDEX, RegRT_IDEX;           // Direcciones de registros fuente desde la etapa ID/EX
@@ -145,26 +146,33 @@ module Forward(
             ForwardMuxB_EX <= 2'b00; // Sin reenvío
 
 
-             if (isBranch == 1'b1) begin
+                    if (isBranch == 1'b1) begin
 
-
-        if (RegWrite_MEMWB && (RegDst_MEMWB == RegRS_IFID)) begin
-
-                        /// CASO ESPECIAL BRANCH
+            if (RegWrite_MEMWB && (RegDst_MEMWB == RegRS_IFID)) begin
+                // Caso especial: Branch
                 /*
                 add $s1, $t1, $t6 
                 add $v0, $t2, $t6 
-                BNE v0,s1, 00011000 
+                BNE v0, s1, 00011000 
                 */
+                if (isLoad == 1'b0) 
+                    ForwardMuxA_ID <= 2'd2;
+                else 
+                    ForwardMuxA_ID <= 2'd0;         //CASO BRANCH LOAD HAZARD
+            end 
+            else if (RegWrite_MEMWB && (RegDst_MEMWB == RegRT_IFID)) begin
+                if (isLoad == 1'b0) 
+                    ForwardMuxB_ID <= 2'd2; 
+                else  
+                    ForwardMuxB_ID <= 2'd0;         //CASO BRANCH LOAD HAZARD
+            end 
+
+        end
+
+
+
 
     
-
-            ForwardMuxA_ID <= 2'd2; // Reenvío habilitado
-        end
-        else if(RegWrite_MEMWB && (RegDst_MEMWB == RegRT_IFID))  begin
-            ForwardMuxB_ID <= 2'd2; // Reenvío habilitado
-        end 
-    end
      
     end
 

@@ -1014,3 +1014,21 @@ PC                 |   Instrucción
 
 ### Caso J: Branch & LOAD, HAZARD
 
+Recomendacion: https://www.youtube.com/watch?v=cOWxinc5oRk&t=1152s
+
+Si un registro de branch es un destino de la instrucción de carga inmediatamente anterior, **se necesitan 2 ciclos de bloqueo**.
+
+Para este tipo de hazard de dependencia load hazard branch, se utiliza la logica similar a la del caso "Caso E: Load-Use Hazard"
+
+
+```assembly 
+PC                 |   Instrucción   
+00000000                add s3 , v0 , v0    -> 0x00429820 -> 00000000010000101001100000100000 -> 4364320     -> s3 = 2d + 2d = 4d
+00000100                lw  s2 , 16(s3)     -> 0x8E520010 -> 10001110011100100000000000010000 -> 2389835792  -> s2 = 10d (16d nivel 5)
+00001000                BEQ t2,s2, 00011000  -> 000100 01010 10010  0000000000011000 -> 0x11520018 -> 290586648  
+00001100                add $t1, $t2, $t3 -> 000000 01010 01011 01001 00000 100000  -> 0X014B4820 -> 21710880
+00010000                add $t2, $t3, $t4 -> 000000 01011 01100 01010 00000 100000  -> 0X016C5020 -> 23875616 
+00010100                add $t3, $t4, $t5 -> 000000 01100 01101 01011 00000 100000  -> 0X018D5820 -> 26040352
+00011000                add $t4, $t5, $t6 -> 000000 01101 01110 01100 00000 100000  -> 0x01AE6020 -> 28205088
+00100000                add $t5, $t1, $t2 -> 000000 01001 01010 01101 00000 100000  -> 0X012A6820 -> 19556384 
+```

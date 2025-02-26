@@ -112,6 +112,7 @@ module MIPS(ClockIn, Reset);
                        .Reset(Reset),    
                        .RegWrite(ControlSignal_WB[2]), 
                        .MemRead_IDEX(ControlSignal_EX[5]),
+                       .MemRead_EXMEM(ControlSignal_MEM[5]),        //SOLO PARA HAZARD BRANCH LOAD
                        .WriteRegister(RegDst_WB), 
                        .BranchFlag(BrachflagIFID),
                        .WriteData(WriteData_WB), 
@@ -163,6 +164,7 @@ module MIPS(ClockIn, Reset);
                               .RegDst_EXMEM(RegDst_MEM),
                              // .DelayHazardAlu(DelayHazardAlu),
                               .RegDst_MEMWB(RegDst_WB),
+                              .isLoad(ControlSignal_WB[5]),
                               .RegRS_IDEX(RegRS_IDEX),
                               .RegRT_IDEX(RegRT_IDEX),
                               .isBranch(isBranchID),

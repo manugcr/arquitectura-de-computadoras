@@ -15,6 +15,7 @@ module ID_Stage(
     ForwardMuxBSel,             // Selección para el multiplexor de reenvío B
     PCWrite, IFIDWrite,
     RegWrite_IDEX, 
+    MemRead_EXMEM,
     ForwardData_MEMWB,
     PCAdder,
     Flush_IF,
@@ -34,6 +35,8 @@ module ID_Stage(
 
     // Señales de control
     input RegWrite, MemRead_IDEX;
+
+    input MemRead_EXMEM;  // solo se usa para el caso de branch hazard load
 
     input RegWrite_IDEX;
 
@@ -160,6 +163,7 @@ module ID_Stage(
         .RegisterDst_EXMEM(RegisterDst_EXMEM),  ///////////////////////
         .MemRead_IDEX(MemRead_IDEX),
         .RegDst_IDEX(RegDst_IDEX),
+        .MemRead_EXMEM(MemRead_EXMEM),          //SOLO SE USA PARA HAZARD BRANCH LOAD
         .ControlStall(ControlStall),
         .PCWrite(PCWrite),
         .RegDst_MEMWB(WriteRegister),   //PARA HAZARD DE BRANCH en etapa MEMWB
