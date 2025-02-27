@@ -21,7 +21,7 @@ module Comparator(InA, InB, Result, Control, CompareFlag);
 
     always @ (*) begin
     
-        if(CompareFlag == 1'b1) begin
+        if(CompareFlag == 1'b1 && Control !=1'b0) begin
              $display("Comparando: InA = %d, InB = %d, Control = %b", InA, InB, Control);
         case (Control)
             BEQ  : Result <= (InA == InB);

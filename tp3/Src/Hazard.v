@@ -109,14 +109,15 @@ module Hazard(
             ControlStall <= 1'b1;
             BranchFlush  <= 1'b0;
 
-            $display("HOLAAAAAAA1");
+            // MemRead_EXMEM != 1'b1 problema con 2 load antes de un branch 
 
-            if(RegDst_MEMWB != RegRS_IFID && RegDst_MEMWB != RegRT_IFID) begin 
+
+            if(RegDst_MEMWB != RegRS_IFID && RegDst_MEMWB != RegRT_IFID && MemRead_EXMEM != 1'b1) begin 
             HazardCompareBranch <= 1'b1;
-            $display("HOLAAAAAAA2");
+            $display("caso 1");
             end
             else begin
-                $display("HOLAAAAAAA3");
+                $display("caso 2");
                 HazardCompareBranch <= 1'b0;
             end 
 
@@ -147,23 +148,14 @@ module Hazard(
 
              $display("Detectado BEQ/BNE con riesgo: OpCode=%b, MemRead_EXMEM=%b, RegisterDst_EXMEM=%d, RegRS_IFID=%d, RegRT_IFID=%d", 
              OpCode, MemRead_EXMEM, RegisterDst_EXMEM, RegRS_IFID, RegRT_IFID);
+
+             $display("caso 3");
             
             PCWrite      <= 1'b0;
             IFIDWrite    <= 1'b0;
             ControlStall <= 1'b1;
             BranchFlush  <= 1'b0;
             HazardCompareBranch <= 1'b0;
-
-            /*$display("HOLAAAAAAA1");
-
-            if(RegDst_MEMWB != RegRS_IFID && RegDst_MEMWB != RegRT_IFID) begin 
-            HazardCompareBranch <= 1'b1;
-            $display("HOLAAAAAAA2");
-            end
-            else begin
-                $display("HOLAAAAAAA3");
-                HazardCompareBranch <= 1'b0;
-            end  */
 
         
         end 
@@ -183,11 +175,16 @@ module Hazard(
 
             // CASO  BEQ t8,t8, 00011000 con t8 sin hazard
 
+             $display("caso 4");
+
             PCWrite      <= 1'b1;
             IFIDWrite    <= 1'b1;
             ControlStall <= 1'b0;
             BranchFlush  <= 1'b0;   
-            HazardCompareBranch <= 1'b1;
+
+
+            if(MemRead_EXMEM == 1'b1) HazardCompareBranch <= 1'b0;
+            else  HazardCompareBranch <= 1'b1;
         end 
 
         // Caso 1: Peligro de datos de carga (Load-Use Hazard)
