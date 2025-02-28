@@ -4,7 +4,7 @@
 module IF_Stage(
     Clock, Reset,               // Señales del sistema
     PCWrite,                   // Control de escritura del PC (señal de control de riesgos)
-    Instruction,BrachAddress, PCAdder_Out,  PCResult,JumpControl, JumpAddress,// Salidas del módulo
+    Instruction,BrachAddress, PCAdder_Out,JumpControl, JumpAddress,// Salidas del módulo
     isBranch, BranchFlagID
     );             
           
@@ -17,7 +17,7 @@ module IF_Stage(
     // Salidas
     output wire [31:0] Instruction;    // Instrucción obtenida de la memoria de instrucciones
     output wire [31:0] PCAdder_Out;    // Resultado del PC + 4 (dirección de la siguiente instrucción)
-    output wire [31:0] PCResult;       // Dirección actual del PC
+
     input [31:0] JumpAddress;
     input JumpControl;
     input [31:0] BrachAddress;

@@ -87,7 +87,6 @@ module MIPS(ClockIn, Reset);
                        // Outputs         
                        .Instruction(Instruction_IF), 
                        .PCAdder_Out(PCAdder_IF),
-                       .PCResult(PCResult),
                        .isBranch(BranchIF)
                        );   
     
