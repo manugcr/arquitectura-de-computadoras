@@ -114,10 +114,8 @@ module Hazard(
 
             if(RegDst_MEMWB != RegRS_IFID && RegDst_MEMWB != RegRT_IFID && MemRead_EXMEM != 1'b1) begin 
             HazardCompareBranch <= 1'b1;
-            $display("caso 1");
             end
             else begin
-                $display("caso 2");
                 HazardCompareBranch <= 1'b0;
             end 
 
@@ -125,32 +123,10 @@ module Hazard(
         end
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
              // CASO HAZARD BRAND LOAD
         else if ( (OpCode == BEQ || OpCode == BNE) && MemRead_EXMEM && 
            ((((RegisterDst_EXMEM == RegRS_IFID) || (RegisterDst_EXMEM == RegRT_IFID))))) begin
-
-             $display("Detectado BEQ/BNE con riesgo: OpCode=%b, MemRead_EXMEM=%b, RegisterDst_EXMEM=%d, RegRS_IFID=%d, RegRT_IFID=%d", 
-             OpCode, MemRead_EXMEM, RegisterDst_EXMEM, RegRS_IFID, RegRT_IFID);
-
-             $display("caso 3");
-            
+       
             PCWrite      <= 1'b0;
             IFIDWrite    <= 1'b0;
             ControlStall <= 1'b1;
@@ -174,8 +150,6 @@ module Hazard(
         else if (OpCode == BEQ || OpCode == BNE) begin
 
             // CASO  BEQ t8,t8, 00011000 con t8 sin hazard
-
-             $display("caso 4");
 
             PCWrite      <= 1'b1;
             IFIDWrite    <= 1'b1;

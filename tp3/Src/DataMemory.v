@@ -46,9 +46,9 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
 
         if (MemWrite == 1'b1) begin // Verificar señal de escritura activa
             // Escritura de palabra completa (sw)
-            $display("ByteSig: %b", ByteSig);
+        //    $display("ByteSig: %b", ByteSig);
             if (ByteSig == 2'b00) begin
-                $display("Condición ByteSig == 2'b00 cumplida. Address: %h, WriteData: %h", Address, WriteData);
+         //       $display("Condición ByteSig == 2'b00 cumplida. Address: %h, WriteData: %h", Address, WriteData);
                 memory[Address[31:2]] = WriteData;  
 
         /*   SUPONIENDO: instruccion  sw  $s0 , 14($s1)  ->   sw 8, 14(10)           
@@ -80,7 +80,7 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
             end
             
                    // Depuración: imprimir mensaje de escritura
-                 $display("Escritura en memoria: Direccion = %h, WriteData = %h, ByteSig = %b", Address[31:2], WriteData, ByteSig);
+            //     $display("Escritura en memoria: Direccion = %h, WriteData = %h, ByteSig = %b", Address[31:2], WriteData, ByteSig);
 
 
                 $writememh("Data_memory.mem", memory);
@@ -95,7 +95,7 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
             // Lectura de palabra completa (lw)
             if (ByteSig == 2'b00) begin
                 ReadData = memory[Address[31:2]];
-                $display("LOAD en memoria: Direccion = %h, ReadData = %h, ByteSig = %b", Address[31:2], ReadData, ByteSig);
+            //    $display("LOAD en memoria: Direccion = %h, ReadData = %h, ByteSig = %b", Address[31:2], ReadData, ByteSig);
             end
             
             // Lectura de media palabra (lh)
