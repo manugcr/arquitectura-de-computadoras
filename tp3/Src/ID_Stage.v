@@ -153,22 +153,22 @@ module ID_Stage(
     Hazard HazardDetection(
             .OpCode(In_Instruction[31:26]), 
             .Func(In_Instruction[5:0]),
-        .RegRS_IFID(In_Instruction[25:21]),
-        .RegRT_IFID(In_Instruction[20:16]),
-        .RegRT_IDEX(RegRT_IDEX),
-        .RegRD_IDEX(RegRD_IDEX),
-        .HazardCompareBranch(HazardCompareBranch),
-        .RegWrite_IDEX(RegWrite_IDEX), //////////////////////////////
-        .RegWrite_EXMEM(RegWrite_EXMEM), /////////////////////////////
-        .RegisterDst_EXMEM(RegisterDst_EXMEM),  ///////////////////////
-        .MemRead_IDEX(MemRead_IDEX),
-        .RegDst_IDEX(RegDst_IDEX),
-        .MemRead_EXMEM(MemRead_EXMEM),          //SOLO SE USA PARA HAZARD BRANCH LOAD
-        .ControlStall(ControlStall),
-        .PCWrite(PCWrite),
-        .RegDst_MEMWB(WriteRegister),   //PARA HAZARD DE BRANCH en etapa MEMWB
-        .IFIDWrite(IFIDWrite),
-        .BranchFlush(FlushJump));
+            .RegRS_IFID(In_Instruction[25:21]),
+            .RegRT_IFID(In_Instruction[20:16]),
+            .RegRT_IDEX(RegRT_IDEX),
+            .RegRD_IDEX(RegRD_IDEX),
+            .HazardCompareBranch(HazardCompareBranch),
+            .RegWrite_IDEX(RegWrite_IDEX), 
+            .RegWrite_EXMEM(RegWrite_EXMEM), 
+            .RegisterDst_EXMEM(RegisterDst_EXMEM),  
+            .MemRead_IDEX(MemRead_IDEX),
+            .RegDst_IDEX(RegDst_IDEX),
+            .MemRead_EXMEM(MemRead_EXMEM),          //SOLO SE USA PARA HAZARD BRANCH LOAD
+            .ControlStall(ControlStall),
+            .PCWrite(PCWrite),
+            .RegDst_MEMWB(WriteRegister),           //PARA HAZARD DE BRANCH en etapa MEMWB
+            .IFIDWrite(IFIDWrite),
+            .BranchFlush(FlushJump));
     
 
     // Módulo de control
@@ -201,11 +201,7 @@ module ID_Stage(
         .out(SignExtend_Out)
     );
 
-    // Desplazador hacia la izquierda por 2
-    ShiftLeft2 AdderShift(
-        .inputNum(SignExtend_Out), 
-        .outputNum(ImmediateShift)
-    );
+
 
     Mux2to1            ControlMux(.out(ControlSignal_Out), 
                                        .inA({14'd0, ALUOp_Control[5:0], ALUBMux_Control, RegDst_Control[1:0], 
@@ -238,7 +234,6 @@ module ID_Stage(
 
     // JUMP
 
-
         ShiftLeft2              JumpShift(.inputNum({6'b0, In_Instruction[25:0]}), 
                                       .outputNum(ShiftedJumpAddress));
 
@@ -268,9 +263,4 @@ module ID_Stage(
                                         .InB(HazardCompareBranch), 
                                         .Out(NotifyCompare));                              
     
-
-
-
-
-
 endmodule

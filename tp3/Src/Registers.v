@@ -4,13 +4,10 @@ module Registers(
     input [4:0] ReadRegister1, ReadRegister2, WriteRegister,
     input [31:0] WriteData,
     input RegWrite, Clock,
-    output reg [31:0] ReadData1, ReadData2
+    output  [31:0] ReadData1, ReadData2
 );
 
     reg [31:0] registers [0:31];
-
-
-   // reg flag_end;
 
     // Inicialización de los registros
     integer i;
@@ -27,10 +24,7 @@ module Registers(
         $s0 = 16, $s1 = 17, $s2 = 18, $s3 = 19, $s4 = 20, $s5 = 21, $s6 = 22, $s7 = 23,  
         $t8 = 24, $t9 = 25, $k0 = 26, $k1 = 27, $gp = 28, $sp = 29, $fp = 30, $ra = 31  
         */
-        
-        
-       
-
+    
         // Crea o limpia el archivo registers.mem
         $writememh("registers.mem", registers);
     end
@@ -38,12 +32,9 @@ module Registers(
     // Escritura sincronizada con el flanco de BAJADA del reloj, cuando estaba en subida, generaba problemas de concurrencia
     // ya que queria escribir y leer en el mismo momento (primero se leia ANTES de que se actualizara el registro)
     always @(negedge Clock) begin
-        if (RegWrite) begin
-
-             // Almacena las señales intermedias en registros
-           // WriteData_reg <= WriteData;
-          //*  WriteRegister_reg <= WriteRegister;
-
+                //$zero SIEMPRE 0
+        if (RegWrite && WriteRegister != 0) begin
+            
             // Escribe en el registro alineando WriteData y WriteRegister
             registers[WriteRegister] = WriteData;
 
@@ -53,16 +44,13 @@ module Registers(
 
                $display("Tiempo: %0t, Escritura en registro[%0d]: %0h", $time, WriteRegister, WriteData);
 
-            
-
+        
         end
 
     end
 
     // Lectura combinacional
-    always @(*) begin
-        ReadData1 = registers[ReadRegister1];
-        ReadData2 = registers[ReadRegister2];
-    end
+        assign ReadData1 = registers[ReadRegister1];
+        assign ReadData2 = registers[ReadRegister2];
 
 endmodule

@@ -25,9 +25,9 @@ module PC(PC_In, PCResult, Enable, Reset, Clock,stall);
 
     // Bloque inicial para establecer el valor inicial del contador de programa
     initial begin
-         PCResult <= 32'h00000000; // Valor inicial del PC
-        stall <= 1'b1;             // Stall inicialmente habilitado
-        cycle_count <= 2'b00;      // Inicializamos el contador de ciclos
+         PCResult = 32'h00000000; // Valor inicial del PC
+        stall = 1'b1;             // Stall inicialmente habilitado
+        cycle_count = 2'b00;      // Inicializamos el contador de ciclos
     end
 
     // Bloque always sensitivo al flanco positivo del reloj o la señal de reinicio

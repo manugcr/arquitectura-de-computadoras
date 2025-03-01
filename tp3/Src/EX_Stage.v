@@ -1,64 +1,39 @@
 `timescale 1ns / 1ps
 
-
-
 module EX_Stage(
 
     // --- Inputs ---
-                        // System Inputs
-    ALUOp, RegDst,        // Control Signals
+    ALUOp, RegDst,        
     RegWrite, ALUBMuxSel,     
-    ReadData1, ReadData2, SignExtend, // ALU Inputs
-    RegRT, RegRD,  ForwardMuxASel, ForwardMuxBSel,                      // Write Back Registers
-    ALUResult_MEM,        // Forwarding Data
-    Shamt,                            // Shift Amount
-    DelayHazardAlu,
+    ReadData1, ReadData2, SignExtend,
+    RegRT, RegRD,  ForwardMuxASel, ForwardMuxBSel,                     
+    ALUResult_MEM,                    
+    Shamt,                            
       
     // --- Outputs ---         
-    ALUZero, ALUResult,               // ALU Outputs     
-    RegDst32_Out,MemToReg_WB,                     // Write Back Register
+    ALUZero, ALUResult,              
+    RegDst32_Out,MemToReg_WB,        
     RegWrite_Out,
     ALURT
     );             
       
-          
-    // Control Signals     
+
     input        ALUBMuxSel,RegWrite;
     input [1:0] RegDst;
     input [5:0] ALUOp;
-
-     // Forwarding
     input [1:0]  ForwardMuxASel, ForwardMuxBSel;
-    
-
     input [31:0] ALUResult_MEM, MemToReg_WB;
-    
-    // Write Back Registers
     input [4:0] RegRT, RegRD;
-    
-    // ALU Inputs
     input [4:0]  Shamt;
     input [31:0] ReadData1, ReadData2, SignExtend;
     
-
-    // ALU Outputs
     output wire         ALUZero;
     output wire [31:0]  ALUResult;
-    
-    // Write Back Register
     output wire [31:0] RegDst32_Out;
-    
     output wire [31:0] ALURT;
-    
     output wire RegWrite_Out;
 
-    input wire DelayHazardAlu;
-    
-    
-    // ALU Inputs
     wire [31:0] ALUA, ALUB; 
-    
-    // ALU Control Signal
     wire [5:0] ALUControl;
 
 
@@ -67,7 +42,6 @@ module EX_Stage(
                                        .ALUControl(ALUControl));
     
 
-    
     ALU                  ALU(.ALUControl(ALUControl), 
                             .A(ALUA), 
                             .B(ALUB), 

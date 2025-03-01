@@ -7,8 +7,6 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
 
     // Salidas
     output reg [31:0] Instruction;   // Instrucción de 32 bits leída desde la memoria
-
-
     output reg [31:0] TargetOffset;
     output reg Branch;
 
@@ -29,19 +27,6 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
             memory[i] = 0;// Asigna el valor i a cada posición de memoria
         end
 
-
-                    memory[0] = 4364320;  // add $s1, $t1, $t6
-                  memory[1] = 2388918292;  // lw  a0 , 20(s3)
-                  memory[2] = 2389835792; //  lw  s2 , 16(s3)
-                  memory[3] = 290586652;  // BEQ t2,s2, 00011000
-                  memory[4] = 21710880;  // add $t1, $t2, $t3
-                  memory[5] = 23875616;  // add $t2, $t3, $t4  Registro 09d  =  9   NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
-                  memory[6] = 26040352;  // add $t3, $t4, $t5  Registro 11d  =  11  NO MODIFICADO   SINO   Registro 9d   =  15h NO MODIFICADO
-                  memory[7] = 28205088;  // add $t4, $t5, $t6  Registro 12d  =  27d = 1Bh
-                  memory[8] = 19556384;  // add $t5, $t1, $t2  Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
-
-
-
         $writememh("Instruction_memory.mem", memory, 0, 511);
     end
 
@@ -57,19 +42,6 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
 
             Branch <= 1'b1;     // Flag que indica que es un branch 
 
-            /* beq  y bne  utilizan
-             un desplazamiento de 16 bits (Instruction[15:0]). Este desplazamiento es un valor con signo 
-             en complemento a dos, lo que significa que si Instruction[15] es 1, el número es negativo; 
-             si es 0, el número es positivo.
-             
-              ej: 0x00400010 : beq $t0, $t1, target
-                  0x00400014 : addi $t2, $zero, 1
-                  0x00400018 : j end
-                  0x0040001C : target: addi $t2, $zero, 2
-                                                                                         signo
-               beq $t0, $t1, target  # opcode = 000100, rs = 01000, rt = 01001, offset = (0)000000000000011 
-             */
-
             if (Instruction[15] == 1) 
                 TargetOffset <= {16'hFFFF, Instruction[15:0]};  // Desplazamiento con signo
             else  
@@ -81,8 +53,6 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
             TargetOffset <= 32'd0;
         end
 
-        
-        
         
         end else begin
             // Si stall es 1, mantener la instrucción actual
