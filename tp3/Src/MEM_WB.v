@@ -17,11 +17,11 @@ module MEM_WB(
 	output reg [31:0] Out_ControlSignal, Out_MemReadData, Out_ALUResult, Out_PCAdder;
 
     initial begin
-        Out_MemReadData   <= 32'd0;
-	    Out_RegDst        <= 5'd0;
-        Out_ControlSignal <= 32'd0;
-        Out_ALUResult     <= 32'd0;
-        Out_PCAdder       <= 32'd0;
+        Out_MemReadData   = 32'd0;
+	    Out_RegDst        = 5'd0;
+        Out_ControlSignal = 32'd0;
+        Out_ALUResult     = 32'd0;
+        Out_PCAdder       = 32'd0;
     end
 	
 	always @(posedge Clock) begin

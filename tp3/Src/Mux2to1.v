@@ -11,9 +11,9 @@ module Mux2to1(out, inA, inB, sel);
     always @ (inA, inB, sel) begin
     
         if (sel)
-            out <= inB;
+            out = inB;
         else
-            out <= inA;
+            out = inA;
     end
 
 endmodule

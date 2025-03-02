@@ -201,11 +201,7 @@ module ID_Stage(
         .out(SignExtend_Out)
     );
 
-    // Desplazador hacia la izquierda por 2
-    ShiftLeft2 AdderShift(
-        .inputNum(SignExtend_Out), 
-        .outputNum(ImmediateShift)
-    );
+
 
     Mux2to1            ControlMux(.out(ControlSignal_Out), 
                                        .inA({14'd0, ALUOp_Control[5:0], ALUBMux_Control, RegDst_Control[1:0], 

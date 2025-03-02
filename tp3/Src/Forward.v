@@ -12,14 +12,7 @@ module Forward(
     RegRS_IDEX, RegRT_IDEX,             // Direcciones de registros fuente desde la etapa ID/EX
     RegRS_IFID, RegRT_IFID,             // Direcciones de registros fuente desde la etapa IF/ID
     isBranch,
-    isLoad,
-
-    /* 
-            NOTA: Se agrega la señal DelayHazardAlu porque, al ocurrir un hazard de datos, hay un ciclo 
-            en el cual una de las entradas de la ALU recibe el forwarding, pero la otra queda desactualizada. 
-            Por lo tanto, es necesario un ciclo adicional (en el que la ALU NO trabaje) para que las entradas 
-            se actualicen.
-    */                 
+    isLoad,  
     
     
     // --- Salidas ---
@@ -51,10 +44,10 @@ module Forward(
 
     // Inicializar salidas con valores por defecto
     initial begin
-        ForwardMuxA_ID <= 2'b00;
-        ForwardMuxB_ID <= 2'b00;
-        ForwardMuxA_EX <= 2'b00;
-        ForwardMuxB_EX <= 2'b00;
+        ForwardMuxA_ID = 2'b00;
+        ForwardMuxB_ID = 2'b00;
+        ForwardMuxA_EX = 2'b00;
+        ForwardMuxB_EX = 2'b00;
 
     end
     
@@ -69,7 +62,7 @@ module Forward(
         
         // ForwardMuxA: Reenvío de datos desde EX/MEM a RS en la etapa IF/ID
         if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRS_IFID))   begin   
-            ForwardMuxA_ID <= 2'd1; // Reenvío habilitado
+            ForwardMuxA_ID = 2'd1; // Reenvío habilitado
 
           // IGUAL QUE PARA EL CASO DE BRANCH
             /*
@@ -79,12 +72,12 @@ module Forward(
             */
         end
         else begin
-            ForwardMuxA_ID <= 2'd0; // Sin reenvío
+            ForwardMuxA_ID = 2'd0; // Sin reenvío
         end 
         
         // ForwardMuxB: Reenvío de datos desde EX/MEM a RT en la etapa IF/ID
         if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRT_IFID))    begin   
-            ForwardMuxB_ID <= 2'd1; // Reenvío habilitado
+            ForwardMuxB_ID = 2'd1; // Reenvío habilitado
 
          
              /*
@@ -95,7 +88,7 @@ module Forward(
            
         end
         else begin
-            ForwardMuxB_ID <= 2'd0; // Sin reenvío
+            ForwardMuxB_ID = 2'd0; // Sin reenvío
         end 
 
         //-----------------
@@ -104,7 +97,7 @@ module Forward(
         
         // ForwardMuxA: Reenvío de datos desde EX/MEM o MEM/WB a RS en la etapa ID/EX
         if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRS_IDEX)) begin     
-            ForwardMuxA_EX <= 2'd1; // Reenvío desde EX/MEM
+            ForwardMuxA_EX = 2'd1; // Reenvío desde EX/MEM
 
         
             /*
@@ -114,7 +107,7 @@ module Forward(
            
          end
         else if ((RegWrite_MEMWB && (RegDst_MEMWB != 0)) && (RegDst_MEMWB == RegRS_IDEX)) begin
-            ForwardMuxA_EX <= 2'd2; // Reenvío desde MEM/WB
+            ForwardMuxA_EX = 2'd2; // Reenvío desde MEM/WB
 
         
 
@@ -126,24 +119,20 @@ module Forward(
 
         end
         else begin
-            ForwardMuxA_EX <= 2'b00; // Sin reenvío
+            ForwardMuxA_EX = 2'b00; // Sin reenvío
         end 
     
         // ForwardMuxB: Reenvío de datos desde EX/MEM o MEM/WB a RT en la etapa ID/EX
         if ((RegWrite_EXMEM && (RegDst_EXMEM != 0)) && (RegDst_EXMEM == RegRT_IDEX))   begin   
-            ForwardMuxB_EX <= 2'd1; // Reenvío desde EX/MEM
+            ForwardMuxB_EX = 2'd1; // Reenvío desde EX/MEM
 
-      
-           
         end 
         else if ((RegWrite_MEMWB && (RegDst_MEMWB != 0)) && (RegDst_MEMWB == RegRT_IDEX)) begin
-            ForwardMuxB_EX <= 2'd2; // Reenvío desde MEM/WB
-
-        
+            ForwardMuxB_EX = 2'd2; // Reenvío desde MEM/WB
             
         end
         else 
-            ForwardMuxB_EX <= 2'b00; // Sin reenvío
+            ForwardMuxB_EX = 2'b00; // Sin reenvío
 
 
                     if (isBranch == 1'b1) begin
@@ -156,24 +145,19 @@ module Forward(
                 BNE v0, s1, 00011000 
                 */
                 if (isLoad == 1'b0) 
-                    ForwardMuxA_ID <= 2'd2;
+                    ForwardMuxA_ID = 2'd2;
                 else 
-                    ForwardMuxA_ID <= 2'd0;         //CASO BRANCH LOAD HAZARD
+                    ForwardMuxA_ID = 2'd0;         //CASO BRANCH LOAD HAZARD
             end 
             else if (RegWrite_MEMWB && (RegDst_MEMWB == RegRT_IFID)) begin
                 if (isLoad == 1'b0) 
-                    ForwardMuxB_ID <= 2'd2; 
+                    ForwardMuxB_ID = 2'd2; 
                 else  
-                    ForwardMuxB_ID <= 2'd0;         //CASO BRANCH LOAD HAZARD
+                    ForwardMuxB_ID = 2'd0;         //CASO BRANCH LOAD HAZARD
             end 
 
         end
 
-
-
-
-    
-     
     end
 
     

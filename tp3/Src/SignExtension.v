@@ -13,11 +13,11 @@ module SignExtension(in, out);
         if (in[15] == 1) 
             // Si el MSB (bit 15) de `in` es 1, el número es negativo.
             // Se extiende rellenando los 16 bits superiores con `1`s (16'hFFFF).
-            out <= {16'hFFFF, in};
+            out = {16'hFFFF, in};
         else 
             // Si el MSB (bit 15) de `in` es 0, el número es positivo.
             // Se extiende rellenando los 16 bits superiores con `0`s (16'h0000).
-            out <= {16'h0000, in};
+            out = {16'h0000, in};
     end
 
 endmodule

@@ -43,52 +43,36 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
     // Bloque siempre para escritura en memoria (controlado por reloj)
     always @ (posedge Clock) begin
     
-
         if (MemWrite == 1'b1) begin // Verificar señal de escritura activa
             // Escritura de palabra completa (sw)
-        //    $display("ByteSig: %b", ByteSig);
-            if (ByteSig == 2'b00) begin
-         //       $display("Condición ByteSig == 2'b00 cumplida. Address: %h, WriteData: %h", Address, WriteData);
-                memory[Address[31:2]] = WriteData;  
 
-        /*   SUPONIENDO: instruccion  sw  $s0 , 14($s1)  ->   sw 8, 14(10)           
-                ____                         
-            00  |    | 0       Address: 18H = 24d = 10d + 14d (offset) = 000110   00 (Descartado)
-            04  |    | 1       
-            08  |    | 2
-            0C  |    | 3
-            10  |    | 4
-            14  |    | 5
-            18  | 8  | 6
-                ----
-    */
-                
+            if (ByteSig == 2'b00) begin
+ 
+                memory[Address[31:2]] <= WriteData;  
+
             end
 
             // Escritura de media palabra (sh)
             else if (ByteSig == 2'b01) begin
-                if      (Address[1:0] == 2'b00) memory[Address[31:2]][15:00] = WriteData[15:0]; // Media palabra inferior
-                else if (Address[1:0] == 2'b10) memory[Address[31:2]][31:16] = WriteData[15:0]; // Media palabra superior
+                if      (Address[1:0] == 2'b00) memory[Address[31:2]][15:00] <= WriteData[15:0]; // Media palabra inferior
+                else if (Address[1:0] == 2'b10) memory[Address[31:2]][31:16] <= WriteData[15:0]; // Media palabra superior
             end
             
             // Escritura de byte (sb)
             else if (ByteSig == 2'b10) begin
-                if      (Address[1:0] == 2'b00) memory[Address[31:2]][07:00] = WriteData[7:0];  // Byte inferior
-                else if (Address[1:0] == 2'b01) memory[Address[31:2]][15:08] = WriteData[7:0];  // Segundo byte
-                else if (Address[1:0] == 2'b10) memory[Address[31:2]][23:16] = WriteData[7:0];  // Tercer byte
-                else if (Address[1:0] == 2'b11) memory[Address[31:2]][31:24] = WriteData[7:0];  // Byte superior
+                if      (Address[1:0] == 2'b00) memory[Address[31:2]][07:00] <= WriteData[7:0];  // Byte inferior
+                else if (Address[1:0] == 2'b01) memory[Address[31:2]][15:08] <= WriteData[7:0];  // Segundo byte
+                else if (Address[1:0] == 2'b10) memory[Address[31:2]][23:16] <= WriteData[7:0];  // Tercer byte
+                else if (Address[1:0] == 2'b11) memory[Address[31:2]][31:24] <= WriteData[7:0];  // Byte superior
             end
             
-                   // Depuración: imprimir mensaje de escritura
-            //     $display("Escritura en memoria: Direccion = %h, WriteData = %h, ByteSig = %b", Address[31:2], WriteData, ByteSig);
-
-
                 $writememh("Data_memory.mem", memory);
         end
     end
 
 
-    always @ (posedge Clock) begin
+     // load
+    always @ (*) begin
         ReadData = 32'b0; // Inicializar dato leído en 0 por defecto
         
         if (MemRead == 1'b1) begin // Verificar señal de lectura activa

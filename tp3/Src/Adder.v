@@ -17,10 +17,10 @@ module Adder(A, B, AddResult, stall);
     always @ (A, B, stall) begin
         if (stall == 1'b0) begin
             // Si stall es 0, realizar la suma
-            AddResult <= A + $signed(B);
+            AddResult = A + $signed(B);
         end else begin
             // Si stall es 1, no hacer nada (el valor de AddResult no cambia)
-            AddResult <= AddResult;  // Mantener el valor anterior
+            AddResult = AddResult;  // Mantener el valor anterior
         end
     end
 

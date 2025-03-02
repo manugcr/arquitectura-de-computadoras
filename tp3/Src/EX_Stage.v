@@ -12,7 +12,6 @@ module EX_Stage(
     RegRT, RegRD,  ForwardMuxASel, ForwardMuxBSel,                      // Write Back Registers
     ALUResult_MEM,        // Forwarding Data
     Shamt,                            // Shift Amount
-    DelayHazardAlu,
       
     // --- Outputs ---         
     ALUZero, ALUResult,               // ALU Outputs     
@@ -51,8 +50,6 @@ module EX_Stage(
     output wire [31:0] ALURT;
     
     output wire RegWrite_Out;
-
-    input wire DelayHazardAlu;
     
     
     // ALU Inputs

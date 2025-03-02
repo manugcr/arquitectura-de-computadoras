@@ -20,15 +20,15 @@ module ID_EX(
 	output reg Out_isBranch;
 
 	initial begin
-        Out_ControlSignal <= 32'd0;
-        Out_ReadData1     <= 32'd0;
-        Out_ReadData2     <= 32'd0;
-        Out_PCAdder       <= 32'd0;
-        Out_SignExtend    <= 32'd0;
-        Out_RegRT         <= 5'd0;
-        Out_RegRD         <= 5'd0;
-        Out_RegRS         <= 5'd0;
-        Out_isBranch      <= 1'd0;
+        Out_ControlSignal = 32'd0;
+        Out_ReadData1     = 32'd0;
+        Out_ReadData2     = 32'd0;
+        Out_PCAdder       = 32'd0;
+        Out_SignExtend    = 32'd0;
+        Out_RegRT         = 5'd0;
+        Out_RegRD         = 5'd0;
+        Out_RegRS         = 5'd0;
+        Out_isBranch      = 1'd0;
 	end
 	
     always @(posedge Clock) begin

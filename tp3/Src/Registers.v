@@ -38,14 +38,14 @@ module Registers(
     // Escritura sincronizada con el flanco de BAJADA del reloj, cuando estaba en subida, generaba problemas de concurrencia
     // ya que queria escribir y leer en el mismo momento (primero se leia ANTES de que se actualizara el registro)
     always @(negedge Clock) begin
-        if (RegWrite) begin
+        if (RegWrite && WriteRegister != 0) begin   //ZERO siempre zero
 
              // Almacena las señales intermedias en registros
            // WriteData_reg <= WriteData;
           //*  WriteRegister_reg <= WriteRegister;
 
             // Escribe en el registro alineando WriteData y WriteRegister
-            registers[WriteRegister] = WriteData;
+            registers[WriteRegister] <= WriteData;
 
             
             // Actualiza el archivo de memoria para depuración

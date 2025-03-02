@@ -54,11 +54,11 @@ module Hazard(
     // Inicialización de salidas
     //--------------------------------
     initial begin
-        PCWrite   <= 1'b1;  // Inicialmente, permitir que el PC avance
-        IFIDWrite <= 1'b1;  // Inicialmente, permitir que el pipeline avance
-        ControlStall <= 1'b0;
-        BranchFlush  <= 1'b1;
-        HazardCompareBranch <= 1'b0;
+        PCWrite   = 1'b1;  // Inicialmente, permitir que el PC avance
+        IFIDWrite = 1'b1;  // Inicialmente, permitir que el pipeline avance
+        ControlStall = 1'b0;
+        BranchFlush  = 1'b1;
+        HazardCompareBranch = 1'b0;
     end
 
         // OpCodes
@@ -104,19 +104,19 @@ module Hazard(
                   RegWrite_IDEX && (( RegDst_IDEX == 2'b0 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID)) ) || 
                                     ( RegDst_IDEX == 2'b1 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID)) )) ) begin
             
-            PCWrite      <= 1'b0;
-            IFIDWrite    <= 1'b0;
-            ControlStall <= 1'b1;
-            BranchFlush  <= 1'b0;
+            PCWrite      = 1'b0;
+            IFIDWrite    = 1'b0;
+            ControlStall = 1'b1;
+            BranchFlush  = 1'b0;
 
             // MemRead_EXMEM != 1'b1 problema con 2 load antes de un branch 
 
 
             if(RegDst_MEMWB != RegRS_IFID && RegDst_MEMWB != RegRT_IFID && MemRead_EXMEM != 1'b1) begin 
-            HazardCompareBranch <= 1'b1;
+            HazardCompareBranch = 1'b1;
             end
             else begin
-                HazardCompareBranch <= 1'b0;
+                HazardCompareBranch = 1'b0;
             end 
 
         
@@ -127,11 +127,11 @@ module Hazard(
         else if ( (OpCode == BEQ || OpCode == BNE) && MemRead_EXMEM && 
            ((((RegisterDst_EXMEM == RegRS_IFID) || (RegisterDst_EXMEM == RegRT_IFID))))) begin
        
-            PCWrite      <= 1'b0;
-            IFIDWrite    <= 1'b0;
-            ControlStall <= 1'b1;
-            BranchFlush  <= 1'b0;
-            HazardCompareBranch <= 1'b0;
+            PCWrite      = 1'b0;
+            IFIDWrite    = 1'b0;
+            ControlStall = 1'b1;
+            BranchFlush  = 1'b0;
+            HazardCompareBranch = 1'b0;
 
         
         end 
@@ -151,14 +151,14 @@ module Hazard(
 
             // CASO  BEQ t8,t8, 00011000 con t8 sin hazard
 
-            PCWrite      <= 1'b1;
-            IFIDWrite    <= 1'b1;
-            ControlStall <= 1'b0;
-            BranchFlush  <= 1'b0;   
+            PCWrite      = 1'b1;
+            IFIDWrite    = 1'b1;
+            ControlStall = 1'b0;
+            BranchFlush  = 1'b0;   
 
 
-            if(MemRead_EXMEM == 1'b1) HazardCompareBranch <= 1'b0;
-            else  HazardCompareBranch <= 1'b1;
+            if(MemRead_EXMEM == 1'b1) HazardCompareBranch = 1'b0;
+            else  HazardCompareBranch = 1'b1;
         end 
 
         // Caso 1: Peligro de datos de carga (Load-Use Hazard)
@@ -170,11 +170,11 @@ module Hazard(
 
 
              
-            HazardCompareBranch <= 1'b0;
-            PCWrite      <= 1'b0;
-            IFIDWrite    <= 1'b0;
-            ControlStall <= 1'b1;
-            BranchFlush  <= 1'b0;   // funcionaaaa
+            HazardCompareBranch = 1'b0;
+            PCWrite      = 1'b0;
+            IFIDWrite    = 1'b0;
+            ControlStall = 1'b1;
+            BranchFlush  = 1'b0;   // funcionaaaa
         end 
 
         /*  El problema es que en ambas situaciones, el JR está intentando leer un registro que está siendo modificado
@@ -194,11 +194,11 @@ module Hazard(
                                         y el valor que se guardara es en el registro 31 (ra)   */   
           
             
-                 HazardCompareBranch <= 1'b0;
-                PCWrite      <= 1'b0;
-                IFIDWrite    <= 1'b0;
-                ControlStall <= 1'b1;
-                BranchFlush  <= 1'b1;
+                 HazardCompareBranch = 1'b0;
+                PCWrite      = 1'b0;
+                IFIDWrite    = 1'b0;
+                ControlStall = 1'b1;
+                BranchFlush  = 1'b1;
             
             end
             
@@ -222,22 +222,22 @@ module Hazard(
                                         */  
                                                           
             
-                 HazardCompareBranch <= 1'b0;
-                PCWrite      <= 1'b0;
-                IFIDWrite    <= 1'b0;
-                ControlStall <= 1'b1;
-                BranchFlush  <= 1'b0;
+                 HazardCompareBranch = 1'b0;
+                PCWrite      = 1'b0;
+                IFIDWrite    = 1'b0;
+                ControlStall = 1'b1;
+                BranchFlush  = 1'b0;
                 
         
             end 
 
        // J    FUNCIONAA
         else if ( OpCode == OP_J || OpCode == OP_JAL || (OpCode == OP_ZERO_JR && (Func == 6'b001000 || Func == 6'b001001)) ) begin
-            PCWrite      <= 1'b1;
-            IFIDWrite    <= 1'b0;
-            ControlStall <= 1'b0;
-            BranchFlush  <= 1'b1;
-             HazardCompareBranch <= 1'b0;
+            PCWrite      = 1'b1;
+            IFIDWrite    = 1'b0;
+            ControlStall = 1'b0;
+            BranchFlush  = 1'b1;
+             HazardCompareBranch = 1'b0;
 
         end 
 
@@ -246,11 +246,11 @@ module Hazard(
             // Caso por defecto: No hay peligro detectado.
             // Permitir que el pipeline avance normalmente.
 
-            PCWrite      <= 1'b1;
-            IFIDWrite    <= 1'b1;
-            ControlStall <= 1'b0;
-            BranchFlush  <= 1'b0;   //VER ESTO!
-            HazardCompareBranch <= 1'b0;
+            PCWrite      = 1'b1;
+            IFIDWrite    = 1'b1;
+            ControlStall = 1'b0;
+            BranchFlush  = 1'b0;   //VER ESTO!
+            HazardCompareBranch = 1'b0;
         end
 
     end

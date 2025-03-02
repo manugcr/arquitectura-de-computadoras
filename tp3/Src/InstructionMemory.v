@@ -52,30 +52,17 @@ module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch);
              //                     BEQ                                 BNE
         if (Instruction[31:26] == 6'b000100 || Instruction[31:26] == 6'b000101) begin
 
-            Branch <= 1'b1;     // Flag que indica que es un branch 
-
-            /* beq  y bne  utilizan
-             un desplazamiento de 16 bits (Instruction[15:0]). Este desplazamiento es un valor con signo 
-             en complemento a dos, lo que significa que si Instruction[15] es 1, el número es negativo; 
-             si es 0, el número es positivo.
-             
-              ej: 0x00400010 : beq $t0, $t1, target
-                  0x00400014 : addi $t2, $zero, 1
-                  0x00400018 : j end
-                  0x0040001C : target: addi $t2, $zero, 2
-                                                                                         signo
-               beq $t0, $t1, target  # opcode = 000100, rs = 01000, rt = 01001, offset = (0)000000000000011 
-             */
+            Branch = 1'b1;     // Flag que indica que es un branch 
 
             if (Instruction[15] == 1) 
-                TargetOffset <= {16'hFFFF, Instruction[15:0]};  // Desplazamiento con signo
+                TargetOffset = {16'hFFFF, Instruction[15:0]};  // Desplazamiento con signo
             else  
-                TargetOffset <= {16'h0000, Instruction[15:0]};  // Desplazamiento sin signo
+                TargetOffset = {16'h0000, Instruction[15:0]};  // Desplazamiento sin signo
             
         end
         else begin
-            Branch <= 1'b0;
-            TargetOffset <= 32'd0;
+            Branch = 1'b0;
+            TargetOffset = 32'd0;
         end
 
         

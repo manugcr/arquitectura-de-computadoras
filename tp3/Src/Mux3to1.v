@@ -10,10 +10,10 @@ module Mux3to1(out, inA, inB, inC, sel);
 
     always @ (inA, inB, inC, sel) begin
         case (sel)
-            2'b00: out <= inA;
-            2'b01: out <= inB;
-            2'b10: out <= inC;
-            default: out <= 0;
+            2'b00: out = inA;
+            2'b01: out = inB;
+            2'b10: out = inC;
+            default: out = 0;
         endcase
     end
 

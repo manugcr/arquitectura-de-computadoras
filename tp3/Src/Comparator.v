@@ -11,7 +11,7 @@ module Comparator(InA, InB, Result, Control, CompareFlag);
     output reg Result;      // Signal of whether to branch or not branch
 
     localparam [2:0] BEQ  = 3'd1,   // 0 results in Result = 0
-                     BNE  = 3'd6;
+                     BNE  = 3'd2;
 
 
                       // Initialize Result to 0 at the beginning
@@ -22,15 +22,15 @@ module Comparator(InA, InB, Result, Control, CompareFlag);
     always @ (*) begin
     
         if(CompareFlag == 1'b1 && Control !=1'b0) begin
-            // $display("Comparando: InA = %d, InB = %d, Control = %b", InA, InB, Control);
+
         case (Control)
-            BEQ  : Result <= (InA == InB);
-            BNE  : Result <= (InA != InB);
-            default : Result <= 0;
+            BEQ  : Result =  (InA == InB);
+            BNE  : Result =  (InA != InB);
+            default : Result =  0;
         endcase
         end
         else begin
-            Result <= 0;
+            Result =  0;
         end
 
     
