@@ -151,6 +151,7 @@ module ID_Stage(
 
     // Unidad de detección de peligros
     Hazard HazardDetection(
+        .Reset(Reset),
             .OpCode(In_Instruction[31:26]), 
             .Func(In_Instruction[5:0]),
         .RegRS_IFID(In_Instruction[25:21]),

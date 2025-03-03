@@ -45,20 +45,14 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
                      SRLV   = 6'd37,      // Desplazamiento lógico a la derecha variable
                      SUBU   = 6'd45;      // Resta (SUBU)
 
-    // Inicialización de variables
+    
+    
+    always @ (*) begin
 
-    initial begin
         ALUResult     =  32'd0;
         Zero          =  1'b0;
         RegWriteClear =  1'b0;
         temp          =  32'd0;
-    end
-    
-    always @ (*) begin
-    
-        RegWriteClear = 0;
-    
-        Zero       =  0;
         
         case (ALUControl)
             ADD  : ALUResult =  $signed(A) + $signed(B);            // add

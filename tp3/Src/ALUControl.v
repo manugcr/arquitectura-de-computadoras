@@ -69,11 +69,11 @@ module ALUControl(Funct, ALUOp, ALUControl);
                      SRLV   = 6'd37,   // SRLV
                      SUBU   = 6'd45;      // Resta (SUBU)     
 
-    initial begin
-        ALUControl =  6'b000000;
-    end
+
     
     always @(*) begin
+
+        ALUControl =  6'b000000;
         
         case(ALUOp)
 

@@ -79,24 +79,7 @@ module Control(Instruction,
     // Controller Logic
     //--------------------------------
 
-    initial begin
-        
-        //ControlSignal = 32'b0;
-        Flush_IF    = 1'b0;
-        ALUBMux     = 1'b0;
-        RegDst      = 2'b00;
-        ALUOp       = 6'b000000;
-        ByteSig     = 2'b00;
-        JumpMuxSel  = 1'b0; 
-        JumpControl = 1'b0;
-        MemWrite    = 1'b0;
-        BranchComp  = 3'b0;
-        MemRead     = 1'b0;
-        RegWrite    = 1'b0;
-        MemToReg    = 2'b00;
-        LaMux       = 1'b0;
-        
-    end
+    //ControlSignal = 32'b0 -> inicial
     
     always @(*) begin
    

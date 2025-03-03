@@ -13,13 +13,9 @@ module Comparator(InA, InB, Result, Control, CompareFlag);
     localparam [2:0] BEQ  = 3'd1,   // 0 results in Result = 0
                      BNE  = 3'd2;
 
-
-                      // Initialize Result to 0 at the beginning
-    initial begin
-        Result = 0;
-    end
-
     always @ (*) begin
+
+         Result = 0;
     
         if(CompareFlag == 1'b1 && Control !=1'b0) begin
 

@@ -42,17 +42,14 @@ module Forward(
     // Lógica de Reenvío
     //--------------------------------
 
-    // Inicializar salidas con valores por defecto
-    initial begin
+    
+    // Lógica combinacional para el reenvío
+    always @ (*) begin
+
         ForwardMuxA_ID = 2'b00;
         ForwardMuxB_ID = 2'b00;
         ForwardMuxA_EX = 2'b00;
         ForwardMuxB_EX = 2'b00;
-
-    end
-    
-    // Lógica combinacional para el reenvío
-    always @ (*) begin
 
 
 

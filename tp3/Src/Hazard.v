@@ -17,6 +17,7 @@
 
 module Hazard(
     // --- Entradas ---
+    Reset,
     OpCode, Func,  
     RegRS_IFID, RegRT_IFID,       // Registros fuente en la etapa IF/ID
     RegRT_IDEX, RegRD_IDEX,       // Registros en la etapa ID/EX
@@ -38,7 +39,7 @@ module Hazard(
     // Entradas
     //--------------------------------
 
-
+    input Reset;
     input [5:0] OpCode, Func;
     input RegWrite_EXMEM,MemRead_IDEX, RegWrite_IDEX, MemRead_EXMEM;   // Señales de control para lectura y escritura
     input [1:0] RegDst_IDEX;             // Selección del registro destino en la etapa ID/EX
@@ -49,17 +50,6 @@ module Hazard(
     // Salidas
     //--------------------------------
     output reg PCWrite, IFIDWrite ,BranchFlush,  ControlStall, HazardCompareBranch ;       // Señales para detener la ejecución (stalls)
-
-    //--------------------------------
-    // Inicialización de salidas
-    //--------------------------------
-    initial begin
-        PCWrite   = 1'b1;  // Inicialmente, permitir que el PC avance
-        IFIDWrite = 1'b1;  // Inicialmente, permitir que el pipeline avance
-        ControlStall = 1'b0;
-        BranchFlush  = 1'b1;
-        HazardCompareBranch = 1'b0;
-    end
 
         // OpCodes
     localparam [5:0] JR     = 6'b000000,
@@ -97,6 +87,19 @@ module Hazard(
     // Lógica de detección de peligros
     //--------------------------------
     always @(*) begin
+
+         if (Reset) begin
+        PCWrite   = 1'b1;
+        IFIDWrite = 1'b1;
+        ControlStall = 1'b0;
+        BranchFlush  = 1'b1;
+        HazardCompareBranch = 1'b0;
+
+        $display("RESETTTTTTTT");
+
+        end
+
+        else  begin
 
 
          // Branch (rs and rt): RegWrite in EX and depedency in ID
@@ -253,6 +256,7 @@ module Hazard(
             HazardCompareBranch = 1'b0;
         end
 
+    end
     end
 
 endmodule

@@ -25,11 +25,6 @@ module IF_ID(
     output reg [31:0] Out_PCAdder;         // Almacena el valor del PC sumado
     output reg Out_Branch;
 
-    // Inicialización de registros
-    initial begin
-        Out_Instruction = 32'b0;  // Inicializa la instrucción almacenada a 0
-        Out_PCAdder     = 32'b0;  // Inicializa el valor del PC sumado almacenado a 0
-    end
 
     // Comportamiento del registro sincronizado con el flanco positivo del reloj
     always @(posedge Clock) begin

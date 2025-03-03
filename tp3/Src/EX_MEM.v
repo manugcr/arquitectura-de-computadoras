@@ -17,15 +17,7 @@ module EX_MEM(
 	output reg [4:0]  Out_RegDst;
 	output reg [31:0] Out_ControlSignal, Out_ALUResult, Out_RegRTData, Out_PCAdder;
 
-    initial begin
-        Out_ALUZero       <= 1'd0;
-	    Out_RegDst        <= 5'd0;
-        Out_ControlSignal <= 32'd0;
-        Out_ALUResult     <= 32'd0;
-        Out_RegRTData     <= 32'd0;
-        Out_PCAdder       <= 32'd0;
-    end
-	
+
 	always @(posedge Clock) begin
 		Out_ALUZero       <= In_ALUZero;
 	    Out_RegDst        <= In_RegDst32[4:0];
