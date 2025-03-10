@@ -5,8 +5,8 @@ module Registers(
     input [31:0] WriteData,
     input RegWrite, Clock,Reset,
     output reg [31:0] ReadData1, ReadData2,
-    output wire [32 * 32 - 1 : 0] o_bus_debug // Debug bus showing all registers
-   // input i_flush
+    output wire [32 * 32 - 1 : 0] o_bus_debug, // Debug bus showing all registers
+    input i_flush
 );
 
     reg [31:0] registers [0:31];
@@ -39,13 +39,13 @@ module Registers(
     // Escritura sincronizada con el flanco de BAJADA del reloj, cuando estaba en subida, generaba problemas de concurrencia
     // ya que queria escribir y leer en el mismo momento (primero se leia ANTES de que se actualizara el registro)
     always @(negedge Clock) begin
-      /*  if(i_flush)begin
+        if(i_flush)begin
 
             for (i = 0; i < 32; i = i + 1) begin
             registers[i]  <= 'b0;
              end
 
-        end */
+        end 
 
         if(Reset) begin
 

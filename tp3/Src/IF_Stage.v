@@ -5,15 +5,15 @@ module IF_Stage(
     Clock, Reset,               // Señales del sistema
     PCWrite,                   // Control de escritura del PC (señal de control de riesgos)
     Instruction,BrachAddress, PCAdder_Out,  PCResult,JumpControl, JumpAddress,// Salidas del módulo
-    isBranch, BranchFlagID
-   /* i_clear_mem,
+    isBranch, BranchFlagID,
+    i_clear_mem,
     i_instruction,
     i_write_mem,
     o_full_mem,
     o_empty_mem,
     i_halt,
     i_enable,
-    i_flush */
+    i_flush 
     );    
 
 
@@ -39,14 +39,14 @@ module IF_Stage(
 
 
     //// DEBUG UNIT
-   /* input i_clear_mem;
+    input i_clear_mem;
     input wire [31:0] i_instruction; // instruction to write
     input wire i_write_mem; // write signal
     output wire o_full_mem; // memory full
     output wire o_empty_mem; // memory empty
     input i_halt;
     input i_enable;
-    input i_flush; */
+    input i_flush; 
     ///
 
 
@@ -62,12 +62,11 @@ module IF_Stage(
     // Instancia del módulo PC (Program Counter)
     // Mantiene la dirección actual de la instrucción a ejecutar
     PC PC(
-    //    .i_flush(i_flush),
-    //    .i_halt(i_halt),
-    //    .i_enable(i_enable),
+        .i_flush(i_flush),
+        .i_halt(i_halt),
+        .i_enable(i_enable),
         .PC_In(ScheduledPC),    // Dirección de la siguiente instrucción (PC + 4)
         .PCResult(PCResult),    // Dirección actual del PC
-        .stall(stall),
         .Enable(PCWrite),          // Habilitación constante a 1 lógico
         .Reset(Reset),          // Señal de reinicio
         .Clock(Clock)           // Señal de reloj
@@ -80,14 +79,13 @@ module IF_Stage(
         .Instruction(Instruction), // Instrucción obtenida de la memoria
         .TargetOffset(TargetOffset),
         .Branch(isBranch),
-        .stall(stall),
         .Clock(Clock),           // Señal de reloj
-        .Reset(Reset)          // Señal de reinicio
-     //   .i_instruction (i_instruction),        // Input instruction
-     //   .i_clear (i_clear_mem),                // Clear memory signal
-    //    .o_full_mem (o_full_mem),              // Indicates if the memory is full
-    //    .o_empty_mem (o_empty_mem),            // Indicates if the memory is empty
-    //    .i_inst_write (i_write_mem)           // Signal to write instruction to memory
+        .Reset(Reset),          // Señal de reinicio
+        .i_instruction (i_instruction),        // Input instruction
+        .i_clear (i_clear_mem),                // Clear memory signal
+        .o_full_mem (o_full_mem),              // Indicates if the memory is full
+        .o_empty_mem (o_empty_mem),            // Indicates if the memory is empty
+        .i_inst_write (i_write_mem)           // Signal to write instruction to memory
     );
     
     // Instancia del módulo Adder
@@ -95,8 +93,7 @@ module IF_Stage(
     Adder PCAdder(
         .A(PCResult),           // Dirección actual del PC
         .B(32'd4),              // Constante 4 (tamaño de instrucción en bytes)
-        .AddResult(PCAdder_Out), // Resultado del sumador (PC + 4)
-        .stall(stall)
+        .AddResult(PCAdder_Out) // Resultado del sumador (PC + 4)
     );
 
     

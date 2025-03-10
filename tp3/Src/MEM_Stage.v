@@ -10,9 +10,9 @@ module MEM_Stage(
     ALUResult,       // Resultado de la ALU (dirección de memoria)
     RegRTData,       // Datos del registro RT (a escribir en memoria)    
     MemReadData,      // Datos leídos de la memoria
-    ByteSig
- //   o_bus_debug,
-  //  i_flush     
+    ByteSig,
+    o_bus_debug,
+    i_flush     
     );             
 
     // Reloj del sistema
@@ -36,8 +36,8 @@ module MEM_Stage(
 
     //DEBUGG
     
- /*   output wire [32 * 32 - 1 : 0] o_bus_debug; // Debug bus showing entire memory content
-    input i_flush;*/
+    output wire [32 * 32 - 1 : 0] o_bus_debug; // Debug bus showing entire memory content
+    input i_flush;
     
 
 
@@ -49,9 +49,9 @@ module MEM_Stage(
         .MemWrite(MemWrite), 
         .MemRead(MemRead), 
         .ReadData(MemReadData),
-        .ByteSig(ByteSig)
-     //   .o_bus_debug (o_bus_debug),        // Debug bus output
-     //   .i_flush(i_flush)
+        .ByteSig(ByteSig),
+        .o_bus_debug (o_bus_debug),        // Debug bus output
+        .i_flush(i_flush)
         );
 
 

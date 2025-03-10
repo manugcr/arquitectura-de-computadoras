@@ -32,8 +32,8 @@ module Hazard(
     HazardCompareBranch,
     BranchFlush,
     // --- Salidas ---  
-    PCWrite, IFIDWrite            // Señales de control para manejar peligros
-  //  o_halt // debuggg
+    PCWrite, IFIDWrite,            // Señales de control para manejar peligros
+    o_halt // debuggg
 );
 
     //--------------------------------
@@ -55,7 +55,7 @@ module Hazard(
 
     /// DEBUGG
 
-  //  output wire o_halt; // Indicates if a HALT operation is detected
+    output wire o_halt; // Indicates if a HALT operation is detected
 
 
         // OpCodes
@@ -270,6 +270,6 @@ module Hazard(
       /*
         The HALT signal indicates if a HALT operation is detected in the IF/ID stage.
      */
-   // assign o_halt = OpCode == HALT;
+    assign o_halt = OpCode == HALT;
 
 endmodule

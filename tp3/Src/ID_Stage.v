@@ -26,9 +26,9 @@ module ID_Stage(
     ImmediateValue,             // Valor inmediato extendido
 
     //DEBUG
-    o_bus_debug
-   /* o_halt,
-    i_flush*/
+    o_bus_debug,
+    o_halt,
+    i_flush
     );             
 
     //--------------------------------
@@ -104,9 +104,9 @@ module ID_Stage(
 
     output wire [32 * 32 - 1 : 0] o_bus_debug;
 
-   // output wire o_halt; // Indicates if a HALT operation is detected
+    output wire o_halt; // Indicates if a HALT operation is detected
 
-    //input i_flush;
+    input i_flush;
 
 
     //--------------------------------
@@ -183,7 +183,7 @@ module ID_Stage(
         .PCWrite(PCWrite),
         .RegDst_MEMWB(WriteRegister),   //PARA HAZARD DE BRANCH en etapa MEMWB
         .IFIDWrite(IFIDWrite),
-      //  .o_halt(o_halt),
+        .o_halt(o_halt),
         .BranchFlush(FlushJump));
     
 
@@ -201,7 +201,7 @@ module ID_Stage(
 
     // Bancos de registros
     Registers Registers(
-       // .i_flush(i_flush),
+        .i_flush(i_flush),
        .Reset(Reset),
         .ReadRegister1(In_Instruction[25:21]), // rs
         .ReadRegister2(In_Instruction[20:16]), // rt 

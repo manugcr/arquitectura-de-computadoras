@@ -1,9 +1,9 @@
 `timescale 1ns / 1ps
 
 
-//module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSig, o_bus_debug, i_flush); 
+module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSig, o_bus_debug, i_flush,Reset); 
 
-module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSig, Reset); 
+//module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSig, Reset); 
 
 
     input [31:0] Address;       // Input Address 
@@ -20,9 +20,9 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
 
     //DEBUGG
 
-   // output wire [32 * 32 - 1 : 0] o_bus_debug; // Debug bus showing entire memory content
+    output wire [32 * 32 - 1 : 0] o_bus_debug; // Debug bus showing entire memory content
 
-    //input i_flush;
+    input i_flush;
     integer i;
     // Variable para inicialización
    /* integer i;
@@ -49,14 +49,14 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
 
     // Bloque siempre para escritura en memoria (controlado por reloj)
     always @ (posedge Clock) begin
-     /*   if(i_flush)begin
+        if(i_flush)begin
             begin
             // Reset or flush: clear all memory locations
             for (i = 0; i < 32; i = i + 1)
                 memory[i] <= 'b0;
             end
         end 
-        else begin*/
+        else begin
         if(Reset)begin
             for (i = 0; i < 31; i = i + 1) begin
             memory[i] = 0;
@@ -92,7 +92,7 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
              //   $writememh("Data_memory.mem", memory);
         end
     end
-   // end
+    end
 
 
      // load
@@ -137,7 +137,7 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
      /// DEBUGGG
 
     // Bloque generate para mapear la memoria al bus de depuración
-   /* generate
+    generate
         genvar j;
         for (j = 0; j < 32; j = j + 1) begin : GEN_DEBUG_BUS
             assign o_bus_debug[(j + 1) * 32 - 1 : j * 32] = memory[j];

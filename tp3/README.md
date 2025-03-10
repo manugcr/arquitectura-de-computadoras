@@ -1052,3 +1052,12 @@ El objetivo principal de este branch es obtener una versión estable del MIPS qu
 
 El resultado es un MIPS que, al presionar el botón W19, muestra los primeros 16 bits de los registros. Con cada pulsación de dicho botón, se avanza de registro en registro, mostrando los valores de estos en los LEDs de la FPGA. Este comportamiento permite verificar el correcto funcionamiento de la implementación del MIPS **sin UART** hacia la PC.
 
+### Requisitos de Timing
+
+Uno de los principales desafíos al integrar el MIPS en la FPGA fue garantizar el cumplimiento de los requisitos de timing en todos los *paths* críticos. 
+
+Para abordar esto, se utilizó el **Clock Wizard** y se introdujo un reloj de **50 MHz**, lo que permitió que todos los *paths* críticos cumplieran satisfactoriamente con los requisitos de timing. Como resultado, la métrica de **WNS** (*Worst Negative Slack*) es positiva, lo que indica que, incluso para el *path* más crítico del diseño, se ha dejado un margen de tiempo dentro del periodo de la señal de reloj utilizado.
+
+En las siguientes pruebas, se explorarán otras frecuencias para determinar el rango de trabajo que cumpla con este requisito.
+
+<p align="center"> <img src="img/image88.png" alt=""> </p>
