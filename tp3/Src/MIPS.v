@@ -1,9 +1,66 @@
 `timescale 1ns / 1ps
 
 
-module MIPS(ClockIn, Reset);
+//module MIPS(Clock, Reset,  i_clear_program, i_ins,i_ins_mem_wr,o_ins_mem_full,o_ins_mem_empty,o_registers,o_mem_data,o_current_pc,o_end_program,i_enable, i_flush);
 
-    input ClockIn, Reset;
+module MIPS(clk_in, Reset,btn,leds);
+
+
+    
+
+    input clk_in, Reset;
+
+    input btn;  // Botón para avanzar
+    output reg [15:0] leds;  // LEDs que muestran los valores de los registros
+
+
+/*    //// DEBUG UNIT
+
+    input i_clear_program;
+    input  [31 : 0] i_ins;
+    input  i_ins_mem_wr;
+    input   i_enable;
+    input   i_flush;
+    output  o_ins_mem_full;
+    output  o_ins_mem_empty;
+    output  [32 * 32 - 1 : 0] o_registers;
+    output  [32 * 32 - 1 : 0] o_mem_data;
+    output wire [31 : 0] o_current_pc;
+    output wire o_end_program;
+    
+
+
+    wire id_halt;
+    wire o_ex_mem_halt;
+    wire o_if_id_halt;   
+    wire o_id_ex_halt; */
+
+   // Declaración de registros y wires fuera del bloque always
+wire [1023:0] o_registers;  // Suponiendo que los registros están en esta estructura
+reg [31:0] register_value;  // Registro actual a mostrar
+reg [4:0] register_index;   // Índice del registro que estamos mostrando
+
+// Sincronización del botón
+reg btn_last;
+wire btn_edge = btn & ~btn_last;  // Detecta flanco de subida
+
+// Contador para los registros
+always @(posedge Clock or posedge Reset) begin
+    if (Reset) begin
+        register_index <= 0;
+        leds <= 16'h0000;
+        btn_last <= 0;
+    end else begin
+        btn_last <= btn;  // Guardamos estado anterior del botón
+        if (btn_edge) begin
+            register_index <= (register_index + 1) % 32; // Avanzar al siguiente registro (circular)
+        end
+        register_value <= o_registers[register_index * 32 +: 32]; // Asignación de valor de registro
+        leds <= register_value[15:0];  // Mostrar los 16 bits más bajos del registro en los LEDs
+    end
+end
+
+
 
     wire [31:0] PCResult;
     wire [31:0] WriteData_WB;
@@ -12,7 +69,7 @@ module MIPS(ClockIn, Reset);
     //--------------------------------
     // Wires
     //--------------------------------
-    wire Clock;
+
 
     // Hazard Detection
     wire Hazard_IFIDWrite, Hazard_PCWrite;
@@ -68,11 +125,7 @@ module MIPS(ClockIn, Reset);
     wire [4:0]  RegDst_MEM, RegDst_WB;
     wire [31:0] RegDst32_EX;
 
-   // wire DelayHazardAlu;
-    
-    //Uncomment when running Test Bench Simulations    
-    assign Clock = ClockIn;
-    
+
 
     // Instruction Fetch Stage 
     IF_Stage         IF_Stage(// Inputs
@@ -87,8 +140,18 @@ module MIPS(ClockIn, Reset);
                        // Outputs         
                        .Instruction(Instruction_IF), 
                        .PCAdder_Out(PCAdder_IF),
-                       .PCResult(PCResult),
+                       .PCResult(o_current_pc),
                        .isBranch(BranchIF)
+
+                       ///DEBUG 
+     //                  .i_clear_mem(i_clear_program),
+       //                .i_instruction(i_ins),
+         //              .i_write_mem(i_ins_mem_wr),
+        //               .o_full_mem(o_ins_mem_full),
+          //             .i_halt(id_halt),
+           //            .o_empty_mem(o_ins_mem_empty),
+           //            .i_enable(i_enable),
+          //             .i_flush(i_flush)
                        );   
     
     
@@ -103,6 +166,8 @@ module MIPS(ClockIn, Reset);
                          .Out_PCAdder(PCAdder_ID),
                          .Out_Branch(isBranchID),
                          .Out_BrachAddress(BrachAddress)
+                  //       .i_enable(i_enable),
+                   //      .i_flush(i_flush)
                          );
  
     
@@ -137,7 +202,11 @@ module MIPS(ClockIn, Reset);
                        .ForwardMuxBSel(ForwardMuxBSel_ID),  
                        .ImmediateValue(SignExtend_ID), 
                        .PCWrite(Hazard_PCWrite),
-                       .IFIDWrite(Hazard_IFIDWrite)); 
+                       .IFIDWrite(Hazard_IFIDWrite),
+                       .o_bus_debug (o_registers)
+                //       .o_halt(id_halt),
+               //        .i_flush(i_flush)
+                       ); 
   
     // ID / EX Register
          ID_EX    IDEX(.Clock(Clock),
@@ -157,7 +226,12 @@ module MIPS(ClockIn, Reset);
                          .Out_PCAdder(PCAdder_EX),
                          .Out_RegRT(RegRT_IDEX), 
                          .Out_RegRD(RegRD_IDEX), 
-                         .Out_RegRS(RegRS_IDEX));
+                         .Out_RegRS(RegRS_IDEX)
+                  //       .i_halt (id_halt),
+                  //       .o_halt (o_id_ex_halt)
+                 //        .i_enable(i_enable),
+                //         .i_flush(i_flush)
+                         );
 
     Forward  Forward(.RegWrite_EXMEM(ControlSignal_MEM[2]),
                               .RegWrite_MEMWB(ControlSignal_WB[2]),  
@@ -216,17 +290,26 @@ module MIPS(ClockIn, Reset);
                           .Out_ALUResult(ALUResult_MEM), 
                           .Out_RegRTData(RegRTData_MEM), 
                           .Out_RegDst(RegDst_MEM), 
-                          .Out_PCAdder(PCAdder_MEM));
+                          .Out_PCAdder(PCAdder_MEM)
+                //          .i_halt (o_id_ex_halt),
+                 //         .o_halt (o_ex_mem_halt)
+                  //        .i_enable(i_enable),
+                  //        .i_flush(i_flush)
+                          );
 
 
     // Memory Stage
     MEM_Stage        MEM_Stage(.Clock(Clock),     
+                               .Reset(Reset),
                               .MemWrite(ControlSignal_MEM[6]), 
                               .MemRead(ControlSignal_MEM[5]),
                               .ALUResult(ALUResult_MEM),         
                               .RegRTData(RegRTData_MEM),
                               .ByteSig(ControlSignal_MEM[8:7]),
-                              .MemReadData(MemReadData_MEM));    
+                              .MemReadData(MemReadData_MEM)
+                  //            .o_bus_debug (o_mem_data),
+                        //      .i_flush(i_flush)
+                              );    
     
 
     // MEM / WB Register
@@ -240,7 +323,12 @@ module MIPS(ClockIn, Reset);
                           .Out_MemReadData(MemReadData_WB), 
                           .Out_ALUResult(ALUResult_WB), 
                           .Out_RegDst(RegDst_WB), 
-                          .Out_PCAdder(PCAdder_WB));
+                          .Out_PCAdder(PCAdder_WB)
+                   //       .i_halt (o_ex_mem_halt),
+                    //      .o_halt (o_end_program)
+                     //     .i_enable(i_enable),
+                     //     .i_flush(i_flush)
+                          );
 
     
     // Write Back Stage
@@ -252,6 +340,18 @@ module MIPS(ClockIn, Reset);
     
                        // Outputs       
                        .MemToReg_Out(WriteData_WB));
+
+
+
+    // prueba clock!
+
+    // Instantiate the clock wizard (clk_wiz_0)
+    clk_wiz_0 clk_wiz_inst (
+        .clk_in1(clk_in),   // Connect your input clock here
+        .reset(Reset),       // Connect your reset signal here
+        .CLK_50MHZ(Clock), // The generated 50 MHz clock output
+        .locked()            // You can use this signal for clock lock status if needed
+    );
                        
 
 

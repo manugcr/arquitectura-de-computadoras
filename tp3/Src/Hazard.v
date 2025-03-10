@@ -33,6 +33,7 @@ module Hazard(
     BranchFlush,
     // --- Salidas ---  
     PCWrite, IFIDWrite            // Señales de control para manejar peligros
+  //  o_halt // debuggg
 );
 
     //--------------------------------
@@ -51,6 +52,12 @@ module Hazard(
     //--------------------------------
     output reg PCWrite, IFIDWrite ,BranchFlush,  ControlStall, HazardCompareBranch ;       // Señales para detener la ejecución (stalls)
 
+
+    /// DEBUGG
+
+  //  output wire o_halt; // Indicates if a HALT operation is detected
+
+
         // OpCodes
     localparam [5:0] JR     = 6'b000000,
                      BGEZ   = 6'b000001,
@@ -58,11 +65,12 @@ module Hazard(
                      BEQ    = 6'b000100,
                      BNE    = 6'b000101,
                      BLEZ   = 6'b000110,
-                     BGTZ   = 6'b000111;
+                     BGTZ   = 6'b000111,
+                     HALT   = 6'b111111;  //debuggg
 
     // OpCodes
     localparam [5:0] 
-                     OP_ZERO_JR        = 6'b000000,   // 
+                     OP_ZERO_JR    = 6'b000000,   // 
                      OP_J           = 6'b000010,   // J
                      OP_JAL         = 6'b000011,   // JAL
                      OP_LW          = 6'b100011,   // LW
@@ -258,5 +266,10 @@ module Hazard(
 
     end
     end
+
+      /*
+        The HALT signal indicates if a HALT operation is detected in the IF/ID stage.
+     */
+   // assign o_halt = OpCode == HALT;
 
 endmodule

@@ -3,13 +3,17 @@
 // almacena y actualiza la dirección de la instrucción
 // actual basada en las señales de entrada.
 
-module PC(PC_In, PCResult, Enable, Reset, Clock,stall);
+//module PC(PC_In, PCResult, Enable, Reset, Clock,stall,i_halt,i_enable, i_flush);
 
+module PC(PC_In, PCResult, Enable, Reset, Clock,stall);
     // Entradas
     input [31:0] PC_In; // Dirección de entrada al contador de programa
     input Reset;        // Señal de reinicio (Reset)
     input Clock;        // Señal de reloj (Clock)
     input Enable;       // Señal de habilitación (Enable)
+//    input i_halt;
+//    input i_enable;
+//    input i_flush;
 
     // Salidas
     output reg [31:0] PCResult; // Dirección actual del contador de programa
@@ -24,12 +28,14 @@ module PC(PC_In, PCResult, Enable, Reset, Clock,stall);
 
     // Bloque always sensitivo al flanco positivo del reloj o la señal de reinicio
        always @(posedge Clock or posedge Reset) begin
-        if (Reset) begin
+      //  if (Reset || i_flush) begin
+            if (Reset ) begin
             // Si se activa el reinicio, establecer el PC a 0 y el contador a 0
             PCResult <= 32'h00000000;
             stall <= 1'b1;         // Reset stall a 1
             cycle_count <= 2'b00;  // Reset contador de ciclos
-        end else if (Enable) begin
+   //     end else if (Enable && !i_halt  && i_enable) begin
+            end else if (Enable ) begin
             // Si Enable está activo, y stall es 0, actualizar el PC
             if (stall == 1'b0 && PC_In < LIMIT) begin
                 PCResult <= PC_In;
@@ -49,5 +55,6 @@ module PC(PC_In, PCResult, Enable, Reset, Clock,stall);
 
     //NOTA: La memoria de instrucciones, funciona como un arreglo ciclico, apenas se termine de recorrer
     // comienza de nuevo
+    
 
 endmodule

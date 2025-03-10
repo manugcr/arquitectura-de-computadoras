@@ -1046,3 +1046,9 @@ Para este tipo de hazard de dependencia load hazard branch, se utiliza la logica
 
 <p align="center"> <img src="img/image87.png" alt=""> </p>
 
+## Avance V: Ready MIPS
+
+El objetivo principal de este branch es obtener una versión estable del MIPS que sea capaz de sintetizarse en la FPGA Basys 3. Para lograr esto, se procedió a eliminar sintaxis específicas para simulaciones, como los bloques `initial begin`, y a corregir la sintaxis de las asignaciones bloqueantes y no bloqueantes.
+
+El resultado es un MIPS que, al presionar el botón W19, muestra los primeros 16 bits de los registros. Con cada pulsación de dicho botón, se avanza de registro en registro, mostrando los valores de estos en los LEDs de la FPGA. Este comportamiento permite verificar el correcto funcionamiento de la implementación del MIPS **sin UART** hacia la PC.
+

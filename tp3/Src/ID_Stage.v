@@ -23,7 +23,12 @@ module ID_Stage(
     ControlSignal_Out,JumpControl,          // Señales de control de salida
     Out_Instruction,
     JumpAddress, BranchFlag,
-    ImmediateValue             // Valor inmediato extendido
+    ImmediateValue,             // Valor inmediato extendido
+
+    //DEBUG
+    o_bus_debug
+   /* o_halt,
+    i_flush*/
     );             
 
     //--------------------------------
@@ -93,6 +98,15 @@ module ID_Stage(
     output wire [31:0]  JumpAddress;
 
     output wire BranchFlag;
+
+
+    ///DEBUG
+
+    output wire [32 * 32 - 1 : 0] o_bus_debug;
+
+   // output wire o_halt; // Indicates if a HALT operation is detected
+
+    //input i_flush;
 
 
     //--------------------------------
@@ -169,6 +183,7 @@ module ID_Stage(
         .PCWrite(PCWrite),
         .RegDst_MEMWB(WriteRegister),   //PARA HAZARD DE BRANCH en etapa MEMWB
         .IFIDWrite(IFIDWrite),
+      //  .o_halt(o_halt),
         .BranchFlush(FlushJump));
     
 
@@ -186,6 +201,8 @@ module ID_Stage(
 
     // Bancos de registros
     Registers Registers(
+       // .i_flush(i_flush),
+       .Reset(Reset),
         .ReadRegister1(In_Instruction[25:21]), // rs
         .ReadRegister2(In_Instruction[20:16]), // rt 
         .WriteRegister(WriteRegister),  // Registro de destino para escritura
@@ -193,7 +210,8 @@ module ID_Stage(
         .RegWrite(RegWrite), 
         .Clock(Clock), 
         .ReadData1(ReadData1), 
-        .ReadData2(ReadData2)
+        .ReadData2(ReadData2),
+       .o_bus_debug (o_bus_debug)
     );
 
     // Extensión de signo para valores inmediatos

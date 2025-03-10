@@ -1,9 +1,9 @@
-`timescale 1ns / 1ps
+//`timescale 1ns / 1ps
 
 module tb_MIPS_Datapath;
 
 // Entradas del sistema
-reg ClockIn;
+reg clk_in;
 reg Reset;
 
 // Salidas para monitoreo
@@ -18,7 +18,7 @@ wire [31:0] EX_ALUResult,EXMEM_AluResult,MEMWB_AluResult,WB_MemToReg ;
 
 // Instancia del módulo principal MIPS
 MIPS uut (
-    .ClockIn(ClockIn),
+    .clk_in(clk_in),
     .Reset(Reset)
 );
 
@@ -51,8 +51,8 @@ assign IFID_Flush = uut.IFID.Flush;
 
 // Generador de reloj
 initial begin
-    ClockIn = 0;
-    forever #5 ClockIn = ~ClockIn; // Periodo de reloj: 10 ns
+    clk_in = 0;
+    forever #5 clk_in = ~clk_in; // Periodo de reloj: 10 ns
 end
 
 // Proceso de pruebas

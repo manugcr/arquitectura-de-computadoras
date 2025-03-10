@@ -20,8 +20,8 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
     output reg RegWrite_Out;              // Salida de escritura en registro
     
     // Variables internas
-    reg RegWriteClear;                    // Bandera para limpiar escritura
-    reg [31:0] temp;                      // Registro temporal
+  //  reg RegWriteClear;                    // Bandera para limpiar escritura
+   // reg [31:0] temp;                      // Registro temporal
 
     // Definición de operaciones mediante constantes locales
     localparam [5:0] ADD    = 6'd00,      // Suma (ADD, ADDI)
@@ -51,8 +51,8 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
 
         ALUResult     =  32'd0;
         Zero          =  1'b0;
-        RegWriteClear =  1'b0;
-        temp          =  32'd0;
+     //   RegWriteClear =  1'b0;
+     //    temp          =  32'd0;
         
         case (ALUControl)
             ADD  : ALUResult =  $signed(A) + $signed(B);            // add
@@ -79,11 +79,6 @@ module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
 
         endcase
 
-        
-        if (RegWriteClear == 1) begin
-            RegWrite_Out  =  1'b0;
-        end
-        else 
             RegWrite_Out =  RegWrite;
         
         if (ALUResult == 0) 
