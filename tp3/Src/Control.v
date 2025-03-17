@@ -2,13 +2,13 @@
 
 module Control(Instruction,
                   ALUBMux, RegDst, ALUOp, MemWrite,JumpMuxSel, JumpControl, MemRead, ByteSig, RegWrite, MemToReg, 
-                  Flush_IF,BranchComp, LaMux);
+                  BranchComp, LaMux);
     
           
     input [31:0] Instruction;
     
 
-    output reg       Flush_IF;
+ //   output reg       Flush_IF;
     output reg [2:0] BranchComp;
     output reg       JumpMuxSel, JumpControl;
     output reg       ALUBMux, LaMux;
@@ -83,7 +83,7 @@ module Control(Instruction,
     
     always @(*) begin
    
-        Flush_IF    = 1'b0;
+     //   Flush_IF    = 1'b0;
         Func   = Instruction[5:0];
         Shamt  = Instruction[10:6];
         Bit6   = Instruction[6];
@@ -91,13 +91,14 @@ module Control(Instruction,
         Bit21  = Instruction[21];
         OpCode = Instruction[31:26];
 
-        // NOP
-        if (Instruction == 32'b0) begin
+    
+
+            //valores por defecto o NOP
             JumpMuxSel  = 1'b0; 
             JumpControl = 1'b0;
             ALUBMux     = 1'b0;
-            RegDst      = 2'b00;
             BranchComp  = 3'b0;
+            RegDst      = 2'b00;
             ALUOp       = ALUOP_ZERO;
             ByteSig     = 2'b00;
             MemWrite    = 1'b0;
@@ -105,445 +106,106 @@ module Control(Instruction,
             RegWrite    = 1'b0;
             MemToReg    = 2'b00;
             LaMux       = 1'b0;
-        end
-        
-        else begin
+
             case(OpCode)
             
-                //------------
-                // Arithmetic  
-                //------------
-            
-                OP_ZERO: begin
-               
-                    ALUBMux     = 1'b0;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    BranchComp  = 3'b0;
-                    ByteSig     = 2'b00;
-                    LaMux       = 1'b0;
-    
-                    if (Func == FUNC_JR) begin    // jr
-                        JumpMuxSel  = 1'b1;
+
+                OP_J, OP_JAL: begin
                         JumpControl = 1'b1;
-                        RegWrite    = 1'b0;
-                        RegDst      = 2'b00;
-                        MemToReg    = 2'b00;
-                        ALUOp       = ALUOP_JUMP;  
-                        
-                        Flush_IF    = 1'b1; 
-                    end
-
-                    else if (Func == FUNC_JALR) begin    // jalr
-                        JumpMuxSel  = 1'b1;            //
-                        JumpControl = 1'b1;
-                        RegWrite    = 1'b1;            //ESTO CAMBIO
-                        RegDst      = 2'b01;
-                        MemToReg    = 2'b01;           //
-                        ALUOp       = ALUOP_JUMP;  
-                        
-                        Flush_IF    = 1'b1; 
-                    end
-
-
-                
-                    else begin
-                        
-                        JumpMuxSel  = 1'b0;
-                        JumpControl = 1'b0;
-                        RegWrite    = 1'b1;
-                        RegDst      = 2'b01;
-                        MemToReg    = 2'b10;
-                        ALUOp       = ALUOP_ZERO;  
-
-                        if (Func == FUNC_SRL && ~Bit21) begin   // srl
-                            ALUOp = ALUOP_SRL;  
-                            ALUBMux = 1'b0;
+                        ALUOp       = ALUOP_JUMP;
+                        if (OpCode == OP_JAL) begin
+                            RegDst   = 2'b10;
+                            RegWrite = 1'b1;
+                            MemToReg = 2'b01;
                         end
-                        
-                        else if (Func == FUNC_SLL || Func == FUNC_SLLV) ALUBMux = 1'b0;
-                        else if (Func == FUNC_SRLV  && ~Bit6)  ALUOp = ALUOP_SRLV;  // srlv
-                        else ALUOp = ALUOP_ZERO;
-                    
+                            end
+
+                  OP_BEQ, OP_BNE: begin
+                        BranchComp = (OpCode == OP_BEQ) ? BRANCH_BEQ : BRANCH_BNE;
+                        ALUOp      = (OpCode == OP_BEQ) ? ALUOP_BEQ : ALUOP_BNE;
+                    end 
+
+
+                OP_ZERO: begin
+            if (Func == FUNC_JR || Func == FUNC_JALR) begin
+                JumpMuxSel  = 1'b1;
+                JumpControl = 1'b1;
+                RegWrite    = (Func == FUNC_JALR);
+                RegDst      = (Func == FUNC_JALR) ? 2'b01 : 2'b00;
+                MemToReg    = (Func == FUNC_JALR) ? 2'b01 : 2'b00;
+                ALUOp       = ALUOP_JUMP;
+            end else begin
+                RegWrite = 1'b1;
+                RegDst   = 2'b01;
+                MemToReg = 2'b10;
+                ALUOp    = (Func == FUNC_SRL && ~Bit21) ? ALUOP_SRL :
+                           (Func == FUNC_SRLV && ~Bit6) ? ALUOP_SRLV : ALUOP_ZERO;
+            end
+        end
+                
+                OP_ADDIU, OP_ADDI: begin
+                        ALUBMux  = 1'b1;
+                        RegWrite = 1'b1;
+                        MemToReg = 2'b10;
+                        ALUOp    = (OpCode == OP_ADDIU) ? ALUOP_ADDIU : ALUOP_ADDI;
                     end
+                
 
-                end
-                
-                //addiu
-                OP_ADDIU: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDIU;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b10;
-                    LaMux       = 1'b0;
-                end
-                
-                //addi
-                OP_ADDI: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b10;
-                    LaMux       = 1'b0;
+               OP_LW, OP_LHU, OP_LBU, OP_LWU, OP_LH, OP_LB: begin
+                    ALUBMux  = 1'b1;
+                    MemRead  = 1'b1;
+                    RegWrite = 1'b1;
+                    ByteSig  = (OpCode == OP_LHU || OpCode == OP_LH) ? 2'b01 :
+                            (OpCode == OP_LBU || OpCode == OP_LB) ? 2'b10 : 2'b00;
+                    ALUOp    = ALUOP_ADDI;
                 end
                 
                 
-                //------------
-                // Data
-                //------------
+                OP_SW, OP_SB, OP_SH: begin
+                    ALUBMux  = 1'b1;
+                    MemWrite = 1'b1;
+                    ByteSig  = (OpCode == OP_SH) ? 2'b01 : (OpCode == OP_SB) ? 2'b10 : 2'b00;
+                    ALUOp    = ALUOP_ADDI;
+                end
                 
-                //lw
-                OP_LW: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b1;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b00; 
-                    LaMux       = 1'b0;               
+                 OP_LUI: begin
+                    ALUBMux  = 1'b1;
+                    RegWrite = 1'b1;
+                    MemToReg = 2'b10;
+                    ALUOp    = ALUOP_LUI;
                 end
 
-                 /*   OP_LHU         = 6'b100101,                    //AGREGAR
-                     OP_LBU         = 6'b100100,                    //AGREGAR
-                     OP_LWU         = 6'b100111,                    //AGREGAR*/
-                
-                OP_LHU: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b01;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b1;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b00;  
-                    LaMux       = 1'b0;      
-                end
-
-                OP_LBU: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b10;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b1;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b00;
-                    LaMux       = 1'b0;
-                end
-
-                OP_LWU: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b1;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b00; 
-                    LaMux       = 1'b0;               
-                end
-
-                
-                
-                //sw
-                OP_SW: begin  
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;               
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b1;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b0;
-                    MemToReg    = 2'b00; 
-                    LaMux       = 1'b0;
-                end
-                
-                //sb
-                OP_SB: begin       
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;  
-                    BranchComp  = 3'b0;         
-                    ALUBMux     = 1'b1;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b10;
-                    MemWrite    = 1'b1;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b0;
-                    MemToReg    = 2'b00;
-                    LaMux       = 1'b0;
-                end
-                
-                //lh
-                OP_LH: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b01;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b1;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b00;  
-                    LaMux       = 1'b0;      
-                end
-                
-                //lb
-                OP_LB: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b10;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b1;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b00;
-                    LaMux       = 1'b0;
-                end
-                
-                //sh
-                OP_SH: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ADDI;
-                    ByteSig     = 2'b01;
-                    MemWrite    = 1'b1;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b0;
-                    MemToReg    = 2'b00;
-                    LaMux       = 1'b0;
-                end
-                
-                //lui
-                OP_LUI: begin  
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;   
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_LUI;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b10;
-                    LaMux       = 1'b0;
-                end
-
-                //beq
-                OP_BEQ: begin 
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    BranchComp  = BRANCH_BEQ;
-                    ALUBMux     = 1'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_BEQ;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b0;
-                    MemToReg    = 2'b00;
-                    LaMux       = 1'b0;
-                end
-                
-                //bne
-                OP_BNE: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    BranchComp  = BRANCH_BNE;
-                    ALUBMux     = 1'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_BNE;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b0;
-                    MemToReg    = 2'b00;
-                    LaMux       = 1'b0;
-                end
-
-                // j
-                OP_J: begin  
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b1;
-                    ALUBMux     = 1'b0;
-                    RegDst      = 2'b00;
-                    BranchComp  = 3'b0;
-                    ALUOp       = ALUOP_JUMP;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b0;
-                    MemToReg    = 2'b00;
-                    LaMux       = 1'b0;
-                    Flush_IF    = 1'b1; 
-                end
-                
-                // jal
-                OP_JAL: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b1;
-                    ALUBMux     = 1'b0;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b10;
-                    ALUOp       = ALUOP_JUMP;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b01;
-                    LaMux       = 1'b0;
-                    Flush_IF    = 1'b1; 
-                end
-                
 
                 //------------
                 // Logical
                 //------------
                
-                //andi
-                OP_ANDI: begin      
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;        
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ANDI;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b10;
-                    LaMux       = 1'b0;
-                end
-                
-                //ori
-                OP_ORI: begin           
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;  
-                    BranchComp  = 3'b0;      
-                    ALUBMux     = 1'b1;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ORI;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b10;
-                    LaMux       = 1'b0;
-                end
-                
-                //xori
-                OP_XORI: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;      
-                    BranchComp  = 3'b0;
-                    ALUBMux     = 1'b1;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_XORI;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b10;
-                    LaMux       = 1'b0;
-                end
+               OP_ANDI, OP_ORI, OP_XORI: begin
+                ALUBMux  = 1'b1;
+                RegWrite = 1'b1;
+                MemToReg = 2'b10;
+                ALUOp    = (OpCode == OP_ANDI) ? ALUOP_ANDI :
+                        (OpCode == OP_ORI) ? ALUOP_ORI :
+                        ALUOP_XORI;
+            end
                 
              
                 
-                //slti
-                OP_SLTI: begin  
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b1;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_SLTI;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b10;
-                    LaMux       = 1'b0;
-                end
-                
-                //sltiu
-                OP_SLTIU: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    BranchComp  = 3'b0;
-                    ALUBMux     = 1'b1;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_SLTIU;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b1;
-                    MemToReg    = 2'b10;
-                    LaMux       = 1'b0;
-                end
+                 OP_SLTI, OP_SLTIU: begin
+                ALUBMux  = 1'b1;
+                RegWrite = 1'b1;
+                MemToReg = 2'b10;
+                ALUOp    = (OpCode == OP_SLTI) ? ALUOP_SLTI : ALUOP_SLTIU;
+            end
                 
             
 
-                default: begin
-                    JumpMuxSel  = 1'b0; 
-                    JumpControl = 1'b0;
-                    ALUBMux     = 1'b0;
-                    BranchComp  = 3'b0;
-                    RegDst      = 2'b00;
-                    ALUOp       = ALUOP_ZERO;
-                    ByteSig     = 2'b00;
-                    MemWrite    = 1'b0;
-                    MemRead     = 1'b0;
-                    RegWrite    = 1'b0;
-                    MemToReg    = 2'b00;
-                    LaMux       = 1'b0;
-                end 
+                default: ; // Mantiene valores por defecto
                 
             endcase
             
         end
 
-    end
 
             
 endmodule

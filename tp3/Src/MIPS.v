@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 
-module MIPS(Clock, Reset,  i_clear_program, i_ins,i_ins_mem_wr,o_ins_mem_full,o_ins_mem_empty,o_registers,o_mem_data,o_current_pc,o_end_program,i_enable, i_flush);
+module MIPS(Clock, Reset,  i_clear_program, i_ins,i_ins_mem_wr,o_ins_mem_full,o_ins_mem_empty,o_registers,o_mem_data,o_current_pc,o_end_program,i_enable, i_flush,o_instruction,FLAGJUMP);
 
 //module MIPS(clk_in, Reset,btn,leds);
 
@@ -27,7 +27,17 @@ module MIPS(Clock, Reset,  i_clear_program, i_ins,i_ins_mem_wr,o_ins_mem_full,o_
     output  [32 * 32 - 1 : 0] o_mem_data;
     output wire [31 : 0] o_current_pc;
     output wire o_end_program;
+  
+    output FLAGJUMP;
+  //  output FLAGALUMUX;
     
+  //  wire FLAGALUMUX;
+  //  wire FLAGJUMP;
+
+  //  output [7:0] ScheduledPC_LSB;
+   // output [1:0] SelMUXPC;
+
+   output wire [10 : 0] o_instruction;  //10 bits MSB para ver en que estado estan
 
 
     wire id_halt;
@@ -89,8 +99,10 @@ end
     wire [31:0] Instruction_IF, Instruction_ID, Instruction_IDStage;
 
     wire BranchIF;
+    wire JumpIF;
 
     wire isBranchID;
+    wire isJumpID;
     
     // Program Counter Adder
     wire [31:0] PCAdder_IF, PCAdder_ID, PCAdder_EX, PCAdder_MEM, PCAdder_WB;
@@ -133,7 +145,7 @@ end
                        .Reset(Reset),          
                        .PCWrite(Hazard_PCWrite),
                        .JumpAddress(JumpAddress), 
-                       .JumpControl(JumpControl), 
+                       .JumpControl(isJumpID), 
                        .BrachAddress(BrachAddress), //////////////////
                        .BranchFlagID(BrachflagIFID),                
                     
@@ -142,6 +154,7 @@ end
                        .PCAdder_Out(PCAdder_IF),
                        .PCResult(o_current_pc),
                        .isBranch(BranchIF),
+                       .isJump(JumpIF),
 
                        ///DEBUG 
                        .i_clear_mem(i_clear_program),
@@ -151,7 +164,9 @@ end
                        .i_halt(id_halt),
                        .o_empty_mem(o_ins_mem_empty),
                        .i_enable(i_enable),
-                       .i_flush(i_flush)
+                       .i_flush(i_flush),
+                       .ScheduledPC_LSB(ScheduledPC_LSB),
+                       .SelMUXPC(SelMUXPC)
                        );   
     
     
@@ -162,9 +177,11 @@ end
                          .In_Instruction(Instruction_IF), 
                          .In_PCAdder(PCAdder_IF),
                          .In_Branch(BranchIF),
+                         .In_Jump(JumpIF),
                          .Out_Instruction(Instruction_ID), 
                          .Out_PCAdder(PCAdder_ID),
                          .Out_Branch(isBranchID),
+                         .Out_Jump(isJumpID),
                          .Out_BrachAddress(BrachAddress),
                          .i_enable(i_enable),
                          .i_flush(i_flush)
@@ -181,7 +198,6 @@ end
                        .WriteRegister(RegDst_WB), 
                        .BranchFlag(BrachflagIFID),
                        .WriteData(WriteData_WB), 
-                       .JumpControl(JumpControl),
                        .JumpAddress(JumpAddress),
                        .In_Instruction(Instruction_ID), //ACAAAAAA
                        .Out_Instruction(Instruction_IDStage),
@@ -202,6 +218,8 @@ end
                        .ForwardMuxBSel(ForwardMuxBSel_ID),  
                        .ImmediateValue(SignExtend_ID), 
                        .PCWrite(Hazard_PCWrite),
+                       .FLAGJUMP(FLAGJUMP),
+                    //   .FLAGALUMUX(FLAGALUMUX),
                        .IFIDWrite(Hazard_IFIDWrite),
                        .o_bus_debug (o_registers),
                        .o_halt(id_halt),
@@ -339,6 +357,10 @@ end
     
                        // Outputs       
                        .MemToReg_Out(WriteData_WB));
+
+
+    assign o_instruction = Instruction_ID[31:21];
+
 
                        
 

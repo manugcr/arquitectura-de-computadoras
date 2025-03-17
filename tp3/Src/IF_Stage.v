@@ -5,7 +5,7 @@ module IF_Stage(
     Clock, Reset,               // Señales del sistema
     PCWrite,                   // Control de escritura del PC (señal de control de riesgos)
     Instruction,BrachAddress, PCAdder_Out,  PCResult,JumpControl, JumpAddress,// Salidas del módulo
-    isBranch, BranchFlagID,
+    isBranch,isJump, BranchFlagID,
     i_clear_mem,
     i_instruction,
     i_write_mem,
@@ -13,7 +13,10 @@ module IF_Stage(
     o_empty_mem,
     i_halt,
     i_enable,
-    i_flush 
+    i_flush,
+    
+    ScheduledPC_LSB,
+    SelMUXPC
     );    
 
 
@@ -35,7 +38,8 @@ module IF_Stage(
     input BranchFlagID;
 
 
-    output wire isBranch;      
+    output wire isBranch;     
+    output wire isJump;       
 
 
     //// DEBUG UNIT
@@ -47,6 +51,9 @@ module IF_Stage(
     input i_halt;
     input i_enable;
     input i_flush; 
+
+    output [7:0] ScheduledPC_LSB; // Nueva salida con los 8 bits menos significativos
+    output [1:0] SelMUXPC;
     ///
 
 
@@ -77,8 +84,8 @@ module IF_Stage(
      InstructionMemory InstructionMemory(
         .Address(PCResult),     // Dirección de memoria (PC actual)
         .Instruction(Instruction), // Instrucción obtenida de la memoria
-        .TargetOffset(TargetOffset),
         .Branch(isBranch),
+        .Jump(isJump),
         .Clock(Clock),           // Señal de reloj
         .Reset(Reset),          // Señal de reinicio
         .i_instruction (i_instruction),        // Input instruction
@@ -109,5 +116,9 @@ module IF_Stage(
 
 
 
+// Asignación de los 8 bits menos significativos
+
+    assign ScheduledPC_LSB = ScheduledPC[7:0];
+    assign SelMUXPC = {BranchFlagID, JumpControl};
     
 endmodule

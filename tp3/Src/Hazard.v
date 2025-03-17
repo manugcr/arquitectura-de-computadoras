@@ -97,10 +97,10 @@ module Hazard(
     always @(*) begin
 
          if (Reset) begin
-        PCWrite   = 1'b1;
-        IFIDWrite = 1'b1;
+        PCWrite      = 1'b1;
+        IFIDWrite    = 1'b1;
         ControlStall = 1'b0;
-        BranchFlush  = 1'b1;
+        BranchFlush  = 1'b0;   //VER ESTO!
         HazardCompareBranch = 1'b0;
 
         $display("RESETTTTTTTT");
@@ -146,15 +146,6 @@ module Hazard(
 
         
         end 
-
-
-
-
-
-
-
-
-
 
 
 

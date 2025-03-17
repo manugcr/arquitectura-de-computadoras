@@ -3,8 +3,6 @@
 
 module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSig, o_bus_debug, i_flush,Reset); 
 
-//module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSig, Reset); 
-
 
     input [31:0] Address;       // Input Address 
     input [31:0] WriteData;     // Data that needs to be written into the address 
@@ -24,28 +22,8 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
 
     input i_flush;
     integer i;
-    // Variable para inicialización
-   /* integer i;
-
-    // Inicialización de la memoria desde un archivo y valores por defecto
-    initial begin
-        $readmemh("Data_memory.mem", memory, 0, 31); // Cargar datos iniciales desde archivo
-        
-        // Inicializar la memoria con valores incrementales (opcional)
-        for (i = 0; i < 31; i = i + 1) begin
-            memory[i] = 0;
-        end
-            
-          memory[5] = 32'h0000000A   ;   
-          memory[6] = 32'h0000000A   ;   
 
 
-        // Escribir los valores iniciales en un archivo para referencia
-        $writememh("Data_memory.mem", memory);
-        
-
-        
-    end */
 
     // Bloque siempre para escritura en memoria (controlado por reloj)
     always @ (posedge Clock) begin
@@ -59,11 +37,10 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
         else begin
         if(Reset)begin
             for (i = 0; i < 31; i = i + 1) begin
-            memory[i] = 0;
+            memory[i] <= 'b0;
              end
 
-            memory[5] = 32'h0000000A   ;   
-          memory[6] = 32'h0000000A   ;   
+
 
         end
         if (MemWrite == 1'b1) begin // Verificar señal de escritura activa
@@ -126,9 +103,6 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
                     ReadData = {{24{memory[Address[31:2]][31]}}, memory[Address[31:2]][31:24]}; // Signo extendido, byte superior
             end
 
-            /* else begin
-                ReadData = 32'b0;
-            end*/
 
         end
     end
@@ -143,6 +117,6 @@ module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSi
             assign o_bus_debug[(j + 1) * 32 - 1 : j * 32] = memory[j];
         end
     endgenerate
-    /// VER SI ESTA BIEN ESTO!, EL GENERATE O SI SE MANDA AL REVES, (EN VEZ DE MANDAR LA PRIMERA PALABRA MANDA LA ULTIMA PRIMERO) */
+
 
 endmodule

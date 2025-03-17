@@ -20,12 +20,13 @@ module ID_Stage(
     PCAdder,
     Flush_IF,
     ReadData1_out,ReadData2_out,
-    ControlSignal_Out,JumpControl,          // Señales de control de salida
+    ControlSignal_Out,          // Señales de control de salida
     Out_Instruction,
     JumpAddress, BranchFlag,
     ImmediateValue,             // Valor inmediato extendido
 
     //DEBUG
+    FLAGJUMP,
     o_bus_debug,
     o_halt,
     i_flush
@@ -76,7 +77,6 @@ module ID_Stage(
     // Señales de control
     output wire [31:0] ControlSignal_Out;
 
-    output wire JumpControl;
 
     output wire Flush_IF;
 
@@ -108,6 +108,7 @@ module ID_Stage(
 
     input i_flush;
 
+    output wire FLAGJUMP;
 
     //--------------------------------
     // Declaración de Cables
@@ -195,8 +196,7 @@ module ID_Stage(
                                     .RegWrite(RegWrite_Control), .MemToReg(MemToReg_Control),  
                                     .JumpMuxSel(JumpMuxSel), 
                                     .BranchComp(BranchComp),
-                                    .JumpControl(JumpControl), 
-                                    .Flush_IF(JumpFlush), //???
+                                   // .Flush_IF(JumpFlush), //???
                                     .LaMux(LaMux));
 
     // Bancos de registros

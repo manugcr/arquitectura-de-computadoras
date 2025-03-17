@@ -1061,3 +1061,13 @@ Para abordar esto, se utilizó el **Clock Wizard** y se introdujo un reloj de **
 En las siguientes pruebas, se explorarán otras frecuencias para determinar el rango de trabajo que cumpla con este requisito.
 
 <p align="center"> <img src="img/image88.png" alt=""> </p>
+
+
+
+
+
+
+agrege: OPTIMIZACION DE CODIGO PARA EVITAR COMBINACIONALES CON MUCHO RETRASO!
+
+
+mover el JumpMux a IF para evitar las condciones de carrera, con 35MHZ no hay condiciones de carrera.

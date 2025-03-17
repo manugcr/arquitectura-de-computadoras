@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module InstructionMemory(Address, Instruction  ,TargetOffset, Branch, Clock,Reset,i_clear,i_inst_write,i_instruction,o_full_mem,o_empty_mem);
+module InstructionMemory(Address, Instruction  , Branch,Jump, Clock,Reset,i_clear,i_inst_write,i_instruction,o_full_mem,o_empty_mem);
 
 //module InstructionMemory(Address, Instruction ,stall ,TargetOffset, Branch, Clock,Reset);
 
@@ -11,9 +11,9 @@ module InstructionMemory(Address, Instruction  ,TargetOffset, Branch, Clock,Rese
     // Salidas
     output reg [31:0] Instruction;   // Instrucción de 32 bits leída desde la memoria, seria el o_instruccion
 
-
-    output reg [31:0] TargetOffset;
     output reg Branch;
+
+    output reg Jump;
 
     // Memoria de instrucciones de 32 bits, con capacidad para 512 palabras
     reg [31:0] memory [0:511]; // La memoria se define como un arreglo de 512 palabras (de 32 bits cada una)
@@ -48,16 +48,15 @@ module InstructionMemory(Address, Instruction  ,TargetOffset, Branch, Clock,Rese
         if (Instruction[31:26] == 6'b000100 || Instruction[31:26] == 6'b000101) begin
 
             Branch = 1'b1;     // Flag que indica que es un branch 
-
-            if (Instruction[15] == 1) 
-                TargetOffset = {16'hFFFF, Instruction[15:0]};  // Desplazamiento con signo
-            else  
-                TargetOffset = {16'h0000, Instruction[15:0]};  // Desplazamiento sin signo
             
         end
+        //                              J                                   JAL
+        else if(Instruction[31:26] == 6'b000010 || Instruction[31:26] == 6'b000011)
+            Jump = 1'b1;     // Flag que indica que es un Jump
+
         else begin
             Branch = 1'b0;
-            TargetOffset = 32'd0;
+            Jump = 1'b0;
         end
 
     end

@@ -5,6 +5,8 @@ module IF_ID(
     Enable,        // Señal para habilitar la escritura en los registros
     In_Instruction, // Entrada de la instrucción actual
     In_Branch,
+    In_Jump,
+    Out_Jump,
     Out_Instruction, // Salida de la instrucción almacenada
     In_PCAdder,     // Entrada del valor del PC sumado
     Flush,
@@ -22,29 +24,33 @@ module IF_ID(
     input        In_Branch;
     input        i_enable;
     input        i_flush;
+    input        In_Jump;
 
     // Declaración de salidas
     output reg [31:0] Out_Instruction;     // Almacena la instrucción
     output reg [31:0] Out_BrachAddress;     // Almacena el valor anterior del PC sumado
     output reg [31:0] Out_PCAdder;         // Almacena el valor del PC sumado
     output reg Out_Branch;
+    output reg Out_Jump;
 
 
     // Comportamiento del registro sincronizado con el flanco positivo del reloj
     always @(posedge Clock) begin
-         if (Flush || i_flush) begin
-         //   if (Flush ) begin
+         if (Flush || i_flush) begin     
+        //    if (Flush ) begin
             Out_Instruction <= 32'd0;
             Out_Branch      <=  1'd0;           //OJOOOO
+            Out_Jump        <=  1'd0;           //OJOOOO
           //  Out_PCAdder     = 32'd0;  VER SI ESTO ROMPE ALGO ojoooooooooooo
         end
-         else if (Enable && i_enable) begin     // ojoooooOOOOO
+      //   else if (Enable && i_enable) begin     // ojoooooOOOOO
+          else if (Enable ) begin     // ojoooooOOOOO
             // Si Enable está activo, actualiza los registros con las entradas
           //  else if (Enable ) begin     // ojoooooOOOOO
             Out_Instruction <= In_Instruction;
             Out_PCAdder     <= In_PCAdder;
             Out_Branch      <=  In_Branch;
- 
+            Out_Jump        <=  In_Jump;           
             Out_BrachAddress <= {16'h0000, In_Instruction[15:0]};  // Desplazamiento sin signo
 
         end
