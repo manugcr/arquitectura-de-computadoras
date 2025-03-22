@@ -16,7 +16,7 @@ module InstructionMemory(Address, Instruction  , Branch,Jump, Clock,Reset,i_clea
     output reg Jump;
 
     // Memoria de instrucciones de 32 bits, con capacidad para 512 palabras
-    reg [31:0] memory [0:511]; // La memoria se define como un arreglo de 512 palabras (de 32 bits cada una)
+    reg [31:0] memory [0:40]; // La memoria se define como un arreglo de 512 palabras (de 32 bits cada una)
 
     // Variable para el bucle
     integer i;
@@ -37,7 +37,6 @@ module InstructionMemory(Address, Instruction  , Branch,Jump, Clock,Reset,i_clea
     ///
 
 
-
         // Bloque always para LEER la instrucción y procesar las instrucciones de salto
     always @ (*) begin
             // Si stall es 0, leer la instrucción desde la memoria
@@ -48,11 +47,14 @@ module InstructionMemory(Address, Instruction  , Branch,Jump, Clock,Reset,i_clea
         if (Instruction[31:26] == 6'b000100 || Instruction[31:26] == 6'b000101) begin
 
             Branch = 1'b1;     // Flag que indica que es un branch 
+             Jump = 1'b0;     // Flag que indica que es un Jump
             
         end
-        //                              J                                   JAL
-        else if(Instruction[31:26] == 6'b000010 || Instruction[31:26] == 6'b000011)
+        //                              J                                   JAL                                                        JR                              JALR
+        else if(Instruction[31:26] == 6'b000010 || Instruction[31:26] == 6'b000011 || (Instruction[31:26] == 6'b000000 && (Instruction[5:0]==6'b001000 || Instruction[5:0]==6'b001001 ) )) begin
             Jump = 1'b1;     // Flag que indica que es un Jump
+            Branch = 1'b0;     // Flag que indica que es un branch 
+            end
 
         else begin
             Branch = 1'b0;
@@ -60,6 +62,7 @@ module InstructionMemory(Address, Instruction  , Branch,Jump, Clock,Reset,i_clea
         end
 
     end
+
 
         // ESCRITURA DE MEMORIA!
 

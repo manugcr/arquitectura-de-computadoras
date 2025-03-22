@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module Control(Instruction,
-                  ALUBMux, RegDst, ALUOp, MemWrite,JumpMuxSel, JumpControl, MemRead, ByteSig, RegWrite, MemToReg, 
+                  ALUBMux, RegDst, ALUOp, MemWrite,JumpMuxSel, MemRead, ByteSig, RegWrite, MemToReg, 
                   BranchComp, LaMux);
     
           
@@ -10,7 +10,7 @@ module Control(Instruction,
 
  //   output reg       Flush_IF;
     output reg [2:0] BranchComp;
-    output reg       JumpMuxSel, JumpControl;
+    output reg       JumpMuxSel;
     output reg       ALUBMux, LaMux;
     output reg [1:0] RegDst;
     output reg [5:0] ALUOp;
@@ -95,7 +95,6 @@ module Control(Instruction,
 
             //valores por defecto o NOP
             JumpMuxSel  = 1'b0; 
-            JumpControl = 1'b0;
             ALUBMux     = 1'b0;
             BranchComp  = 3'b0;
             RegDst      = 2'b00;
@@ -111,7 +110,6 @@ module Control(Instruction,
             
 
                 OP_J, OP_JAL: begin
-                        JumpControl = 1'b1;
                         ALUOp       = ALUOP_JUMP;
                         if (OpCode == OP_JAL) begin
                             RegDst   = 2'b10;
@@ -129,7 +127,6 @@ module Control(Instruction,
                 OP_ZERO: begin
             if (Func == FUNC_JR || Func == FUNC_JALR) begin
                 JumpMuxSel  = 1'b1;
-                JumpControl = 1'b1;
                 RegWrite    = (Func == FUNC_JALR);
                 RegDst      = (Func == FUNC_JALR) ? 2'b01 : 2'b00;
                 MemToReg    = (Func == FUNC_JALR) ? 2'b01 : 2'b00;

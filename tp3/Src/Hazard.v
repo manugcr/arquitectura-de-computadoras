@@ -58,6 +58,9 @@ module Hazard(
     output wire o_halt; // Indicates if a HALT operation is detected
 
 
+    reg HazardResolved_EX; //CASO DE JR V0 EN IDEX Y LUEGO DE VUELTA EN EXMEM (3 CICLOS EN VEZ DE 2 EN ID el jump)
+
+
         // OpCodes
     localparam [5:0] JR     = 6'b000000,
                      BGEZ   = 6'b000001,
@@ -97,11 +100,12 @@ module Hazard(
     always @(*) begin
 
          if (Reset) begin
-        PCWrite      = 1'b1;
-        IFIDWrite    = 1'b1;
+        PCWrite   = 1'b1;
+        IFIDWrite = 1'b1;
         ControlStall = 1'b0;
-        BranchFlush  = 1'b0;   //VER ESTO!
+        BranchFlush  = 1'b0;
         HazardCompareBranch = 1'b0;
+        HazardResolved_EX = 1'b0;  //para evitar que luego se meta en EXMEM    
 
         $display("RESETTTTTTTT");
 
@@ -115,10 +119,14 @@ module Hazard(
                   RegWrite_IDEX && (( RegDst_IDEX == 2'b0 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID)) ) || 
                                     ( RegDst_IDEX == 2'b1 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID)) )) ) begin
             
+            
+        $display("CASO 1");
+
             PCWrite      = 1'b0;
             IFIDWrite    = 1'b0;
             ControlStall = 1'b1;
             BranchFlush  = 1'b0;
+            HazardResolved_EX = 1'b0;  //para evitar que luego se meta en EXMEM    
 
             // MemRead_EXMEM != 1'b1 problema con 2 load antes de un branch 
 
@@ -143,9 +151,20 @@ module Hazard(
             ControlStall = 1'b1;
             BranchFlush  = 1'b0;
             HazardCompareBranch = 1'b0;
+            HazardResolved_EX = 1'b0;  //para evitar que luego se meta en EXMEM    
+            $display("CASO 2");
 
         
         end 
+
+
+
+
+
+
+
+
+
 
 
 
@@ -156,7 +175,8 @@ module Hazard(
             PCWrite      = 1'b1;
             IFIDWrite    = 1'b1;
             ControlStall = 1'b0;
-            BranchFlush  = 1'b0;   
+            BranchFlush  = 1'b0;  
+            HazardResolved_EX = 1'b0;  //para evitar que luego se meta en EXMEM     
 
 
             if(MemRead_EXMEM == 1'b1) HazardCompareBranch = 1'b0;
@@ -170,6 +190,8 @@ module Hazard(
            ((RegDst_IDEX == 2'b00 && ((RegRT_IDEX == RegRS_IFID) || (RegRT_IDEX == RegRT_IFID))) || 
             (RegDst_IDEX == 2'b01 && ((RegRD_IDEX == RegRS_IFID) || (RegRD_IDEX == RegRT_IFID))))) begin
 
+                $display("CASO 3");
+
 
              
             HazardCompareBranch = 1'b0;
@@ -177,6 +199,7 @@ module Hazard(
             IFIDWrite    = 1'b0;
             ControlStall = 1'b1;
             BranchFlush  = 1'b0;   // funcionaaaa
+            HazardResolved_EX = 1'b0;  //para evitar que luego se meta en EXMEM    
         end 
 
         /*  El problema es que en ambas situaciones, el JR está intentando leer un registro que está siendo modificado
@@ -194,6 +217,8 @@ module Hazard(
                                         y el valor que se guardara en ese registro viene del resultado de la ALU
                     - (RegWrite_EXMEM && RegisterDst_EXMEM == 5'd31) -> si la instruccion que esta en MEM quiere escribir 
                                         y el valor que se guardara es en el registro 31 (ra)   */   
+
+                                        $display("CASO 4");
           
             
                  HazardCompareBranch = 1'b0;
@@ -203,11 +228,21 @@ module Hazard(
                 BranchFlush  = 1'b1;
             
             end
+
+
+
+
+
+
+
+
+
             
             // JR in ID and lw in EX or MEM
             else if ( OpCode == OP_ZERO_JR && (Func == 6'b001000 || Func == 6'b001001) && 
-                    ((RegWrite_IDEX && (RegRT_IDEX == RegRS_IFID || RegRD_IDEX == RegRS_IFID)) || 
-                    (RegWrite_EXMEM && RegisterDst_EXMEM == RegRS_IFID)) ) begin
+                    ((RegWrite_IDEX && (RegRT_IDEX == RegRS_IFID || RegRD_IDEX == RegRS_IFID))) ) begin
+
+                        $display("CASO 5");
 
                     /*       - OpCode == JR && Func == 6'b001000     -> instruccion JR
                     - RegWrite_IDEX -> si la instruccion que esta en EX quiere escribir 
@@ -222,7 +257,7 @@ module Hazard(
                                     ESTE ELSE RESUELVE EL CASO:  add $v0, $t2, $t6               
                                                                  jr  $v0       
                                         */  
-                                                          
+                HazardResolved_EX = 1'b1;  //para evitar que luego se meta en EXMEM                                       
             
                  HazardCompareBranch = 1'b0;
                 PCWrite      = 1'b0;
@@ -233,6 +268,40 @@ module Hazard(
         
             end 
 
+
+            /*
+             // JR in ID and lw in EX or MEM
+            else if ( OpCode == OP_ZERO_JR && (Func == 6'b001000 || Func == 6'b001001) && 
+                    ( (RegWrite_EXMEM && RegisterDst_EXMEM == RegRS_IFID)) && !HazardResolved_EX ) begin
+
+                        $display("CASO 6");
+
+                    /*       - OpCode == JR && Func == 6'b001000     -> instruccion JR
+                    - RegWrite_IDEX -> si la instruccion que esta en EX quiere escribir 
+                    - RegRT_IDEX == RegRS_IFID -> Si la instrucción en IDEX escribe en un registro 
+                        (por ejemplo, el registro de destino de un LW o SW) y la instrucción en IFID está 
+                        intentando leer ese mismo registro, entonces esa condición se cumple.    
+                    - RegRD_IDEX == RegRS_IFID -> La instrucción en IDEX escribe en un registro (RD), y la 
+                    instrucción en IFID usa el mismo registro como fuente (RS). Esto implica que la instrucción
+                    en IFID depende de un valor que aún no ha sido escrito por la instrucción en IDEX.                 
+                    - (RegWrite_EXMEM && RegisterDst_EXMEM == RegRS_IFID) -> si la instruccion que esta en MEM quiere escribir 
+                                        y el valor que se guardara es en el registro RegRS_IFID (ra) 
+                                    ESTE ELSE RESUELVE EL CASO:  add $v0, $t2, $t6               
+                                                                 jr  $v0       
+                                        */  
+             /*   HazardResolved_EX = 1'b0;  //para evitar que luego se meta en EXMEM                                              
+                
+                 HazardCompareBranch = 1'b0;
+                PCWrite      = 1'b0;
+                IFIDWrite    = 1'b0;
+                ControlStall = 1'b1;
+                BranchFlush  = 1'b0;
+                
+        *
+            end */
+
+            
+
        // J    FUNCIONAA
         else if ( OpCode == OP_J || OpCode == OP_JAL || (OpCode == OP_ZERO_JR && (Func == 6'b001000 || Func == 6'b001001)) ) begin
             PCWrite      = 1'b1;
@@ -240,6 +309,11 @@ module Hazard(
             ControlStall = 1'b0;
             BranchFlush  = 1'b1;
              HazardCompareBranch = 1'b0;
+
+             HazardResolved_EX = 1'b0;  //para evitar que luego se meta en EXMEM    
+             
+
+             $display("CASO 7");
 
         end 
 
@@ -253,6 +327,7 @@ module Hazard(
             ControlStall = 1'b0;
             BranchFlush  = 1'b0;   //VER ESTO!
             HazardCompareBranch = 1'b0;
+            HazardResolved_EX = 1'b0;  //para evitar que luego se meta en EXMEM    
         end
 
     end
