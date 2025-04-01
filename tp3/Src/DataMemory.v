@@ -1,122 +1,121 @@
-`timescale 1ns / 1ps
+module DataMemory
+#(
+    parameter NB_DATA = 32,
+    parameter NB_ADDR = 8,
+    parameter NB_REG  = 1
+
+)(
+    input   wire                    clk                             ,
+    input   wire                    i_rst_n                         ,
+    input   wire                    i_stall                         ,
+    input   wire                    i_halt                          ,
+    input   wire   [4:0]            i_reg2write                     , //! o_write_reg from instruction_execute
+    input   wire   [NB_DATA-1:0]    i_result                        , //! o_result from instruction_execute
+    //input   wire   [NB_DATA-1:0]    i_aluOP                         , //! opcode NO LO USO
+    input   wire   [1:0]            i_width                         , //! width
+    input   wire                    i_sign_flag                     , //! sign flag || 1 = signed, 0 = unsigned
+    input   wire                    i_mem2reg                       ,
+    //input   wire                    i_memRead                       ,
+    input   wire                    i_memWrite                      , //! Si 1 -> STORE || escribo en memoria
+    input   wire                    i_regWrite                      ,
+    //input   wire   [1:0]            i_aluSrc                        ,
+    //input   wire                    i_jump                          ,
+    input   wire   [NB_DATA-1:0]    i_data4Mem                      , //! src data for store ops
 
 
-module DataMemory(Address, WriteData, Clock, MemWrite, MemRead, ReadData, ByteSig, o_bus_debug, i_flush,Reset); 
 
+    output  reg   [NB_DATA-1:0]    o_reg_read                       , //! data from memory 
+    output  reg   [NB_DATA-1:0]    o_ALUresult                      , //! alu result
+    output  reg   [4:0]            o_reg2write                      , //! o_write_reg from execute (rd or rt)
 
-    input [31:0] Address;       // Input Address 
-    input [31:0] WriteData;     // Data that needs to be written into the address 
-    input Clock;
-    input MemWrite;             // Control signal for memory write 
-    input MemRead;              // Control signal for memory read 
-    input [1:0] ByteSig;
-    input Reset;
+    // ctrl signals
+    output  reg                    o_mem2reg                        , //! 0-> guardo el valor de leído || 1-> guardo valor de alu
+    output  reg                    o_regWrite                       , //! writes the value
 
-    output reg[31:0] ReadData;  // Contents of memory location at Address
+    output  wire [31:0]            o_data2mem                       , //
+    output  wire [7 :0]            o_dataAddr                       ,  //
+    output  wire                   o_memWrite
+
     
-    reg [31:0] memory [0:31];    // Reminder: Update stack pointer
+);
+    reg  [NB_DATA-1:0] data2mem, masked_reg_read;
+    wire [NB_DATA-1:0] reg_read;
+    
+    wire writeEnable;
+    //wire []
 
-    //DEBUGG
+    //! mask data
+    always @(*) begin : mask
+        data2mem = 0;
+        case (i_width)
+            2'b00: begin
+                // byte
+                data2mem = !i_sign_flag ?    {{24{i_data4Mem[7]}}    , i_data4Mem[7:0]}     : //unsigned
+                                             {{24{1'b0}}             , i_data4Mem[7:0]}     ; //signed
 
-    output wire [32 * 32 - 1 : 0] o_bus_debug; // Debug bus showing entire memory content
-
-    input i_flush;
-    integer i;
-
-
-
-    // Bloque siempre para escritura en memoria (controlado por reloj)
-    always @ (posedge Clock) begin
-        if(i_flush)begin
-            begin
-            // Reset or flush: clear all memory locations
-            for (i = 0; i < 32; i = i + 1)
-                memory[i] <= 'b0;
+                masked_reg_read = !i_sign_flag ?     
+                                                    {{24{reg_read[7]}}    , reg_read[7:0]}  : //unsigned
+                                                    {{24{1'b0}}           , reg_read[7:0]}  ; //signed
             end
-        end 
-        else begin
-        if(Reset)begin
-            for (i = 0; i < 31; i = i + 1) begin
-            memory[i] <= 'b0;
-             end
+            2'b01: begin
+                // half word
+                data2mem = !i_sign_flag ?    {{16{i_data4Mem[15]}}   , i_data4Mem[15:0]}    : //unsigned
+                                             {{16{1'b0}}             , i_data4Mem[15:0]}    ; //signed
 
-
-
-        end
-        if (MemWrite == 1'b1) begin // Verificar señal de escritura activa
-            // Escritura de palabra completa (sw)
-
-            if (ByteSig == 2'b00) begin
- 
-                memory[Address[31:2]] <= WriteData;  
-
+                masked_reg_read = !i_sign_flag ?     
+                                            {{24{reg_read[15]}}    , reg_read[15:0]}        : //unsigned
+                                            {{24{1'b0}}            , reg_read[15:0]}        ; //signed
             end
+            2'b10: begin
+                // word
+                data2mem = i_data4Mem[31:0]                                                 ; //signed
 
-            // Escritura de media palabra (sh)
-            else if (ByteSig == 2'b01) begin
-                if      (Address[1:0] == 2'b00) memory[Address[31:2]][15:00] <= WriteData[15:0]; // Media palabra inferior
-                else if (Address[1:0] == 2'b10) memory[Address[31:2]][31:16] <= WriteData[15:0]; // Media palabra superior
+                masked_reg_read = reg_read                                                  ;
             end
-            
-            // Escritura de byte (sb)
-            else if (ByteSig == 2'b10) begin
-                if      (Address[1:0] == 2'b00) memory[Address[31:2]][07:00] <= WriteData[7:0];  // Byte inferior
-                else if (Address[1:0] == 2'b01) memory[Address[31:2]][15:08] <= WriteData[7:0];  // Segundo byte
-                else if (Address[1:0] == 2'b10) memory[Address[31:2]][23:16] <= WriteData[7:0];  // Tercer byte
-                else if (Address[1:0] == 2'b11) memory[Address[31:2]][31:24] <= WriteData[7:0];  // Byte superior
+            default: begin
+                // ERRORRRRRRRRR
+                data2mem = 0;
             end
-            
-             //   $writememh("Data_memory.mem", memory);
-        end
-    end
+        endcase
     end
 
-
-     // load
-    always @ (*) begin
-        ReadData = 32'b0; // Inicializar dato leído en 0 por defecto
-        
-        if (MemRead == 1'b1) begin // Verificar señal de lectura activa
-            // Lectura de palabra completa (lw)
-            if (ByteSig == 2'b00) begin
-                ReadData = memory[Address[31:2]];
-            //    $display("LOAD en memoria: Direccion = %h, ReadData = %h, ByteSig = %b", Address[31:2], ReadData, ByteSig);
+    always @(posedge clk or negedge i_rst_n) begin
+        if(!i_rst_n) begin
+            // reset
+            o_reg_read  <= 32'b0                                                            ;
+            o_ALUresult <= 32'b0                                                            ;
+            o_reg2write <= 4'b0                                                             ;
+            //ctrl          
+            o_regWrite  <= 1'b0                                                             ;
+            o_mem2reg   <= 1'b0                                                             ;
+        end else begin
+            if(!i_halt) begin
+                o_reg_read  <= masked_reg_read                                              ;
+                o_ALUresult <= i_result                                                     ;
+                o_reg2write <= i_reg2write                                                  ;  
+                //ctrl  
+                o_regWrite  <= i_regWrite                                                   ;
+                o_mem2reg   <= i_mem2reg                                                    ;
             end
             
-            // Lectura de media palabra (lh)
-            else if (ByteSig == 2'b01) begin
-                if      (Address[1:0] == 2'b00) 
-                    ReadData = {{16{memory[Address[31:2]][15]}}, memory[Address[31:2]][15:00]}; // Signo extendido, mitad inferior
-                else if (Address[1:0] == 2'b10) 
-                    ReadData = {{16{memory[Address[31:2]][31]}}, memory[Address[31:2]][31:16]}; // Signo extendido, mitad superior
-            end
-            
-            // Lectura de byte (lb)
-            else if (ByteSig == 2'b10) begin
-                if      (Address[1:0] == 2'b00) 
-                    ReadData = {{24{memory[Address[31:2]][07]}}, memory[Address[31:2]][07:00]}; // Signo extendido, byte inferior
-                else if (Address[1:0] == 2'b01) 
-                    ReadData = {{24{memory[Address[31:2]][15]}}, memory[Address[31:2]][15:08]}; // Signo extendido, segundo byte
-                else if (Address[1:0] == 2'b10) 
-                    ReadData = {{24{memory[Address[31:2]][23]}}, memory[Address[31:2]][23:16]}; // Signo extendido, tercer byte
-                else if (Address[1:0] == 2'b11) 
-                    ReadData = {{24{memory[Address[31:2]][31]}}, memory[Address[31:2]][31:24]}; // Signo extendido, byte superior
-            end
-
-
         end
     end
 
+    assign writeEnable = i_memWrite                                                         ;
+    assign o_data2mem  = data2mem                                                           ;
+    assign o_dataAddr  = i_result[7:0]                                                      ;
+    assign o_memWrite  = i_memWrite                                                         ;
 
-     /// DEBUGGG
-
-    // Bloque generate para mapear la memoria al bus de depuración
-    generate
-        genvar j;
-        for (j = 0; j < 32; j = j + 1) begin : GEN_DEBUG_BUS
-            assign o_bus_debug[(j + 1) * 32 - 1 : j * 32] = memory[j];
-        end
-    endgenerate
-
+    //! data memory
+    RAM #(
+        .NB_DATA(32),   // limita 256 addrs
+        .NB_ADDR(8)     // 8 bits
+    ) Datamemory (
+        .clk        (clk        ),
+        .i_we       (writeEnable),
+        .i_data     (data2mem   ),
+        .i_addr_w   (i_result[7:0]   ),
+        .o_data     (reg_read   )
+    );
 
 endmodule

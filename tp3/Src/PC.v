@@ -1,39 +1,32 @@
-`timescale 1ns / 1ps
+module PC (
+    input   wire                    clk,
+    input   wire                    i_rst_n,
+    input   wire    [32-1:0]  i_addr2jump,
+    input   wire                    i_jump,   // pc <= addr2jump (for jumps)
+    output  reg     [32-1:0]  o_pcounter,
+    output  reg     [32-1:0] o_pcounter4, // Change to wire
+    
+    input   wire                    i_halt,
+    input   wire                    i_stall
+);
 
-// almacena y actualiza la dirección de la instrucción
-// actual basada en las señales de entrada.
+    // o_pcounter4 is always o_pcounter + 4
+    //assign o_pcounter4 = o_pcounter + 4;
 
-module PC(PC_In, PCResult, Enable, Reset, Clock,i_halt,i_enable, i_flush);
-
-//module PC(PC_In, PCResult, Enable, Reset, Clock,stall);
-    // Entradas
-    input [31:0] PC_In; // Dirección de entrada al contador de programa
-    input Reset;        // Señal de reinicio (Reset)
-    input Clock;        // Señal de reloj (Clock)
-    input Enable;       // Señal de habilitación (Enable)
-    input i_halt;
-    input i_enable;
-    input i_flush;
-
-    // Salidas
-    output reg [31:0] PCResult; // Dirección actual del contador de programa
-
-    // Valor límite para bloquear cambios en PCResult
-    localparam [31:0] LIMIT = 32'h000007FF; // 000111111111 en hexadecimal
-
-    // Bloque always sensitivo al flanco positivo del reloj o la señal de reinicio
-       always @(posedge Clock or posedge Reset) begin
-        if (Reset || i_flush) begin
-            PCResult <= 32'h00000000;
-        end else if (Enable && !i_halt  && i_enable) begin
-                PCResult <= PC_In;
-      
-
+    always @(posedge clk or negedge i_rst_n) begin
+        if (!i_rst_n) begin
+            o_pcounter <= 32'b0;        // Reset PC to 0
+            o_pcounter4 <=4;
+        end
+        else if (!i_halt && !i_stall) begin
+            if (i_jump) begin
+                // Jump to address in i_addr2jump
+                o_pcounter <= i_addr2jump;
+            end else begin
+                // Normal increment by 4
+                o_pcounter <= o_pcounter + 4;
+                o_pcounter4 <= o_pcounter + 8;
+            end
         end
     end
-
-    //NOTA: La memoria de instrucciones, funciona como un arreglo ciclico, apenas se termine de recorrer
-    // comienza de nuevo
-    
-
 endmodule

@@ -1,124 +1,56 @@
-`timescale 1ns / 1ps
-
-// Módulo IFStage: Implementa la etapa de Instruction Fetch (IF) de un procesador.
-module IF_Stage(
-    Clock, Reset,               // Señales del sistema
-    PCWrite,                   // Control de escritura del PC (señal de control de riesgos)
-    Instruction,BrachAddress, PCAdder_Out,  PCResult,JumpControl, JumpAddress,// Salidas del módulo
-    isBranch,isJump, BranchFlagID,
-    i_clear_mem,
-    i_instruction,
-    i_write_mem,
-    o_full_mem,
-    o_empty_mem,
-    i_halt,
-    i_enable,
-    i_flush,
-    
-    ScheduledPC_LSB,
-    SelMUXPC
-    );    
-
-
-
-    // Entradas del sistema
-    input Clock, Reset; // Señales de reloj y reset del sistema
-    
-    // Señales de control de riesgos
-    input PCWrite; // Habilita o deshabilita la escritura en el PC, utilizada para manejar riesgos
-    
-    // Salidas
-    output wire [31:0] Instruction;    // Instrucción obtenida de la memoria de instrucciones
-    output wire [31:0] PCAdder_Out;    // Resultado del PC + 4 (dirección de la siguiente instrucción)
-    output wire [31:0] PCResult;       // Dirección actual del PC
-    input [31:0] JumpAddress;
-    input JumpControl;
-    input [31:0] BrachAddress;
-
-    input BranchFlagID;
-
-
-    output wire isBranch;     
-    output wire isJump;       
-
-
-    //// DEBUG UNIT
-    input i_clear_mem;
-    input wire [31:0] i_instruction; // instruction to write
-    input wire i_write_mem; // write signal
-    output wire o_full_mem; // memory full
-    output wire o_empty_mem; // memory empty
-    input i_halt;
-    input i_enable;
-    input i_flush; 
-
-    output [7:0] ScheduledPC_LSB; // Nueva salida con los 8 bits menos significativos
-    output [1:0] SelMUXPC;
-    ///
-
-
-    
-    
-    // Cables internos
-    wire [31:0] PCInput;           // Entrada al PC (sin usar en este módulo)
-    wire [31:0] ScheduledPC;       // Dirección programada del PC (sin usar en este módulo)
-    wire [31:0] TargetOffset;      // Desplazamiento objetivo (sin usar en este módulo)
-    wire [31:0] TargetAddress;     // Dirección objetivo (sin usar en este módulo)
-    wire [31:0] ShiftedOffset;     // Desplazamiento desplazado (sin usar en este módulo) 
-    wire stall;
-    // Instancia del módulo PC (Program Counter)
-    // Mantiene la dirección actual de la instrucción a ejecutar
-    PC PC(
-        .i_flush(i_flush),
-        .i_halt(i_halt),
-        .i_enable(i_enable),
-        .PC_In(ScheduledPC),    // Dirección de la siguiente instrucción (PC + 4)
-        .PCResult(PCResult),    // Dirección actual del PC
-        .Enable(PCWrite),          // Habilitación constante a 1 lógico
-        .Reset(Reset),          // Señal de reinicio
-        .Clock(Clock)           // Señal de reloj
-    );
-                           
-    // Instancia del módulo InstructionMemory
-    // Obtiene la instrucción correspondiente a la dirección actual del PC
-     InstructionMemory InstructionMemory(
-        .Address(PCResult),     // Dirección de memoria (PC actual)
-        .Instruction(Instruction), // Instrucción obtenida de la memoria
-        .Branch(isBranch),
-        .Jump(isJump),
-        .Clock(Clock),           // Señal de reloj
-        .Reset(Reset),          // Señal de reinicio
-        .i_instruction (i_instruction),        // Input instruction
-        .i_clear (i_clear_mem),                // Clear memory signal
-        .o_full_mem (o_full_mem),              // Indicates if the memory is full
-        .o_empty_mem (o_empty_mem),            // Indicates if the memory is empty
-        .i_inst_write (i_write_mem)           // Signal to write instruction to memory
-    );
-    
-    // Instancia del módulo Adder
-    // Calcula la dirección de la siguiente instrucción (PC + 4)
-    Adder PCAdder(
-        .A(PCResult),           // Dirección actual del PC
-        .B(32'd4),              // Constante 4 (tamaño de instrucción en bytes)
-        .AddResult(PCAdder_Out) // Resultado del sumador (PC + 4)
+module IF_Stage
+(
+    input wire          clk             ,
+    input wire          i_rst_n         ,   
+    input wire          i_jump          ,  //! 1= jump asserted | 0= else
+    input wire          i_we            ,  //! Write enable for memory initialization only
+    input wire [31:0]   i_addr2jump     ,  //! Address for jump
+    input wire [31:0]   i_instr_data    ,  //! Data to write if i_we is high
+    input wire [31:0]   i_inst_addr     ,  //! address to write instructions
+    input wire          i_halt          ,  //! halt -> enable
+    input wire          i_stall         ,  //! stall
+    output wire [31:0]  o_pcounter4     ,  //! program counter + 4
+    output reg  [31:0]  o_instruction   ,  //! Instruction read
+    output wire [31:0]  o_pcounter         //! program counter
+);
+    // wire [31:0] o_pcounter;             // Current program counter
+    wire [31:0] instruction_data;     // Data fetched from memory
+    wire [7:0]  instruction_addr;
+    //! Instantiate program_counter module
+    PC pc1 (
+        .clk        (clk),
+        .i_rst_n    (i_rst_n),
+        .i_addr2jump(i_addr2jump),
+        .i_jump     (i_jump),
+        .o_pcounter (o_pcounter),
+        .o_pcounter4(o_pcounter4),
+        .i_halt     (i_halt),
+        .i_stall    (i_stall)
     );
 
-    
+    //! Instantiate memory module for instruction storage and fetching
+    RAM #(
+        .NB_DATA(32),
+        .NB_ADDR(8)
+    ) InstructionMemory (
+        .clk        (clk),
+       // .i_rst_n    (i_rst_n),
+        .i_we       (i_we),               // Controlled externally, should be 0 during fetch phase
+        .i_data     (i_instr_data),
+        .i_addr_w   (instruction_addr),      // Address from the program counter
+        .o_data     (instruction_data)
+    );
 
+    //! Update the output instruction on positive clock edge
+    always @(posedge clk) begin
+        if(!i_rst_n) begin
+            o_instruction <= 32'b0;      // Reset output instruction
+        end
+        else if (!i_halt && !i_stall) begin
+            o_instruction <= instruction_data; // Load instruction from memory
+        end
+    end
 
-    //MODIFY PC
+    assign instruction_addr = i_we ? i_inst_addr[7:0] : o_pcounter [7:0];
 
-    Mux3to1            PCSrcMux(.out(ScheduledPC), 
-                                 .inA(PCAdder_Out),     // Nothing
-                                 .inB(JumpAddress),     // Jump
-                                 .inC(BrachAddress),
-                                 .sel({BranchFlagID, JumpControl}));
-
-
-
-// Asignación de los 8 bits menos significativos
-
-    assign ScheduledPC_LSB = ScheduledPC[7:0];
-    assign SelMUXPC = {BranchFlagID, JumpControl};
-    
 endmodule

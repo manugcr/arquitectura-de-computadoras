@@ -1,208 +1,324 @@
-`timescale 1ns / 1ps
+module Control
+#( 
+    parameter NB_OP = 6
 
-module Control(Instruction,
-                  ALUBMux, RegDst, ALUOp, MemWrite,JumpMuxSel, MemRead, ByteSig, RegWrite, MemToReg, 
-                  BranchComp, LaMux);
-    
-          
-    input [31:0] Instruction;
-    
+)(
+    input wire clk,
+    input wire i_rst_n,
+    input wire [NB_OP-1:0] i_opcode       , //[31:26] instruction
+    input wire [NB_OP-1:0] i_funct        , // for R-type [5:0] field
 
- //   output reg       Flush_IF;
-    output reg [2:0] BranchComp;
-    output reg       JumpMuxSel;
-    output reg       ALUBMux, LaMux;
-    output reg [1:0] RegDst;
-    output reg [5:0] ALUOp;
-    output reg       MemWrite, MemRead;
-    output reg [1:0] ByteSig;   
-    output reg       RegWrite;
-    output reg [1:0] MemToReg;
-    
-    
-    localparam [5:0] OP_ZERO        = 6'b000000,   // 
-                     OP_J           = 6'b000010,   // J
-                     OP_JAL         = 6'b000011,   // JAL
-                     OP_LW          = 6'b100011,   // LW
-                     OP_SW          = 6'b101011,   // SW
-                     OP_ADDI        = 6'b001000,   // ADDI
-                     OP_ADDIU       = 6'b001001,   // ADDIU
-                     OP_LHU         = 6'b100101,                    
-                     OP_LBU         = 6'b100100,                    
-                     OP_LWU         = 6'b100111,                    
-                     OP_BEQ         = 6'b000100,   // BEQ
-                     OP_BNE         = 6'b000101,   // BNE
-                     OP_SB          = 6'b101000,   // SB
-                     OP_SH          = 6'b101001,   // SH
-                     OP_ORI         = 6'b001101,   // ORI
-                     OP_XORI        = 6'b001110,   // XORI
-                     OP_LUI         = 6'b001111,   // LUI
-                     OP_LB          = 6'b100000,   // LB
-                     OP_LH          = 6'b100001,   // LH
-                     OP_ANDI        = 6'b001100,   // ANDI
-                     OP_SLTI        = 6'b001010,   // SLTI
-                     OP_SLTIU       = 6'b001011;   // SLTUI
-    
-    localparam [5:0] FUNC_JR        =  6'b001000,  // JR 
-                     FUNC_JALR      =  6'b001001,  // JALR      
-                     FUNC_SLL       =  6'b000000,  // SLL
-                     FUNC_SRL       =  6'b000010,  // SRL 
-                     FUNC_SRLV      =  6'b000110,  // SRLV 
-                     FUNC_SRA       =  6'b000011,  //SRA
-                     FUNC_SRAV      =  6'b000111,  // SRAV 
-                     FUNC_SLLV      =  6'b000100;  // SLLV         //////////// VER
 
-    localparam [5:0] ALUOP_ZERO     = 6'b000000, // ZERO
-                     ALUOP_ADDIU    = 6'b000001, // ADDIU
-                     ALUOP_ADDI     = 6'b000010, // ADDI
-                     ALUOP_LUI      = 6'b000100, // LUI
-                     ALUOP_BEQ      = 6'b000110,       // BEQ
-                     ALUOP_BNE      = 6'b000111,       // BNE
-                     ALUOP_ANDI     = 6'b001100, // ANDI
-                     ALUOP_ORI      = 6'b001101, // ORI
-                     ALUOP_JUMP     = 6'b001011, // J, JR, JAL
-                     ALUOP_XORI     = 6'b001110, // XORI
-                     ALUOP_XOR      = 6'b100110,  // XOR AGREGADOOOOOOOOOOO
-                     ALUOP_SLTI     = 6'b010000, // SLTI
-                     ALUOP_SLTIU    = 6'b010001, // SLTIU
-                     ALUOP_SRL      = 6'b010010, // SRL
-                     ALUOP_SRLV     = 6'b010100; // SRLV
-           
-    localparam [2:0] BRANCH_BEQ  = 3'd1,
-                     BRANCH_BNE  = 3'd2;     
-      
 
-    reg Bit21, Bit16, Bit6;
-    reg [5:0] Func, Shamt, OpCode;
-
-    //--------------------------------
-    // Controller Logic
-    //--------------------------------
-
-    //ControlSignal = 32'b0 -> inicial
+    //output
+    output wire         o_jump      , //! Controls whether a jump should be performed
+    output wire [1:0]   o_aluSrc    , 
+    output wire [1:0]   o_aluOp     , //! ALU operation to be performed (00: ADD | 01: OR | 10: SUB | 11: SLT)
+    output wire         o_branch    ,
+    output wire         o_regDst    , //! dst reg for the wb stage (if 1 then rt if 0 then rd)
+    output wire         o_mem2Reg   , //! ctrl src of data to wb to register_file (1: Memory data is written to register file)
+    output wire         o_regWrite  , //! write enable for register file (1: Write to register file is enabled)
+    output wire         o_memRead   , //! enable reading from memory (1: Memory read is enabled)
+    output wire         o_memWrite  , //! enable writinh to memory (1: Memory write is enabled (used for sw))
+    output wire [1:0]   o_width     , //! width of the data to be written to memory. 10 = word | 01 = half word | 00 = byte
+    output wire         o_sign_flag , //! sign flag for the load/store instructions || 0-Signed | 1-Unsigned
+    output wire         o_immediate   //! immediate flag for the immediate instructions || 0-Register | 1-Immediate
+);  
     
+    localparam [5:0]
+                    R_TYPE      = 6'b000000,
+                    LW_TYPE     = 6'b100011,
+                    SW_TYPE     = 6'b101011,
+                    BEQ_TYPE    = 6'b000100,
+                    ADDI_TYPE   = 6'b001000,
+                    ADDIU_TYPE  = 6'b001001,//
+                    J_TYPE      = 6'b000010,
+                    JAL_TYPE    = 6'b000011,
+                    LHU_TYPE    = 6'b100101,
+                    LBU_TYPE    = 6'b100100,
+                    LWU_TYPE    = 6'b100111,
+                    SB_TYPE     = 6'b101000,
+                    SH_TYPE     = 6'b101001,
+                    ORI_TYPE    = 6'b001101,
+                    XORI_TYPE   = 6'b001110,
+                    LUI_TYPE    = 6'b001111,
+                    LB_TYPE     = 6'b100000,
+                    LH_TYPE     = 6'b100001,
+                    BNE_TYPE    = 6'b000101,
+                    ANDI_TYPE   = 6'b001100,
+                    STLI_TYPE   = 6'b001010,
+                    STLIU_TYPE  = 6'b001011,//
+                    JR_TYPE     = 6'b001000,
+                    JARL_TYPE   = 6'b001001;
+
+    reg r_jump, r_ALUSrc, r_branch, r_regDst, r_mem2Reg, r_regWrite, r_memRead, r_memWrite, r_immediate, r_sign_flag;
+    reg [1:0] r_aluOP;
+    reg [1:0] r_width;
+
     always @(*) begin
-   
-     //   Flush_IF    = 1'b0;
-        Func   = Instruction[5:0];
-        Shamt  = Instruction[10:6];
-        Bit6   = Instruction[6];
-        Bit16  = Instruction[16];
-        Bit21  = Instruction[21];
-        OpCode = Instruction[31:26];
+        r_immediate = 1'b0;
+        r_regDst    = 1'b0                                                      ; 
+        r_ALUSrc    = 1'b0                                                      ; 
+        r_mem2Reg   = 1'b0                                                      ; 
+        r_regWrite  = 1'b0                                                      ;
+        r_memRead   = 1'b0                                                      ;
+        r_memWrite  = 1'b0                                                      ;
+        r_branch    = 1'b0                                                      ;
+        r_jump      = 1'b0                                                      ;
+        r_aluOP     = 2'b00                                                     ; 
+        r_width     = 2'b11                                                     ;
+        r_sign_flag = 1'b0                                                      ;
 
-    
+        case (i_opcode)
 
-            //valores por defecto o NOP
-            JumpMuxSel  = 1'b0; 
-            ALUBMux     = 1'b0;
-            BranchComp  = 3'b0;
-            RegDst      = 2'b00;
-            ALUOp       = ALUOP_ZERO;
-            ByteSig     = 2'b00;
-            MemWrite    = 1'b0;
-            MemRead     = 1'b0;
-            RegWrite    = 1'b0;
-            MemToReg    = 2'b00;
-            LaMux       = 1'b0;
+            R_TYPE: begin
+                r_regDst    = 1'b0                                              ;
+                r_ALUSrc    = 1'b0                                              ;
+                r_mem2Reg   = 1'b0                          ;
+                r_regWrite  = 1'b1                                              ; //always asserted except for jr type
+                r_memRead   = 1'b0                                              ;
+                r_memWrite  = 1'b0                                              ;
+                r_branch    = 1'b0                                              ;
+                r_jump      = 1'b0                                              ;
+                r_aluOP     =  2'b10                                            ;
 
-            case(OpCode)
-            
-
-                OP_J, OP_JAL: begin
-                        ALUOp       = ALUOP_JUMP;
-                        if (OpCode == OP_JAL) begin
-                            RegDst   = 2'b10;
-                            RegWrite = 1'b1;
-                            MemToReg = 2'b01;
-                        end
-                            end
-
-                  OP_BEQ, OP_BNE: begin
-                        BranchComp = (OpCode == OP_BEQ) ? BRANCH_BEQ : BRANCH_BNE;
-                        ALUOp      = (OpCode == OP_BEQ) ? ALUOP_BEQ : ALUOP_BNE;
-                    end 
-
-
-                OP_ZERO: begin
-            if (Func == FUNC_JR || Func == FUNC_JALR) begin
-                JumpMuxSel  = 1'b1;
-                RegWrite    = (Func == FUNC_JALR);
-                RegDst      = (Func == FUNC_JALR) ? 2'b01 : 2'b00;
-                MemToReg    = (Func == FUNC_JALR) ? 2'b01 : 2'b00;
-                ALUOp       = ALUOP_JUMP;
-            end else begin
-                RegWrite = 1'b1;
-                RegDst   = 2'b01;
-                MemToReg = 2'b10;
-                ALUOp    = (Func == FUNC_SRL && ~Bit21) ? ALUOP_SRL :
-                           (Func == FUNC_SRLV && ~Bit6) ? ALUOP_SRLV : ALUOP_ZERO;
-            end
-        end
-                
-                OP_ADDIU, OP_ADDI: begin
-                        ALUBMux  = 1'b1;
-                        RegWrite = 1'b1;
-                        MemToReg = 2'b10;
-                        ALUOp    = (OpCode == OP_ADDIU) ? ALUOP_ADDIU : ALUOP_ADDI;
-                    end
-                
-
-               OP_LW, OP_LHU, OP_LBU, OP_LWU, OP_LH, OP_LB: begin
-                    ALUBMux  = 1'b1;
-                    MemRead  = 1'b1;
-                    RegWrite = 1'b1;
-                    ByteSig  = (OpCode == OP_LHU || OpCode == OP_LH) ? 2'b01 :
-                            (OpCode == OP_LBU || OpCode == OP_LB) ? 2'b10 : 2'b00;
-                    ALUOp    = ALUOP_ADDI;
+                if((i_funct == JARL_TYPE)) begin
+                    r_aluOP = 2'b00;
                 end
-                
-                
-                OP_SW, OP_SB, OP_SH: begin
-                    ALUBMux  = 1'b1;
-                    MemWrite = 1'b1;
-                    ByteSig  = (OpCode == OP_SH) ? 2'b01 : (OpCode == OP_SB) ? 2'b10 : 2'b00;
-                    ALUOp    = ALUOP_ADDI;
+                if((i_funct == JR_TYPE) || (i_funct == JARL_TYPE)) r_jump = 1'b1;
+                if(i_funct == JR_TYPE) begin 
+                    r_regWrite = 1'b0                                           ;
+                    r_mem2Reg  = 1'b1                                           ;
                 end
-                
-                 OP_LUI: begin
-                    ALUBMux  = 1'b1;
-                    RegWrite = 1'b1;
-                    MemToReg = 2'b10;
-                    ALUOp    = ALUOP_LUI;
-                end
-
-
-                //------------
-                // Logical
-                //------------
-               
-               OP_ANDI, OP_ORI, OP_XORI: begin
-                ALUBMux  = 1'b1;
-                RegWrite = 1'b1;
-                MemToReg = 2'b10;
-                ALUOp    = (OpCode == OP_ANDI) ? ALUOP_ANDI :
-                        (OpCode == OP_ORI) ? ALUOP_ORI :
-                        ALUOP_XORI;
             end
-                
-             
-                
-                 OP_SLTI, OP_SLTIU: begin
-                ALUBMux  = 1'b1;
-                RegWrite = 1'b1;
-                MemToReg = 2'b10;
-                ALUOp    = (OpCode == OP_SLTI) ? ALUOP_SLTI : ALUOP_SLTIU;
+            LW_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b1                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_memRead   = 1'b1                                              ;
+                r_memWrite  = 1'b0                                              ;
+                r_branch    = 1'b0                                              ;
+                r_jump      = 1'b0                                              ;
+                r_aluOP     = 2'b00                                             ;
+                r_width     = 2'b10                                             ;   // word
+                r_sign_flag = 1'b0                                              ;   // signed
+                r_immediate = 1'b1                                              ;
+            end                                     
+            SW_TYPE: begin                                      
+                r_regDst    = 1'b1                                              ; //x
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b0                                              ; //x
+                r_regWrite  = 1'b0                                              ;
+                r_memRead   = 1'b0                                              ;
+                r_memWrite  = 1'b1                                              ;
+                r_branch    = 1'b0                                              ;
+                r_jump      = 1'b0                                              ;
+                r_aluOP     = 2'b00                                             ;
+                r_width     = 2'b10                                             ;   // word
+                r_sign_flag = 1'b0                                              ;   // signed
+                r_immediate = 1'b1                                              ;
+            end                                     
+            BEQ_TYPE: begin                                     
+                r_regDst    = 1'b0                                              ; //x
+                r_ALUSrc    = 1'b0                                              ; //--
+                r_mem2Reg   = 1'b0                                              ; //x
+                r_regWrite  = 1'b0                                              ;
+                r_memRead   = 1'b0                                              ;
+                r_memWrite  = 1'b0                                              ;
+                r_branch    = 1'b1                                              ; //--
+                r_jump      = 1'b0                                              ;
+                r_aluOP     = 2'b01                                             ; //--
+                r_immediate = 1'b1                                              ;
+            end                                     
+            BNE_TYPE: begin //                                      
+                r_ALUSrc    = 1'b0                                              ;
+                r_branch    = 1'b1                                              ;
+                r_aluOP     = 2'b01                                             ;
+                r_immediate = 1'b1                                              ;
             end
-                
-            
+            ADDI_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b0                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_memRead   = 1'b0                                              ;
+                r_memWrite  = 1'b0                                              ;
+                r_branch    = 1'b0                                              ;
+                r_jump      = 1'b0                                              ;
+                r_aluOP     = 2'b11                                             ;
+                r_immediate = 1'b1                                              ;
+            end
+            ORI_TYPE: begin // 
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b0                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_aluOP     = 2'b11                                             ;  // Logical OR
+                r_immediate = 1'b1                                              ;
+            end
+            ANDI_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b0                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_aluOP     = 2'b11                                             ;  // Logical OR
+                r_immediate = 1'b1                                              ;
 
-                default: ; // Mantiene valores por defecto
-                
-            endcase
-            
-        end
+            end
+            ADDIU_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b0                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_memRead   = 1'b0                                              ;
+                r_memWrite  = 1'b0                                              ;
+                r_branch    = 1'b0                                              ;
+                r_jump      = 1'b0                                              ;
+                r_aluOP     = 2'b11                                             ;
+                r_immediate = 1'b1                                              ;
+                r_sign_flag = 1'b1                                              ;
+            end
+            STLIU_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b0                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_aluOP     = 2'b11                                             ;  // Set Less Than Immediate
+                r_immediate = 1'b1                                              ;
+                r_sign_flag = 1'b1                                              ;
+            end
+            XORI_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b0                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_aluOP     = 2'b11                                             ;  // Logical XOR
+                r_immediate = 1'b1                                              ;
+            end
 
+            LUI_TYPE: begin 
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b0                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_immediate = 1'b1                                              ;  // Load Upper Immediate
+                r_sign_flag = 1'b1                                              ;
+                r_aluOP     = 2'b11                                             ;
+            end
 
-            
+            STLI_TYPE: begin //
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b0                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_aluOP     = 2'b11                                             ;  // Set Less Than Immediate
+                r_immediate = 1'b1                                              ;
+
+            end
+            JAL_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_jump      = 1'b1                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_aluOP     = 2'b00                                             ;
+                r_regDst    = 1'b1                                              ;
+            end
+
+            LB_TYPE: begin
+                r_regDst    = 1'b1                                              ; 
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b1                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_memRead   = 1'b1                                              ;
+                r_width     = 2'b00                                             ;  // Byte
+                r_sign_flag = 1'b0                                              ;
+                r_immediate = 1'b1                                              ;
+            end
+
+            LH_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b1                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_memRead   = 1'b1                                              ;
+                r_width     = 2'b01                                             ;  // Half Word
+                r_sign_flag = 1'b0                                              ;
+                r_immediate = 1'b1                                              ;
+            end
+
+            LBU_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b1                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_memRead   = 1'b1                                              ;
+                r_width     = 2'b00                                             ;  // Byte (Unsigned)
+                r_sign_flag = 1'b1                                              ;
+                r_immediate = 1'b1                                              ;
+            end
+
+            LHU_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b1                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_memRead   = 1'b1                                              ;
+                r_width     = 2'b01                                             ;  // Half Word (Unsigned)
+                r_sign_flag = 1'b1                                              ;
+                r_immediate = 1'b1                                              ;
+            end
+
+            LWU_TYPE: begin
+                r_regDst    = 1'b1                                              ;
+                r_ALUSrc    = 1'b1                                              ;
+                r_mem2Reg   = 1'b1                                              ;
+                r_regWrite  = 1'b1                                              ;
+                r_memRead   = 1'b1                                              ;
+                r_width     = 2'b10                                             ;  // Word (Unsigned)
+                r_sign_flag = 1'b1                                              ;
+                r_immediate = 1'b1                                              ;
+            end
+
+            SB_TYPE: begin // rs para mem access - rt dirección del dato a guardar
+                r_ALUSrc    = 1'b1                                              ;
+                r_memWrite  = 1'b1                                              ;
+                r_width     = 2'b00                                             ;  // Byte
+                r_sign_flag = 1'b0                                              ;
+                r_immediate = 1'b1                                              ;
+            end                                             
+
+            SH_TYPE: begin                                              
+                r_ALUSrc    = 1'b1                                              ;
+                r_memWrite  = 1'b1                                              ;
+                r_width     = 2'b01                                             ;  // Half Word
+                r_sign_flag = 1'b0                                              ;
+                r_immediate = 1'b1                                              ;
+            end
+            J_TYPE: begin
+                r_regDst    = 1'b0                                              ; //x
+                r_ALUSrc    = 1'b0                                              ; //x
+                r_mem2Reg   = 1'b0                                              ; //x
+                r_regWrite  = 1'b0                                              ;
+                r_memRead   = 1'b0                                              ;
+                r_memWrite  = 1'b0                                              ;
+                r_branch    = 1'b0                                              ;
+                r_jump      = 1'b1                                              ;
+                r_aluOP     = 2'b00                                             ; //x
+            end
+
+        endcase
+    end
+
+    assign o_aluOp         = r_aluOP                                            ;
+    assign o_aluSrc        = r_ALUSrc                                           ;
+    assign o_branch        = r_branch                                           ;
+    assign o_immediate     = r_immediate                                        ;
+    assign o_jump          = r_jump                                             ;
+    assign o_mem2Reg       = r_mem2Reg                                          ;
+    assign o_memRead       = r_memRead                                          ;
+    assign o_memWrite      = r_memWrite                                         ;
+    assign o_regDst        = r_regDst                                           ;
+    assign o_regWrite      = r_regWrite                                         ;
+    assign o_width         = r_width                                            ;
+    assign o_sign_flag     = r_sign_flag                                        ;
 endmodule

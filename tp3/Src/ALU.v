@@ -1,89 +1,89 @@
-`timescale 1ns / 1ps
+module ALU
+#(
+    parameter NB_DATA   = 32, //! BITs de datos y LEDs
+    parameter NB_OP     = 6  //! BITs de operaciones
+)
+(
+    input   wire    signed [NB_DATA-1:0]   i_datoA                                              , //! Dato de entrada
+    input   wire    signed [NB_DATA-1:0]   i_datoB                                              , //! Dato de entrada
+    input   wire           [NB_OP - 1:0]   i_op                                          , //! Operación a realizar    
+    input   wire    signed [ 4       :0]   i_shamt                                              , //! Shift amount
+    output  wire    signed [NB_DATA-1:0]   o_resultALU                                                 //! output  
+);
 
-/*
- 'ALUResult' genera el resultado correspondiente según las entradas de 32 bits, 'A' y 'B'.
- La bandera 'ZERO' se activa cuando 'ALUResult' es igual a '0'.
- La señal 'ALUControl' determina la función de la ALU. La cantidad de bits de
- 'ALUControl' depende del número de operaciones necesarias para soportar. */
-
-
-module ALU(ALUControl, A, B, Shamt, ALUResult, Zero, RegWrite, RegWrite_Out);
-
-    // Definición de entradas
-    input        RegWrite;                // Señal de escritura en registro
-    input [5:0]  ALUControl;              // Bits de control para las operaciones de la ALU
-    input [4:0]  Shamt;                   // Cantidad de desplazamiento
-
-    input [31:0] A, B;                    // Entradas de datos A y B
-    output reg [31:0] ALUResult;          // Resultado de la ALU
-    output reg Zero;                      // Bandera que indica si el resultado es cero
-    output reg RegWrite_Out;              // Salida de escritura en registro
+    reg signed [NB_DATA-1:0] result                                                             ; //! Resultado de la operación
+    reg        [NB_DATA-1:0] result_U                                                           ; //! Resultado de la operación unsigned
+    wire                     is_unsigned                                                        ; //! Señal para saber si es unsigned
+    wire       [NB_DATA-1:0] dato_A_u = i_datoA                                                 ; //! Dato A unsigned
+    wire       [NB_DATA-1:0] dato_B_u = i_datoB                                                 ; //! Dato B unsigned
     
-    // Variables internas
-  //  reg RegWriteClear;                    // Bandera para limpiar escritura
-   // reg [31:0] temp;                      // Registro temporal
-
-    // Definición de operaciones mediante constantes locales
-    localparam [5:0] ADD    = 6'd00,      // Suma (ADD, ADDI)
-                     ADDU   = 6'd01,      // Suma sin signo (ADDU, ADDIU)
-                     SUB    = 6'd02,      // Resta (SUB)
-                     BEQ    = 6'd09,      // Rama si es igual (BEQ)
-                     BNE    = 6'd10,      // Rama si es distinto (BNE)
-                     JUMP   = 6'd14,      // Salto (J, JAL, JR)
-                     SRAV   = 6'd15,      // Desplazamiento aritmético a la derecha variable
-                     LUI    = 6'd17,      // Cargar inmediato superior
-                     AND    = 6'd18,      // Operación AND
-                     OR     = 6'd19,      // Operación OR
-                     NOR    = 6'd20,      // Operación NOR
-                     XOR    = 6'd21,      // Operación XOR
-                     SLL    = 6'd23,      // Desplazamiento lógico a la izquierda
-                     SRL    = 6'd24,      // Desplazamiento lógico a la derecha
-                     SRA    = 6'd28,      // Desplazamiento aritmético a la derecha
-                     SLT    = 6'd30,      // Comparación menor que (signed)
-                     SLTU   = 6'd31,      // Comparación menor que (unsigned)
-                     SLLV   = 6'd36,      // Desplazamiento lógico a la izquierda variable
-                     SRLV   = 6'd37,      // Desplazamiento lógico a la derecha variable
-                     SUBU   = 6'd45;      // Resta (SUBU)
-
+    localparam [NB_OP-1:0] //! Operation cases
+        IDLE_OP = 6'b111111                                                                     ,  
+        ADD_OP  = 6'b100000                                                                     , //! R-type add operation
+        SUB_OP  = 6'b100010                                                                     , //! R-type sub operation
+        SLL_OP  = 6'b000000                                                                     , //! R-type sll operation
+        SRL_OP  = 6'b000010                                                                     , //! R-type srl operation
+        SRA_OP  = 6'b000011                                                                     , //! R-type sra operation
+        SLLV_OP = 6'b000100                                                                     , //! R-type sllv operation
+        SRLV_OP = 6'b000110                                                                     , //! R-type srlv operation
+        SRAV_OP = 6'b000111                                                                     , //! R-type srav operation
+        ADDU_OP = 6'b100001                                                                     , //! R-type addu operation 
+        SUBU_OP = 6'b100011                                                                     , //! R-type subu operation
+        AND_OP  = 6'b100100                                                                     , //! R-type and operation  
+        OR_OP   = 6'b100101                                                                     , //! R-type or operation
+        XOR_OP  = 6'b100110                                                                     , //! R-type xor operation
+        NOR_OP  = 6'b100111                                                                     , //! R-type nor operation
+        SLT_OP  = 6'b101010                                                                     , //! R-type slt operation
+        SLTU_OP = 6'b101011                                                                     , //! R-type sltu operation
     
-    
-    always @ (*) begin
+        ADDI_OP  = 6'b001000                                                                    , //! I-type add operation
+        ADDIU_OP = 6'b001001                                                                    , //! I-type addiu operation
+        ANDI_OP  = 6'b001100                                                                    , //! I-type and operation
+        ORI_OP   = 6'b001101                                                                    , //! I-type or operation
+        XORI_OP  = 6'b001110                                                                    , //! I-type xor operation
+        LUI_OP   = 6'b001111                                                                    , //! I-type lui operation
+        SLTI_OP  = 6'b001010                                                                    , //! I-type slti operation
+        SLTIU_OP = 6'b001011                                                                    ; //! I-type sltiu operation
 
-        ALUResult     =  32'd0;
-        Zero          =  1'b0;
-     //   RegWriteClear =  1'b0;
-     //    temp          =  32'd0;
-        
-        case (ALUControl)
-            ADD  : ALUResult =  $signed(A) + $signed(B);            // add
-            ADDU : ALUResult =  A + B;                              // add unsigned
-            SUB  : ALUResult =  $signed(A) - $signed(B);            // sub
-            SUBU : ALUResult =  A - B;                              // subU      
-            LUI  : ALUResult =  B << 16;                            // lui
-            AND  : ALUResult =  A & B;                              // and   
-            OR   : ALUResult =  A | B;                              // or
-            NOR  : ALUResult =  ~(A | B);                           // nor 
-            XOR  : ALUResult =  A ^ B;                              // xor
-            SLL  : ALUResult =  B << Shamt;                         // sll
-            SLLV : ALUResult =  B << A;                             // sllv
-            SRL  : ALUResult =  B >> Shamt;                         // srl
-            SRLV : ALUResult =  B >> A;                             // srlv
-            SRA  : ALUResult[31:0] =  $signed(B) >>> Shamt;         // sra   
-            SRAV : ALUResult =  $signed(B) >>> A;                   // srav
-            SLT  : ALUResult =  ($signed(A) < $signed(B));          // slt
-            SLTU : ALUResult =  (A < B) ;                           // sltu
-            
+
+    always @(*) begin
+        result = 0;
+        result_U = 0;
+        case(i_op)
+            ADD_OP:   result   = i_datoA + i_datoB                                                  ;
+            SUB_OP:   result   = i_datoA - i_datoB                                                  ;
+            SLL_OP:   result   = i_datoB << i_shamt                                                 ;
+            SRL_OP:   result   = i_datoB >> i_shamt                                                 ;
+            SRA_OP:   result   = i_datoB >>> i_shamt                                                ;      
+            SLLV_OP:  result   = i_datoB << i_datoA                                                 ;      
+            SRLV_OP:  result   = i_datoB >> i_datoA                                                 ;      
+            SRAV_OP:  result   = i_datoB >>> i_datoA                                                ;
+            ADDU_OP:  result_U = dato_A_u + dato_B_u                                                ;
+            SUBU_OP:  result_U = dato_A_u - dato_B_u                                                ;
+            AND_OP:   result   = i_datoA & i_datoB                                                  ;
+            OR_OP:    result   = i_datoA | i_datoB                                                  ;
+            XOR_OP:   result   = i_datoA ^ i_datoB                                                  ;
+            NOR_OP:   result   = ~(i_datoA | i_datoB)                                               ;        
+            SLT_OP:   result   = (i_datoA < i_datoB) ? 1 : 0                                        ;
+            SLTU_OP:  result_U = (dato_A_u < dato_B_u) ? 1 : 0                                      ;
+            ADDI_OP:  result   = i_datoA + i_datoB                                                  ;
+            ADDIU_OP: result_U = dato_A_u + dato_B_u                                                ;
+            ANDI_OP:  result   = i_datoA & i_datoB                                                  ;
+            ORI_OP:   result   = i_datoA | i_datoB                                                  ;
+            XORI_OP:  result   = i_datoA ^ i_datoB                                                  ;
+            LUI_OP:   result   = i_datoB << 16                                                      ;
+            SLTI_OP:  result   = (i_datoA < i_datoB) ? 1 : 0                                        ;
+            SLTIU_OP: result_U = (dato_A_u < dato_B_u) ? 1 : 0                                      ;                                   
             default: begin
-                ALUResult  =  0;
-            end
-
+                result   = result                                                                   ;
+                result_U = result_U                                                                 ;
+            end   
         endcase
-
-            RegWrite_Out =  RegWrite;
-        
-        if (ALUResult == 0) 
-            Zero =  1;
-
     end
+                          
+    assign is_unsigned = (i_op == ADDU_OP) || (i_op == SUBU_OP) || (i_op == SLTU_OP)
+    || (i_op == SLTIU_OP) || (i_op == ADDIU_OP);
+    assign o_resultALU = is_unsigned ? result_U : result                                             ;
+
 
 endmodule

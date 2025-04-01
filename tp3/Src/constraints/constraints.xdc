@@ -17,24 +17,19 @@ set_property -dict { PACKAGE_PIN A18 IOSTANDARD LVCMOS33 } [get_ports o_tx]
 #set_property -dict { PACKAGE_PIN U19 IOSTANDARD LVCMOS33 } [get_ports { instruction[2] }]
 #set_property -dict { PACKAGE_PIN V19 IOSTANDARD LVCMOS33 } [get_ports { instruction[3] }]
 
-set_property -dict { PACKAGE_PIN W18 IOSTANDARD LVCMOS33 } [get_ports { HazardFlag[0] }]
-set_property -dict { PACKAGE_PIN U15 IOSTANDARD LVCMOS33 } [get_ports { HazardFlag[1] }]
-set_property -dict { PACKAGE_PIN U14 IOSTANDARD LVCMOS33 } [get_ports { HazardFlag[2] }]
-set_property -dict { PACKAGE_PIN V14 IOSTANDARD LVCMOS33 } [get_ports { HazardFlag[3] }]
-
-set_property -dict { PACKAGE_PIN V13 IOSTANDARD LVCMOS33 } [get_ports { STATE[0] }]
-set_property -dict { PACKAGE_PIN V3 IOSTANDARD LVCMOS33 } [get_ports { STATE[1] }]
-set_property -dict { PACKAGE_PIN W3 IOSTANDARD LVCMOS33 } [get_ports { STATE[2] }]
-
-
-
-#set_property -dict { PACKAGE_PIN U3 IOSTANDARD LVCMOS33 } [get_ports { FLAGJUMP }]
+set_property -dict { PACKAGE_PIN W18 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[0] }]
+set_property -dict { PACKAGE_PIN U15 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[1] }]
+set_property -dict { PACKAGE_PIN U14 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[2] }]
+set_property -dict { PACKAGE_PIN V14 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[3] }]
+set_property -dict { PACKAGE_PIN V13 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[4] }]
+set_property -dict { PACKAGE_PIN V3 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[5] }]
+set_property -dict { PACKAGE_PIN W3 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[6] }]
+set_property -dict { PACKAGE_PIN U3 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[7] }]
+set_property -dict { PACKAGE_PIN P3 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[8] }]
 
 
-set_property -dict { PACKAGE_PIN P3 IOSTANDARD LVCMOS33 } [get_ports { DEBUG_current_pc[0] }]
-set_property -dict { PACKAGE_PIN N3 IOSTANDARD LVCMOS33 } [get_ports { DEBUG_current_pc[1] }]
-set_property -dict { PACKAGE_PIN P1 IOSTANDARD LVCMOS33 } [get_ports { DEBUG_current_pc[2] }]
-set_property -dict { PACKAGE_PIN L1 IOSTANDARD LVCMOS33 } [get_ports { DEBUG_current_pc[3] }]
+
+
 
 
 

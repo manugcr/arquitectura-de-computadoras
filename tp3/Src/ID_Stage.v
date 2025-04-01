@@ -1,291 +1,256 @@
-`timescale 1ns / 1ps
+module ID_Stage
+#(
+    parameter NB_DATA = 32,
+    parameter NB_ADDR = 5,
+    parameter NB_REG  = 1
+)(
+    input wire                 clk                                                                                  ,
+    input wire                 i_rst_n                                                                              ,
+    input wire [NB_DATA-1:0]   i_instruction                                                                        ,
+    input wire [NB_DATA-1:0]   i_pcounter4                                                                          ,
+    input wire                 i_we_wb                                                                              ,
+    input wire                 i_we                                                                                 ,
+    input wire [NB_ADDR-1:0]   i_wr_addr                                                                            ,
+    input wire [NB_DATA-1:0]   i_wr_data_WB                                                                         ,
+    input wire                 i_stall                                                                              ,
+    input wire                 i_halt                                                                               ,
+    //                                                                  
+    //                                                                  
+    output reg [4:0]    o_rs                                                                                        ,
+    output reg [4:0]    o_rt                                                                                        ,
+    output reg [4:0]    o_rd                                                                                        ,
 
-module ID_Stage(
+    output reg [NB_DATA-1:0]   o_reg_DA                                                                             ,
+    output reg [NB_DATA-1:0]   o_reg_DB                                                                             ,
 
-    // --- Entradas ---
-    Clock, Reset,               // Entradas del sistema
-    RegWrite , MemRead_IDEX ,     // Señales de control
-    RegisterDst_EXMEM,
-    WriteRegister, WriteData,   // Datos para escritura
-    In_Instruction,                // Instrucción actual
-    ForwardData_EXMEM,          // Datos reenviados desde la etapa EX/MEM
-    RegRT_IDEX, RegRD_IDEX, RegDst_IDEX,  // Registros y control de destino
-    RegWrite_EXMEM,       // Señales de escritura
-    ForwardMuxASel,             // Selección para el multiplexor de reenvío A
-    ForwardMuxBSel,             // Selección para el multiplexor de reenvío B
-    PCWrite, IFIDWrite,
-    RegWrite_IDEX, 
-    MemRead_EXMEM,
-    ForwardData_MEMWB,
-    PCAdder,
-    Flush_IF,
-    ReadData1_out,ReadData2_out,
-    ControlSignal_Out,          // Señales de control de salida
-    Out_Instruction,
-    JumpAddress, BranchFlag,
-    ImmediateValue,             // Valor inmediato extendido
+    output reg [NB_DATA-1:0]   o_immediate                                                                          ,
+    output reg [5 :0]           o_opcode                                                                            ,
+    output reg [4 :0]           o_shamt                                                                             ,
+    output reg [5 :0]           o_func                                                                              ,
+    output reg [15:0]           o_addr                                                                              ,
+    output reg [31:0]           o_addr2jump                                                                         ,
+    output reg [1: 0]           o_jump_cases                                                                        , //! 00-> no | 01 -> branch | 10 -> jump
+    //ctrl unit                                                         
+    output reg                  o_jump                                                                              , 
+    output reg                  o_branch                                                                            , 
+    output reg                  o_regDst                                                                            , 
+    output reg                  o_mem2Reg                                                                           , 
+    output reg                  o_memRead                                                                           , 
+    output reg                  o_memWrite                                                                          , 
+    output reg                  o_immediate_flag                                                                    , 
+    output reg                  o_sign_flag                                                                         ,
+    output reg                  o_regWrite                                                                          ,
+    output reg [1:0]            o_aluSrc                                                                            ,
+    output reg [1:0]            o_width                                                                             ,
+    output reg [1:0]            o_aluOp                                                                             ,
+    output wire                 o_stop
 
-    //DEBUG
-    FLAGJUMP,
-    o_bus_debug,
-    o_halt,
-    i_flush
-    );             
+);
+    localparam HALT = 32'hFFFFFFFF; // last instruction of the program
 
-    //--------------------------------
-    // Declaración de Entradas
-    //--------------------------------
-
-    // Entradas del sistema
-    input Clock, Reset;
-
-    // Señales de control
-    input RegWrite, MemRead_IDEX;
-
-    input MemRead_EXMEM;  // solo se usa para el caso de branch hazard load
-
-    input RegWrite_IDEX;
-
-    // Datos reenviados
-    input [31:0] ForwardData_EXMEM;
-
-    input RegWrite_EXMEM;
-
-    input [31:0] ForwardData_MEMWB; // SOLO UTIL PARA HAZARD DE BRANCH
-    
-
-    input [1:0] ForwardMuxASel, ForwardMuxBSel;
-    
-
-    // Control de registros de destino
-    input [1:0] RegDst_IDEX;
-
-    // Datos de entrada
-    input [31:0] In_Instruction , PCAdder;
-    input [4:0] RegRT_IDEX, RegRD_IDEX;
-
-    // Datos para escritura
-    input [4:0] WriteRegister, RegisterDst_EXMEM;
-    input [31:0] WriteData;
-
-    //--------------------------------
-    // Declaración de Salidas
-    //--------------------------------
+    wire [NB_DATA-1:0] wire_D1, wire_D2                                                                             ;
 
     
+    localparam [5:0]                                                            
+                    JR_TYPE     = 6'b001000                                                                         ,
+                    JARL_TYPE   = 6'b001001                                                                         ,
+                    R_TYPE      = 6'b000000                                                                         ,
+                    BEQ_TYPE    = 6'b000100                                                                         ,
+                    J_TYPE      = 6'b000010                                                                         ,
+                    JAL_TYPE    = 6'b000011                                                                         ,
+                    BNE_TYPE    = 6'b000101                                                                         ;
 
-    // Señales de control
-    output wire [31:0] ControlSignal_Out;
+    // ---- ctrl unit ----
+    //reg [5:0] reg_opcode, reg_funct;
+    wire w_jump, w_branch, w_regDst, w_mem2Reg, w_memRead, w_memWrite, w_immediate, w_regWrite, w_sign_flag         ;
+    wire [1:0] w_aluSrc, w_aluOp, w_width;
+    wire [NB_DATA -1: 0] w_immediat;
 
-
-    output wire Flush_IF;
-
-    output wire [31:0] Out_Instruction;
-
-    // Datos de los registros
-    output wire [31:0] ReadData1_out, ReadData2_out;
-
-    
-    wire [2:0] BranchComp;
-
-    // Valor inmediato extendido
-    output wire [31:0] ImmediateValue;
-
-    // Señales de peligro (hazards)
-    output wire PCWrite, IFIDWrite;
-
-    // PC Addresses
-    output wire [31:0]  JumpAddress;
-
-    output wire BranchFlag;
+    //
+    wire [4 :0] rs, rt, rd                                                                                          ;
+    wire [5:0] opcode                                                                                               ;
+    wire [15:0 ] wire_immediate                                                                                     ;
+    wire [5:0] w_func                                                                                               ;
+    assign opcode = i_instruction[31:26]                                                                            ;
+    assign wire_immediate= i_instruction [15:0   ]                                                                  ;
+    assign w_func = i_instruction [5:0]                                                                             ;
 
 
-    ///DEBUG
+    assign rs = i_instruction[25:21]                                                                                ;
+    assign rt = i_instruction[20:16]                                                                                ;
+    assign rd = i_instruction[15:11]                                                                                ;
 
-    output wire [32 * 32 - 1 : 0] o_bus_debug;
+    //! registers file
+    Registers #()                               
+    regFile1(                               
+        .clk        (clk        )                                                                                   ,
+        .i_rst_n    (i_rst_n    )                                                                                   ,
+        .i_we       (i_we       )                                                                                   , // todo: poner en 0
+        .i_wr_addr  (i_wr_addr  )                                                                                   , // todo: poner en 0
+        .i_wr_data  (i_wr_data_WB)                                                                                  ,
+        .i_rd_addr1 (rs)                                                                                            ,
+        .i_rd_addr2 (rt)                                                                                            ,
+        .o_rd_data1 (wire_D1)                                                                                       ,
+        .o_rd_data2 (wire_D2)                                                           
+    );                                                          
 
-    output wire o_halt; // Indicates if a HALT operation is detected
+    //! control unit
+    Control #()                                                            
+    controlU1                                                           
+    (                                                           
+        .clk        (clk        )                                                                                   ,
+        .i_rst_n    (i_rst_n    )                                                                                   ,
+        .i_opcode   (opcode     )                                                                                   ,
+        .i_funct    (w_func     )                                                                                   ,
 
-    input i_flush;
-
-    output wire FLAGJUMP;
-
-    //--------------------------------
-    // Declaración de Cables
-    //--------------------------------
-
-    // Hazard Signals
-    wire ControlStall;
-
-    // Control de memoria
-    wire MemWrite_Control, MemRead_Control;
-    wire [1:0] ByteSig_Control;  
-
-    wire JumpFlush;
-
-    wire JumpMuxSel;
-
-    wire BranchFlush;
-
-    wire [31:0] ShiftedJumpAddress;
-
-    // Cable para valor inmediato desplazado
-    wire [31:0] ImmediateShift, ReadData1, ReadData2;
-
-    // Control de ejecución
-    wire ALUBMux_Control;
-    wire [1:0] RegDst_Control;
-    wire [5:0] ALUOp_Control;
-
-    wire FlushJump;
-
-    wire BranchControl;
-
-    wire itsHazardBranch, NotifyCompare;
-
-        
-
-    // Control de escritura posterior
-    wire RegWrite_Control;
-    wire [1:0] MemToReg_Control;
-
-    // Salida del bloque de extensión de signo
-    wire [31:0] SignExtend_Out;
-
-    wire LaMux;
-
-    wire HazardCompareBranch;
-
-    //--------------------------------
-    // Componentes de Hardware
-    //--------------------------------
-
-    assign Out_Instruction = In_Instruction;
-
-    assign BranchFlag = BranchControl;
-
-    // Unidad de detección de peligros
-    Hazard HazardDetection(
-        .Reset(Reset),
-            .OpCode(In_Instruction[31:26]), 
-            .Func(In_Instruction[5:0]),
-        .RegRS_IFID(In_Instruction[25:21]),
-        .RegRT_IFID(In_Instruction[20:16]),
-        .RegRT_IDEX(RegRT_IDEX),
-        .RegRD_IDEX(RegRD_IDEX),
-        .HazardCompareBranch(HazardCompareBranch),
-        .RegWrite_IDEX(RegWrite_IDEX), //////////////////////////////
-        .RegWrite_EXMEM(RegWrite_EXMEM), /////////////////////////////
-        .RegisterDst_EXMEM(RegisterDst_EXMEM),  ///////////////////////
-        .MemRead_IDEX(MemRead_IDEX),
-        .RegDst_IDEX(RegDst_IDEX),
-        .MemRead_EXMEM(MemRead_EXMEM),          //SOLO SE USA PARA HAZARD BRANCH LOAD
-        .ControlStall(ControlStall),
-        .PCWrite(PCWrite),
-        .RegDst_MEMWB(WriteRegister),   //PARA HAZARD DE BRANCH en etapa MEMWB
-        .IFIDWrite(IFIDWrite),
-        .o_halt(o_halt),
-        .BranchFlush(FlushJump));
-    
-
-    // Módulo de control
-    Control              Control(.Instruction(In_Instruction),
-                                    .ALUBMux(ALUBMux_Control), .RegDst(RegDst_Control), 
-                                    .ALUOp(ALUOp_Control), .MemWrite(MemWrite_Control), 
-                                    .MemRead(MemRead_Control), .ByteSig(ByteSig_Control),
-                                    .RegWrite(RegWrite_Control), .MemToReg(MemToReg_Control),  
-                                    .JumpMuxSel(JumpMuxSel), 
-                                    .BranchComp(BranchComp),
-                                   // .Flush_IF(JumpFlush), //???
-                                    .LaMux(LaMux));
-
-    // Bancos de registros
-    Registers Registers(
-        .i_flush(i_flush),
-       .Reset(Reset),
-        .ReadRegister1(In_Instruction[25:21]), // rs
-        .ReadRegister2(In_Instruction[20:16]), // rt 
-        .WriteRegister(WriteRegister),  // Registro de destino para escritura
-        .WriteData(WriteData), 
-        .RegWrite(RegWrite), 
-        .Clock(Clock), 
-        .ReadData1(ReadData1), 
-        .ReadData2(ReadData2),
-       .o_bus_debug (o_bus_debug)
+        .o_jump     (w_jump     )                                                                                   ,
+        .o_aluSrc   (w_aluSrc   )                                                                                   ,
+        .o_aluOp    (w_aluOp    )                                                                                   ,
+        .o_branch   (w_branch   )                                                                                   ,
+        .o_regDst   (w_regDst   )                                                                                   ,
+        .o_mem2Reg  (w_mem2Reg  )                                                                                   ,
+        .o_regWrite (w_regWrite )                                                                                   ,
+        .o_memRead  (w_memRead  )                                                                                   ,
+        .o_memWrite (w_memWrite )                                                                                   ,
+        .o_width    (w_width    )                                                                                   ,
+        .o_sign_flag(w_sign_flag)                                                                                   ,
+        .o_immediate(w_immediate)
     );
 
-    // Extensión de signo para valores inmediatos
-    SignExtension ImmSignExtend(
-        .in(In_Instruction[15:0]), 
-        .out(SignExtend_Out)
+    //! extends sign for immediate|
+    SignExtension #()
+    se1
+    (
+        .i_immediate_flag   (w_immediate)                                                                           ,
+        .i_immediate_value  (wire_immediate)                                                                        ,
+        .o_data             (w_immediat)
     );
 
 
-
-    Mux2to1            ControlMux(.out(ControlSignal_Out), 
-                                       .inA({14'd0, ALUOp_Control[5:0], ALUBMux_Control, RegDst_Control[1:0], 
-                                             ByteSig_Control[1:0], MemWrite_Control, MemRead_Control, 2'd0, 
-                                             RegWrite_Control, MemToReg_Control[1:0]}),
-                                       .inB(32'd0), 
-                                       .sel(ControlStall));
-
-    Mux3to1            ForwardMuxA_ID(.out(ReadData1_out), 
-                                           .inA(ReadData1),
-                                           .inB(ForwardData_EXMEM), 
-                                           .inC(ForwardData_MEMWB),           //SOLO PARA HAZARD BRANCH    
-                                           .sel(ForwardMuxASel));
-                                    
-    Mux3to1            ForwardMuxB_ID(.out(ReadData2_out), 
-                                           .inA(ReadData2),
-                                           .inB(ForwardData_EXMEM), 
-                                           .inC(ForwardData_MEMWB),   //SOLO PARA HAZARD BRANCH
-                                           .sel(ForwardMuxBSel));  
+    //! jumps control
+    always @(*) begin : jumps
+        o_jump       = 1'b0                                                                                         ;
+        o_jump_cases = 2'b00                                                                                        ;
+        o_addr2jump  = 0                                                                                            ;
+        if(w_jump || w_branch) begin // the following will execute only when a jump opcode is detected      
+            case (opcode)       
+                R_TYPE: begin //jr o jalr       
 
 
-
-    // Multiplexor para dirección de carga inmediata
-    Mux2to1 LoadAddressMux(
-        .out(ImmediateValue),
-        .inA(SignExtend_Out),
-        .inB({16'd0, In_Instruction[15:0]}),
-        .sel(LaMux)
-    );
-
-    // JUMP
+                    o_jump = 1'b1                                                                                   ;
+                    o_addr2jump = wire_D1                                                                           ; //RA
+                    if(w_func == JARL_TYPE) o_jump_cases= 2'b10                                                     ;
 
 
-        ShiftLeft2              JumpShift(.inputNum({6'b0, In_Instruction[25:0]}), 
-                                      .outputNum(ShiftedJumpAddress));
+                end                     
+                BEQ_TYPE: begin                     
+                    o_jump_cases= 2'b01                                                                             ;
+                    if(wire_D1 == wire_D2) begin                        
+                        o_jump = 1'b1                                                                               ;
+                        o_addr2jump = i_pcounter4 + (w_immediat << 2) + 4                                           ;
+                    end                     
+                end                     
+                BNE_TYPE: begin                     
+                    o_jump_cases= 2'b01                                                                             ;
+                    if(wire_D1 != wire_D2) begin                        
+                        o_jump = 1'b1                                                                               ;
+                        o_addr2jump = i_pcounter4 + (w_immediat << 2) + 4                                           ;
+                    end                     
+                end                     
+                JAL_TYPE: begin                     
+                    o_jump = 1'b1                                                                                   ;
+                    o_addr2jump = {i_pcounter4[NB_DATA-1:NB_DATA-4], i_instruction[25:0], 2'b00}                    ;
+                    o_jump_cases= 2'b10                                                                             ;
+                end     
+                J_TYPE: begin       
+                    o_jump = 1'b1                                                                                   ;
+                    o_addr2jump = {i_pcounter4[NB_DATA-1:NB_DATA-4], i_instruction[25:0], 2'b00}                    ;
+                end
+            endcase
+        end
+    end
 
-        Mux2to1            JumpMux(.out(JumpAddress), 
-                                    .inA({PCAdder[31:28], ShiftedJumpAddress[27:0]}),
-                                    .inB(ReadData1_out), 
-                                    .sel(JumpMuxSel));
+    //! update signals
+    always @(posedge clk or negedge i_rst_n) begin
+        if(!i_rst_n) begin
+            o_reg_DA <= 32'b0                                                                                       ;
+            o_reg_DB <= 32'b0                                                                                       ;
+            o_rd     <= 5'b0                                                                                        ;
+            o_rs     <= 5'b0                                                                                        ;
+            o_rt     <= 5'b0                                                                                        ;
+            
+            o_opcode   <= 6'b0                                                                                      ;
+            o_shamt    <= 5'b0                                                                                      ;
+            o_func     <= 6'b0                                                                                      ;
+            o_addr     <= 16'b0                                                                                     ;
+            //o_stop     <= 1'b0                                                                                      ;
+            o_width    <= 2'b00                                                                                     ; 
+            //o_addr2jump<= 0;
+            o_immediate <= 0;
+            o_immediate_flag <= 1'b0;
+        end else begin
 
-    //BRANCH
+            if (!i_halt) begin
+               // if((o_opcode == JAL_TYPE) || (o_func == JARL_TYPE) ) o_rs <= 5'b0           ;
+                // if((opcode == JAL_TYPE)) o_rt <= 5'b11111                                 ;
+            
+                o_reg_DA   <= wire_D1                                                                               ;
+                o_reg_DB   <= wire_D2                                                                               ;
+                o_rd       <= rd                                                                                    ;
+                o_rs       <= rs                                                                                    ;
+                o_rt       <= rt                                                                                    ; //register 31 reserved for jal
+                //r_immediate<= i_instruction [15:0   ]                                                               ;
+                o_opcode   <= opcode                                                                                ;
+                o_shamt    <= i_instruction [10:6   ]                                                               ;
+                o_func     <= w_func                                                                                ;
+                o_addr     <= i_instruction [15:0   ]                                                               ;
 
-        Comparator              BranchCompare(.InA(ReadData1_out), 
-                                          .InB(ReadData2_out), 
-                                          .Result(BranchControl),
-                                          .CompareFlag(NotifyCompare),
-                                          .Control(BranchComp));                       
+                o_immediate <= w_immediat                                                                           ;
 
+                //o_jump     <= w_jump                                                                                ;
+                o_branch   <= w_branch                                                                              ;   
+                o_regDst   <= w_regDst                                                                              ;
+                o_mem2Reg  <= w_mem2Reg                                                                             ;
+                o_memRead  <= w_memRead                                                                             ;
+                o_memWrite <= w_memWrite                                                                            ;
+                o_immediate_flag<= w_immediate                                                                      ;
+                o_regWrite <= w_regWrite                                                                            ;
+                o_aluSrc   <= w_aluSrc                                                                              ;
+                o_aluOp    <= w_aluOp                                                                               ;
+                o_width    <= w_width                                                                               ;
+                o_sign_flag<= w_sign_flag                                                                           ;
 
-        Or                  FlushOr(.InA(BranchControl), 
-                                    .InB(FlushJump), 
-                                    .Out(Flush_IF));
+                
 
-         Or                  HazardBranchCompareFlagOr(.InA(ForwardMuxASel[1]), 
-                                    .InB(ForwardMuxBSel[1]), 
-                                    .Out(itsHazardBranch));
-      
-        Or                  CompareFlagOr(.InA(itsHazardBranch), 
-                                        .InB(HazardCompareBranch), 
-                                        .Out(NotifyCompare));                              
-    
+            // ctrl unit
+            //reg_opcode <= i_instruction [31:25  ]       ;
+            //reg_funct  <= i_instruction [5:0    ]       ;
+                //if(i_instruction == HALT ) o_stop = 1'b1;
+            
+                if((opcode == JAL_TYPE) || ((opcode == R_TYPE) && (w_func == JARL_TYPE)) ) o_reg_DA <= i_pcounter4  ;
+                if((opcode == JAL_TYPE) || ((opcode == R_TYPE) && (w_func == JARL_TYPE)) ) o_rs <= 5'b0             ;
+                if((opcode == JAL_TYPE)) o_rt <= 5'b11111                                                           ;
+                if((opcode == JAL_TYPE) || ((opcode == R_TYPE) && (w_func == JARL_TYPE)) ) o_reg_DB <= 32'd4        ;
+                if(i_stall) begin
 
+                    o_branch   <= 1'b0                                                                              ;   
+                    o_regDst   <= 1'b0                                                                              ;
+                    o_mem2Reg  <= 1'b0                                                                              ;
+                    o_memRead  <= 1'b0                                                                              ;
+                    o_memWrite <= 1'b0                                                                              ;
+                    o_immediate_flag<= 1'b0                                                                         ;
+                    o_regWrite <= 1'b0                                                                              ;
+                    o_aluSrc   <= 2'b00                                                                             ;
+                    o_aluOp    <= 2'b00                                                                             ;
+                    o_width    <= 2'b00                                                                             ;
+                    o_sign_flag<= 1'b0                                                                              ;
+                end
+            end
+        end
+    end
 
-
+    assign o_stop = (i_instruction == HALT )? 1'b1: 1'b0;
+    //assign o_stop = (i_instruction == HALT) ? 1'b1 : 1'b0;
 
 
 endmodule
