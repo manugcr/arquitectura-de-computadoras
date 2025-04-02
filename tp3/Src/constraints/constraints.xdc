@@ -1,37 +1,14 @@
-## Clock
-set_property -dict { PACKAGE_PIN W5 IOSTANDARD LVCMOS33 } [get_ports clk_100MHz]
 
 
-## Reset
-set_property -dict { PACKAGE_PIN U18 IOSTANDARD LVCMOS33 } [get_ports i_reset]
+## Clock signal
+set_property -dict { PACKAGE_PIN W5   IOSTANDARD LVCMOS33 } [get_ports clk_100MHz]
 
-## USB-RS232 Interface
-set_property -dict { PACKAGE_PIN B18 IOSTANDARD LVCMOS33 } [get_ports i_rx]
-set_property -dict { PACKAGE_PIN A18 IOSTANDARD LVCMOS33 } [get_ports o_tx]
+set_property -dict { PACKAGE_PIN R2    IOSTANDARD LVCMOS33 } [get_ports {i_rst_n}]
 
 
-
-## Leds - Asignación de pines para los LEDs
-#set_property -dict { PACKAGE_PIN U16 IOSTANDARD LVCMOS33 } [get_ports { instruction[0] }]
-#set_property -dict { PACKAGE_PIN E19 IOSTANDARD LVCMOS33 } [get_ports { instruction[1] }]
-#set_property -dict { PACKAGE_PIN U19 IOSTANDARD LVCMOS33 } [get_ports { instruction[2] }]
-#set_property -dict { PACKAGE_PIN V19 IOSTANDARD LVCMOS33 } [get_ports { instruction[3] }]
-
-set_property -dict { PACKAGE_PIN W18 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[0] }]
-set_property -dict { PACKAGE_PIN U15 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[1] }]
-set_property -dict { PACKAGE_PIN U14 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[2] }]
-set_property -dict { PACKAGE_PIN V14 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[3] }]
-set_property -dict { PACKAGE_PIN V13 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[4] }]
-set_property -dict { PACKAGE_PIN V3 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[5] }]
-set_property -dict { PACKAGE_PIN W3 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[6] }]
-set_property -dict { PACKAGE_PIN U3 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[7] }]
-set_property -dict { PACKAGE_PIN P3 IOSTANDARD LVCMOS33 } [get_ports { o_instruction[8] }]
-
-
-
-
-
-
+##USB-RS232 Interface
+set_property -dict { PACKAGE_PIN B18   IOSTANDARD LVCMOS33 } [get_ports i_rx]
+set_property -dict { PACKAGE_PIN A18   IOSTANDARD LVCMOS33 } [get_ports o_tx]
 
 
 

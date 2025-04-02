@@ -110,7 +110,7 @@ module DataMemory
     RAM #(
         .NB_DATA(32),   // limita 256 addrs
         .NB_ADDR(8)     // 8 bits
-    ) Datamemory (
+    ) DataMemoryRAM (
         .clk        (clk        ),
         .i_we       (writeEnable),
         .i_data     (data2mem   ),

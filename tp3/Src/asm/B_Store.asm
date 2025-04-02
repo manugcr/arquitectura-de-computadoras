@@ -1,6 +1,4 @@
-ADDI s1,zero,10
-ADDI s0,zero,8
-
-SW s0,14(s1)
-
+ADDI R2,R0,10
+ADDI R4,R0,8
+SW R4, 14(R2)
 HALT
