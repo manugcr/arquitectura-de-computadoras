@@ -4,16 +4,13 @@ module MIPS
     input wire          i_rst_n             ,
     input wire          i_we_IF             ,
     input wire [31:0]   i_instruction_data  ,
-    input wire          i_halt              , //??????????????
+    input wire          i_halt              , 
     input wire [31:0]   i_inst_addr         ,
-
-    //out
-
     // IF
 
 
     // ctrl unit flags (ID)
-    output wire                     o_jump          , // revisar
+    output wire                     o_jump          , 
     output wire                     o_branch        ,
     output wire                     o_regDst        ,
     output wire                     o_mem2reg       ,
@@ -57,10 +54,13 @@ module MIPS
     output wire [32-1:0]        o_write_dataWB2ID,
     output wire [5-1:0]         o_reg2writeWB2ID ,
     output wire                 o_end           ,
-    output wire                 o_write_enable   
+    output wire                 o_write_enable  ,
 
-
+    output wire [15:0]        pcounterIF2ID_LSB
 );
+
+
+    assign pcounterIF2ID_LSB = pcounterIF2ID[15:0];
 
 
     // P A R A M S
@@ -78,8 +78,6 @@ module MIPS
 
     wire [31:0]
                 addr2jumpID2IF;
-
-
     
     // ID 2 EX
 
@@ -162,13 +160,11 @@ module MIPS
         .i_IF_ID_RegisterRs (rsIF2ID),//inst en pipeline.v//
         .i_IF_ID_RegisterRt (rtIF2ID),//inst en pipeline.v
         .i_ID_EX_MemRead    (memReadID2EX),
-
         .i_jumpType         (jumpType),
-
-        .i_EX_RegisterRd    (aux_rdEX       ),
+        .i_EX_RegisterRd    (aux_rdEX),
         .i_MEM_RegisterRd   (write_regEX2MEM),
         .i_WB_RegisterRd    (reg2writeMEM2WB),
-        .i_EX_WB_Write      (regWriteID2EX  ), //regWriteEX2MEM
+        .i_EX_WB_Write      (regWriteID2EX), //regWriteEX2MEM
         .i_MEM_WB_Write     (regWriteEX2MEM ),
         .i_WB_WB_Write      (regWriteMEM2WB ),
         // Output   
@@ -176,21 +172,19 @@ module MIPS
     );
 
     IF_Stage IF_inst (
-        .clk            (clk                ),
-        .i_rst_n        (i_rst_n            ),
-        
+        .clk            (clk),
+        .i_rst_n        (i_rst_n),
         // ID
-        .i_jump         (jumpID2EX          ),
-        .i_we           (i_we_IF            ),  
-        .i_addr2jump    (addr2jumpID2IF     ),  
+        .i_jump         (jumpID2EX),
+        .i_we           (i_we_IF),  
+        .i_addr2jump    (addr2jumpID2IF),  
         // uart
         .i_instr_data   (i_instruction_data ),  
         .i_inst_addr    (inst_addr_from_interface),
-        .i_halt         (haltIF             ),
+        .i_halt         (haltIF),
         .i_stall        (stall), // from HDU
         //out
-        .o_pcounter4    (      ),
-        .o_instruction  (instructionIF2ID   ),
+        .o_instruction  (instructionIF2ID),
         .o_pcounter     (pcounterIF2ID)
     );
     
@@ -199,54 +193,49 @@ module MIPS
     
     ID_Stage #(
         .NB_DATA        (NB_DATA),
-        .NB_ADDR        (NB_ADDR),
-        .NB_REG         ()
+        .NB_ADDR        (NB_ADDR)
     ) ID_inst (
-        .clk                      (clk              ),
-        .i_rst_n                  (i_rst_n          ),
+        .clk                      (clk ),
+        .i_rst_n                  (i_rst_n),
         // IF
         .i_instruction            (instructionIF2ID ),
-        .i_pcounter4              (pcounterIF2ID    ),
+        .i_pcounter4              (pcounterIF2ID ),
         // WB
-        .i_we_wb                  (    ),
-        .i_we                     (regWriteWB2ID    ),
-        .i_wr_addr                (reg2writeWB2ID   ),
-        .i_wr_data_WB             (write_dataWB2ID  ),
+        .i_we_wb                  ( ),
+        .i_we                     (regWriteWB2ID ),
+        .i_wr_addr                (reg2writeWB2ID),
+        .i_wr_data_WB             (write_dataWB2ID),
 
         .i_stall                  (stall || stop),
         .i_halt                   (i_halt ),
         //------------------------------------
         //out
-        .o_rs                     (rsID2EX          ),
-        .o_rt                     (rtID2EX          ),
-        .o_rd                     (rdID2EX          ),
-
-        .o_reg_DA                 (datoAID2EX       ),
-        .o_reg_DB                 (datoBID2EX       ),
-
-        .o_immediate              (immediateID2EX   ),
-        .o_opcode                 (opcodeID2EX      ),
-        .o_shamt                  (shamtID2EX       ),
-        .o_func                   (funcID2EX        ),
+        .o_rs                     (rsID2EX),
+        .o_rt                     (rtID2EX),
+        .o_rd                     (rdID2EX),
+        .o_reg_DA                 (datoAID2EX),
+        .o_reg_DB                 (datoBID2EX),
+        .o_immediate              (immediateID2EX),
+        .o_opcode                 (opcodeID2EX),
+        .o_shamt                  (shamtID2EX),
+        .o_func                   (funcID2EX ),
         //id-if
-        .o_addr                   (),
-        .o_addr2jump              (addr2jumpID2IF   ),
-        .o_jump_cases             (jumpType         ),
-
+        .o_addr2jump              (addr2jumpID2IF),
+        .o_jump_cases             (jumpType),
             //ctrl unit
-        .o_jump                   (jumpID2EX            ), 
-        .o_branch                 (branchID2EX          ), 
-        .o_regDst                 (regDstID2EX          ), 
-        .o_mem2Reg                (mem2RegID2EX         ), 
-        .o_memRead                (memReadID2EX         ), 
-        .o_memWrite               (memWriteID2EX        ), 
-        .o_immediate_flag         (immediate_flagID2EX  ), 
-        .o_sign_flag              (sign_flagID2EX       ),
-        .o_regWrite               (regWriteID2EX        ),
-        .o_aluSrc                 (aluSrcID2EX          ),
-        .o_width                  (widthID2EX           ),
-        .o_aluOp                  (aluOpID2EX           ),
-        .o_stop                   (stop                 )
+        .o_jump                   (jumpID2EX), 
+        .o_branch                 (branchID2EX), 
+        .o_regDst                 (regDstID2EX), 
+        .o_mem2Reg                (mem2RegID2EX), 
+        .o_memRead                (memReadID2EX), 
+        .o_memWrite               (memWriteID2EX ), 
+        .o_immediate_flag         (immediate_flagID2EX), 
+        .o_sign_flag              (sign_flagID2EX),
+        .o_regWrite               (regWriteID2EX ),
+        .o_aluSrc                 (aluSrcID2EX),
+        .o_width                  (widthID2EX ),
+        .o_aluOp                  (aluOpID2EX ),
+        .o_stop                   (stop)
 
     );
 
@@ -254,65 +243,62 @@ module MIPS
         .NB_DATA(NB_DATA)
     ) EX_inst
     (
-        .clk                             (clk       ),
-        .i_rst_n                         (i_rst_n   ),
+        .clk                             (clk),
+        .i_rst_n                         (i_rst_n),
         // hzrd?
         .i_stall                         (stall),
         .i_halt                          (i_halt),
     
-        .i_rs                            (rsID2EX               ),
-        .i_rt                            (rtID2EX               ),
-        .i_rd                            (rdID2EX               ),
+        .i_rs                            (rsID2EX),
+        .i_rt                            (rtID2EX),
+        .i_rd                            (rdID2EX),
     
-        .i_reg_DA                        (datoAID2EX            ),
-        .i_reg_DB                        (datoBID2EX            ),
+        .i_reg_DA                        (datoAID2EX),
+        .i_reg_DB                        (datoBID2EX),
     
-        .i_immediate                     (immediateID2EX        ),
-        .i_opcode                        (opcodeID2EX           ),
-        .i_shamt                         (shamtID2EX            ),
-        .i_func                          (funcID2EX             ),
+        .i_immediate                     (immediateID2EX ),
+        .i_opcode                        (opcodeID2EX ),
+        .i_shamt                         (shamtID2EX),
+        .i_func                          (funcID2EX),
         .i_addr                          (),//jmp
     
         //ctrl unit
-        .i_jump                          (jumpID2EX             ), 
-        .i_branch                        (branchID2EX           ), 
-        .i_regDst                        (regDstID2EX           ), 
-        .i_mem2Reg                       (mem2RegID2EX          ), 
-        .i_memRead                       (memReadID2EX          ), 
-        .i_memWrite                      (memWriteID2EX         ), 
-        .i_immediate_flag                (immediate_flagID2EX   ), 
-        .i_regWrite                      (regWriteID2EX         ),
-        .i_aluSrc                        (aluSrcID2EX           ),
-        .i_aluOP                         (aluOpID2EX            ),
-        .i_width                         (widthID2EX            ),
-        .i_sign_flag                     (sign_flagID2EX        ),
+        .i_jump                          (jumpID2EX), 
+        .i_branch                        (branchID2EX ), 
+        .i_regDst                        (regDstID2EX ), 
+        .i_mem2Reg                       (mem2RegID2EX), 
+        .i_memRead                       (memReadID2EX), 
+        .i_memWrite                      (memWriteID2EX), 
+        .i_immediate_flag                (immediate_flagID2EX), 
+        .i_regWrite                      (regWriteID2EX),
+        .i_aluSrc                        (aluSrcID2EX ),
+        .i_aluOP                         (aluOpID2EX),
+        .i_width                         (widthID2EX),
+        .i_sign_flag                     (sign_flagID2EX ),
         //fwd unit
-        .i_fw_a                          (fwA_FU2EX             ),
-        .i_fw_b                          (fwB_FU2EX             ),
-        .i_output_MEMWB                  (write_dataWB2ID       ), //result wb stage
-        .i_output_EXMEM                  (resultALUEX2MEM       ), // o_result 
+        .i_fw_a                          (fwA_FU2EX),
+        .i_fw_b                          (fwB_FU2EX),
+        .i_output_MEMWB                  (write_dataWB2ID), //result wb stage
+        .i_output_EXMEM                  (resultALUEX2MEM), // o_result 
         
         
         // ctrl signals
-        .o_mem2reg                       (mem2RegEX2MEM         ),
-        .o_memRead                       (memReadEX2MEM         ),
-        .o_memWrite                      (memWriteEX2MEM        ),
-        .o_regWrite                      (regWriteEX2MEM        ),
-        .o_aluSrc                        (aluSrcEX2MEM          ),
+        .o_mem2reg                       (mem2RegEX2MEM),
+        .o_memRead                       (memReadEX2MEM),
+        .o_memWrite                      (memWriteEX2MEM ),
+        .o_regWrite                      (regWriteEX2MEM ),
+        .o_aluSrc                        (aluSrcEX2MEM),
         //.o_jump                          (),
     
-        .o_sign_flag                     (sign_flagEX2MEM       ),
-        .o_width                         (widthEX2MEM           ),
-        .o_write_reg                     (write_regEX2MEM       ), // EX/MEM.RegisterRd for control unit
+        .o_sign_flag                     (sign_flagEX2MEM),
+        .o_width                         (widthEX2MEM ),
+        .o_write_reg                     (write_regEX2MEM), // EX/MEM.RegisterRd for control unit
         .o_aluOP                         (),
-        .o_data4Mem                      (data4MemEX2MEM        ),
-        .o_result                        (resultALUEX2MEM       )
+        .o_data4Mem                      (data4MemEX2MEM ),
+        .o_result                        (resultALUEX2MEM)
     
     );
     
-
-    
-
     Forward #(
         .NB_ADDR(NB_ADDR),
         .NB_FW  (NB_FW)
@@ -326,15 +312,13 @@ module MIPS
 
         .i_wr_WB         (regWriteEX2MEM),
         .i_wr_MEM        (regWriteMEM2WB),
-        .o_fw_b          (fwB_FU2EX     ),
-        .o_fw_a          (fwA_FU2EX     )
+        .o_fw_b          (fwB_FU2EX),
+        .o_fw_a          (fwA_FU2EX)
     );
-
 
     DataMemory #(
         .NB_DATA(),
-        .NB_ADDR(),
-        .NB_REG ()
+        .NB_ADDR()
     ) MEM_inst (
         .clk                             (clk),
         .i_rst_n                         (i_rst_n),
@@ -342,48 +326,46 @@ module MIPS
         .i_stall                         (stall),
         .i_halt                          (i_halt),
 
-        .i_reg2write                     (write_regEX2MEM   ), //! o_write_reg from instruction_execute
-        .i_result                        (resultALUEX2MEM   ), //! o_result from instruction_execute
-        .i_width                         (widthEX2MEM       ), //! width
-        .i_sign_flag                     (sign_flagEX2MEM   ), //! sign flag || 1 = signed, 0 = unsigned
-        .i_mem2reg                       (mem2RegEX2MEM     ),
-        .i_memWrite                      (memWriteEX2MEM    ), //! Si 1 -> STORE || escribo en memoria
-        .i_regWrite                      (regWriteEX2MEM    ),
-        .i_data4Mem                      (data4MemEX2MEM    ), //! src data for store ops
+        .i_reg2write                     (write_regEX2MEM), //! o_write_reg from instruction_execute
+        .i_result                        (resultALUEX2MEM), //! o_result from instruction_execute
+        .i_width                         (widthEX2MEM), //! width
+        .i_sign_flag                     (sign_flagEX2MEM), //! sign flag || 1 = signed, 0 = unsigned
+        .i_mem2reg                       (mem2RegEX2MEM),
+        .i_memWrite                      (memWriteEX2MEM ), //! Si 1 -> STORE || escribo en memoria
+        .i_regWrite                      (regWriteEX2MEM ),
+        .i_data4Mem                      (data4MemEX2MEM ), //! src data for store ops
     
     
     
-        .o_reg_read                      (reg_readMEM2WB    ), //! data from memory 
-        .o_ALUresult                     (resultALUMEM2WB   ), //! alu result
-        .o_reg2write                     (reg2writeMEM2WB   ), //! o_write_reg from execute (rd or rt)
+        .o_reg_read                      (reg_readMEM2WB ), //! data from memory 
+        .o_ALUresult                     (resultALUMEM2WB), //! alu result
+        .o_reg2write                     (reg2writeMEM2WB), //! o_write_reg from execute (rd or rt)
     
         // ctrl signals
-        .o_mem2reg                       (mem2regMEM2WB     ), //! 0-> guardo el valor de leído || 1-> guardo valor de alu
-        .o_regWrite                      (regWriteMEM2WB    ),  //! writes the value
+        .o_mem2reg                       (mem2regMEM2WB), //! 0-> guardo el valor de leído || 1-> guardo valor de alu
+        .o_regWrite                      (regWriteMEM2WB ),  //! writes the value
 
         //DU
-        .o_data2mem                      (o_data2mem        ),
-        .o_dataAddr                      (o_dataAddr        ),
-        .o_memWrite                      (o_memWriteDebug   )
+        .o_data2mem                      (o_data2mem ),
+        .o_dataAddr                      (o_dataAddr ),
+        .o_memWrite                      (o_memWriteDebug)
     );
     
-
     WB_Stage #(
         .NB_DATA (NB_DATA),
-        .NB_ADDR (NB_ADDR),
-        .NB_REG  ()
+        .NB_ADDR (NB_ADDR)
     ) WB_inst
     (
-        .i_reg_read      (reg_readMEM2WB    ),//! data from memory 
-        .i_ALUresult     (resultALUMEM2WB   ),//! alu result
-        .i_reg2write     (reg2writeMEM2WB   ),//! o_write_reg from execute (rd or rt)
+        .i_reg_read      (reg_readMEM2WB ),//! data from memory 
+        .i_ALUresult     (resultALUMEM2WB),//! alu result
+        .i_reg2write     (reg2writeMEM2WB),//! o_write_reg from execute (rd or rt)
 
-        .i_mem2reg       (mem2regMEM2WB     ), //! 1-> guardo el valor de leído || 0-> guardo valor de alu
-        .i_regWrite      (regWriteMEM2WB    ), //! writes the value
+        .i_mem2reg       (mem2regMEM2WB), //! 1-> guardo el valor de leído || 0-> guardo valor de alu
+        .i_regWrite      (regWriteMEM2WB ), //! writes the value
 
-        .o_write_data    (write_dataWB2ID   ), //! data2write
-        .o_reg2write     (reg2writeWB2ID    ), //! dst reg
-        .o_regWrite      (regWriteWB2ID     )  //!ctrl signal
+        .o_write_data    (write_dataWB2ID), //! data2write
+        .o_reg2write     (reg2writeWB2ID ), //! dst reg
+        .o_regWrite      (regWriteWB2ID)  //!ctrl signal
     );
 
     // ctrl unit flags (ID)
@@ -427,7 +409,6 @@ module MIPS
     assign o_write_dataWB2ID= write_dataWB2ID   ;
     assign o_reg2writeWB2ID = reg2writeWB2ID    ;
     assign o_write_enable   = regWriteWB2ID     ;
-
 
     // program finishHHHHHH
 

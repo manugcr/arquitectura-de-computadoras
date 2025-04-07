@@ -1,8 +1,7 @@
 module DataMemory
 #(
     parameter NB_DATA = 32,
-    parameter NB_ADDR = 8,
-    parameter NB_REG  = 1
+    parameter NB_ADDR = 8
 
 )(
     input   wire                    clk                             ,
@@ -112,7 +111,7 @@ module DataMemory
         .NB_ADDR(8)     // 8 bits
     ) DataMemoryRAM (
         .clk        (clk        ),
-        .i_we       (writeEnable),
+        .i_write_enable (writeEnable),
         .i_data     (data2mem   ),
         .i_addr_w   (i_result[7:0]   ),
         .o_data     (reg_read   )

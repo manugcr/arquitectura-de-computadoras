@@ -9,7 +9,7 @@ module RAM
 )(
     input  wire clk                         ,
     //input  wire i_rst_n                     ,
-    input  wire i_we                        , //! Write enable signal
+    input  wire i_write_enable                        , //! Write enable signal
     input  wire [NB_DATA-1:0] i_data        , //! 32-bit input data
     input  wire [NB_ADDR-1:0] i_addr_w      , //! Byte-addressable
     output wire [NB_DATA-1:0] o_data          //! 32-bit output data
@@ -20,8 +20,8 @@ module RAM
 
     // Writing 32-bit data in 8-bit chunks
     always @(posedge clk) begin
-        if (i_we) begin
-            memory[i_addr_w ]     <= i_data[31:24]       ; // MSB
+        if (i_write_enable) begin
+            memory[i_addr_w   ] <= i_data[31:24]       ;   // MSB
             memory[i_addr_w +1] <= i_data[23:16]       ;
             memory[i_addr_w +2] <= i_data[15 :8]       ;
             memory[i_addr_w +3] <= i_data[7  :0]       ;   // LSB

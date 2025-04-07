@@ -9,7 +9,6 @@ module IF_Stage
     input wire [31:0]   i_inst_addr     ,  //! address to write instructions
     input wire          i_halt          ,  //! halt -> enable
     input wire          i_stall         ,  //! stall
-    output wire [31:0]  o_pcounter4     ,  //! program counter + 4
     output reg  [31:0]  o_instruction   ,  //! Instruction read
     output wire [31:0]  o_pcounter         //! program counter
 );
@@ -23,7 +22,6 @@ module IF_Stage
         .i_addr2jump(i_addr2jump),
         .i_jump     (i_jump),
         .o_pcounter (o_pcounter),
-        .o_pcounter4(o_pcounter4),
         .i_halt     (i_halt),
         .i_stall    (i_stall)
     );
@@ -35,7 +33,7 @@ module IF_Stage
     ) InstructionMemory (
         .clk        (clk),
        // .i_rst_n    (i_rst_n),
-        .i_we       (i_we),               // Controlled externally, should be 0 during fetch phase
+        .i_write_enable       (i_we),               // Controlled externally, should be 0 during fetch phase
         .i_data     (i_instr_data),
         .i_addr_w   (instruction_addr),      // Address from the program counter
         .o_data     (instruction_data)

@@ -1046,11 +1046,56 @@ Para este tipo de hazard de dependencia load hazard branch, se utiliza la logica
 
 <p align="center"> <img src="img/image87.png" alt=""> </p>
 
-## Avance V: Ready MIPS
+## Avance V: Ready MIPS & UART
 
 El objetivo principal de este branch es obtener una versión estable del MIPS que sea capaz de sintetizarse en la FPGA Basys 3. Para lograr esto, se procedió a eliminar sintaxis específicas para simulaciones, como los bloques `initial begin`, y a corregir la sintaxis de las asignaciones bloqueantes y no bloqueantes.
 
 El resultado es un MIPS que, al presionar el botón W19, muestra los primeros 16 bits de los registros. Con cada pulsación de dicho botón, se avanza de registro en registro, mostrando los valores de estos en los LEDs de la FPGA. Este comportamiento permite verificar el correcto funcionamiento de la implementación del MIPS **sin UART** hacia la PC.
+
+
+
+### UART
+
+Para la implementacion del UART, se recurrio a una version similar a la implementada en el TP2, pero descartando las fifo RX y fifo TX.
+
+<p align="center"> <img src="img/image89.png" alt=""> </p>
+
+##### Proceso de RX y TX de Datos en la UART
+
+Suponiendo un total de **N bits de datos** y **M bits de Stop**:
+
+1. **IDLE** → Permanecer en espera hasta que la señal de entrada pase a 0, lo que indica el inicio del bit de Start. Iniciar el contador de ticks.
+
+2. **START** → Cuando el contador alcance el valor **7**,la señal de entrada se encontrará en la mitad del bit de Start. Reiniciar el contador.
+
+3. **RECEIVE / DATA** → Al llegar a **15**, la señal de entrada habrá avanzado un bit y se ubicará en la mitad del primer bit de datos. Capturar este valor y almacenarlo en un registro de desplazamiento. Reiniciar el contador.
+
+4. Repetir el **paso 3** un total de **N-1 veces** para capturar los bits restantes.
+
+5. Si se usa un bit de paridad, repetir nuevamente el **paso 3**.
+
+6. **STOP** → Repetir el **paso 3** un total de **M veces** para procesar los bits de Stop.
+
+<p align="center"> <img src="img/image91.png" alt=""> </p>
+
+> **Nota:** Se utiliza la misma máquina de estados para la `uart_tx`.
+
+<p align="center"> <img src="img/image92.png" alt=""> </p>
+
+> **Configuración específica:** Para el caso de **CLK = 50 MHz** con **BR = 19200**.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### Requisitos de Timing
 
@@ -1061,13 +1106,3 @@ Para abordar esto, se utilizó el **Clock Wizard** y se introdujo un reloj de **
 En las siguientes pruebas, se explorarán otras frecuencias para determinar el rango de trabajo que cumpla con este requisito.
 
 <p align="center"> <img src="img/image88.png" alt=""> </p>
-
-
-
-
-
-
-agrege: OPTIMIZACION DE CODIGO PARA EVITAR COMBINACIONALES CON MUCHO RETRASO!
-
-
-mover el JumpMux a IF para evitar las condciones de carrera, con 35MHZ no hay condiciones de carrera.

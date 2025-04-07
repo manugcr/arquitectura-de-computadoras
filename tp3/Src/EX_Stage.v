@@ -86,7 +86,7 @@ module EX_Stage
     wire [NB_DATA-1:0]   alu_result                              ;
 
     //! state machine for alu
-    always @(*) begin: alu_ctrl
+    always @(*) begin
 
         case(i_aluOP)
             LOAD_STORE: begin // load - store - jalr - jal type
@@ -112,7 +112,7 @@ module EX_Stage
 
     //! mux to determine dato A.
     //!  For JAL or  JARL type there is no forwarding
-    always @(*) begin: mux1_datoA
+    always @(*) begin
         case(i_fw_a)
             2'b00: begin
                 // datoA = reg[rs]
@@ -140,7 +140,7 @@ module EX_Stage
 
     //! mux to determine datoB. For JAL or JARL type there is no forwarding. 
     //! For immediate ops datoB = immediate value
-    always @(*) begin: mux2_datoB
+    always @(*) begin
         case(i_fw_b)
             2'b00: begin
                 // datoB = reg[rt]
@@ -173,7 +173,7 @@ module EX_Stage
     //! comes from the rd field.
     //! when deasserted The register destination number for the Write register
     //! comes from the rt field
-    always @(posedge clk) begin: mux3
+    always @(posedge clk) begin
         if(!i_rst_n) begin
             o_write_reg = 5'b0                                  ;
         end else begin
@@ -217,15 +217,15 @@ module EX_Stage
 
     //! alu instance
     ALU #(
-        .NB_DATA    (NB_DATA        ),
-        .NB_OP      (6              )
+        .NB_DATA    (NB_DATA),
+        .NB_OP      (6)
     ) alu1
     (
-        .i_op       (opcode         ),
-        .i_datoA    (alu_datoA      ),
-        .i_datoB    (alu_datoB      ),
-        .i_shamt    (i_shamt        ),
-        .o_resultALU(alu_result     )
+        .i_op       (opcode),
+        .i_datoA    (alu_datoA),
+        .i_datoB    (alu_datoB),
+        .i_shamt    (i_shamt),
+        .o_resultALU(alu_result)
     );
 
 
