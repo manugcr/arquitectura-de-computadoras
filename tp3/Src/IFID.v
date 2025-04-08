@@ -1,6 +1,6 @@
 module IFID (
     input wire         clk,
-    input wire         i_rst_n,
+    input wire         i_reset,
     input wire         i_halt,
     input wire         i_stall,
     input wire [31:0]  i_instruction,   //! instrucción cruda desde IF
@@ -8,7 +8,7 @@ module IFID (
 );
 
     always @(posedge clk) begin
-        if (!i_rst_n) begin
+        if (!i_reset) begin
             o_instruction <= 32'b0;
         end
         else if (!i_halt && !i_stall) begin

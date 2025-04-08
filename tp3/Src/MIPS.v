@@ -1,66 +1,25 @@
 module MIPS
 (
     input wire          clk                 ,
-    input wire          i_rst_n             ,
+    input wire          i_reset             ,
     input wire          i_we_IF             ,
     input wire [31:0]   i_instruction_data  ,
     input wire          i_halt              , 
     input wire [31:0]   i_inst_addr         ,
-    // IF
 
+    output wire                 o_end,
 
-    // ctrl unit flags (ID)
-    output wire                     o_jump          , 
-    output wire                     o_branch        ,
-    output wire                     o_regDst        ,
-    output wire                     o_mem2reg       ,
-    output wire                     o_memRead       ,
-    output wire                     o_memWrite      ,
-    output wire                     o_immediate_flag,
-    output wire                     o_sign_flag     ,
-    output wire                     o_regWrite      ,
-    output wire [1:0]               o_aluSrc        ,
-    output wire [1:0]               o_width         ,
-    output wire [1:0]               o_aluOp         ,
+    output wire [23:0]  o_Control_data,
+    output wire [31:0]  o_EX_MEM_data,
+    output wire [143:0] o_ID_EX_data,
+    output wire [47:0]  o_MEM_WB_data,
+    output wire [39:0]  o_WB_data,
 
-    // ID out
-    output wire [32-1:0]       o_addr2jump          , //! ID 2 IF
-    output wire [32-1:0]       o_reg_DA             ,
-    output wire [32-1:0]       o_reg_DB             ,
-
-    output wire [5:0]               o_opcode        ,
-    output wire [5:0]               o_func          ,
-    output wire [4:0]               o_shamt         ,
-
-    output wire [5-1:0]       o_rs                  ,
-    output wire [5-1:0]       o_rd                  ,
-    output wire [5-1:0]       o_rt                  ,
-
-    output wire [15:0]              o_immediate     ,
-
-    // EX 2 MEM
-
-    output wire [32-1:0]       o_ALUresult          ,
-    // fu2ex
-    output wire [1:0]               o_fwA           ,
-    output wire [1:0]               o_fwB           ,
-
-    //MEM 2 WB
-    output wire [31:0]              o_data2mem      ,
-    output wire [7 :0]              o_dataAddr      , // 
-    output wire                     o_memWriteDebug ,
-
-    // WB 2 ID
-    output wire [32-1:0]        o_write_dataWB2ID,
-    output wire [5-1:0]         o_reg2writeWB2ID ,
-    output wire                 o_end           ,
-    output wire                 o_write_enable  ,
-
-    output wire [15:0]        pcounterIF2ID_LSB
+    output wire [15:0]  PC_IF
 );
 
 
-    assign pcounterIF2ID_LSB = pcounterIF2ID[15:0];
+   
 
 
     // P A R A M S
@@ -173,13 +132,13 @@ module MIPS
 
     IF_Stage IF_inst (
         .clk            (clk),
-        .i_rst_n        (i_rst_n),
+        .i_reset        (i_reset),
         // ID
         .i_jump         (jumpID2EX),
         .i_we           (i_we_IF),  
         .i_addr2jump    (addr2jumpID2IF),  
         // uart
-        .i_instr_data   (i_instruction_data ),  
+        .i_inst_data   (i_instruction_data ),  
         .i_inst_addr    (inst_addr_from_interface),
         .i_halt         (haltIF),
         .i_stall        (stall), // from HDU
@@ -196,7 +155,7 @@ module MIPS
         .NB_ADDR        (NB_ADDR)
     ) ID_inst (
         .clk                      (clk ),
-        .i_rst_n                  (i_rst_n),
+        .i_reset                  (i_reset),
         // IF
         .i_instruction            (instructionIF2ID ),
         .i_pcounter4              (pcounterIF2ID ),
@@ -244,7 +203,7 @@ module MIPS
     ) EX_inst
     (
         .clk                             (clk),
-        .i_rst_n                         (i_rst_n),
+        .i_reset                         (i_reset),
         .i_stall                         (stall),
         .i_halt                          (i_halt),
         .i_rt                            (rtID2EX),
@@ -313,7 +272,7 @@ module MIPS
         .NB_ADDR()
     ) MEM_inst (
         .clk                             (clk),
-        .i_rst_n                         (i_rst_n),
+        .i_reset                         (i_reset),
         .i_halt                          (i_halt),
 
         .i_reg2write                     (write_regEX2MEM), //! o_write_reg from instruction_execute
@@ -405,5 +364,53 @@ module MIPS
     assign o_end = stop;
     assign haltIF = (i_halt || stop) ? 1 : 0;
 
+        //FOR DEBUG IN GUI  
+
+     assign o_ID_EX_data = {
+        datoAID2EX    , // 32 bits
+        datoBID2EX    , // 32 bits
+        opcodeID2EX    , // 6 bits
+        rsID2EX        , // 5 bits
+        rtID2EX        , // 5 bits
+        rdID2EX        , // 5 bits
+        shamtID2EX     , // 5 bits
+        funcID2EX     , // 6 bits
+        immediateID2EX , // 16 bits
+        addr2jumpID2IF   // 32 bits
+    }; // 144 bits
+    assign o_EX_MEM_data = {
+        resultALUMEM2WB // 32 bits
+    }; // 32 bits
+    assign o_MEM_WB_data = {
+        o_data2mem  , // 32 bits
+        o_dataAddr  ,  // 8 bits
+        o_memWriteDebug  ,
+        7'b0000000
+    }; // 48 bits
+    assign o_WB_data = {
+        write_dataWB2ID   , // 32 bits
+        reg2writeWB2ID    , // 5 bits
+        regWriteWB2ID      ,
+        2'b00
+    }; // 40 bits
+    assign o_Control_data = {
+        jumpID2EX              , // 1 bit
+        branchID2EX            , // 1 bit
+        regDstID2EX            , // 1 bit
+        mem2RegID2EX           , // 1 bit
+        memReadID2EX           , // 1 bit  
+        memWriteID2EX          , // 1 bit
+        immediate_flagID2EX    , // 1 bit
+        sign_flagID2EX         , // 1 bit
+        regWriteID2EX          , // 1 bit
+        aluSrcID2EX            , // 2 bits
+        widthID2EX             , // 2 bits
+        aluOpID2EX             , // 2 bits
+        fwA_FU2EX               , // 2 bits
+        fwB_FU2EX               , // 2 bits
+        5'b00000
+    }; // 24 bits
+
+ assign PC_IF = pcounterIF2ID[15:0];
 
 endmodule

@@ -3,7 +3,7 @@ module EXMEM #(
     parameter NB_REG  = 5
 )(
     input  wire                 clk,
-    input  wire                 i_rst_n,
+    input  wire                 i_reset,
     input  wire                 i_halt,
 
     // Señales de control y datos
@@ -43,7 +43,7 @@ module EXMEM #(
     //! comes from the rt field
     // === Instancia del pipeline register EXMEM ===
     always @(posedge clk) begin
-        if (!i_rst_n) begin
+        if (!i_reset) begin
             o_write_reg <= {NB_REG{1'b0}};
         end else if (!i_halt) begin
             o_write_reg <= i_regDst ? i_rt : i_rd;
@@ -51,8 +51,8 @@ module EXMEM #(
     end
 
     // Registros del resto de señales (clk y rst_n asíncrono)
-    always @(posedge clk or negedge i_rst_n) begin
-        if (!i_rst_n) begin
+    always @(posedge clk or negedge i_reset) begin
+        if (!i_reset) begin
             o_mem2reg    <= 1'b0;
             o_memRead    <= 1'b0;
             o_memWrite   <= 1'b0;

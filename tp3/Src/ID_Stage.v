@@ -4,7 +4,7 @@ module ID_Stage
     parameter NB_ADDR = 5
 )(
     input wire                 clk              ,
-    input wire                 i_rst_n          ,
+    input wire                 i_reset          ,
     input wire [NB_DATA-1:0]   i_instruction    ,
     input wire [NB_DATA-1:0]   i_pcounter4      ,
     input wire                 i_we_wb          ,
@@ -92,7 +92,7 @@ module ID_Stage
     Registers #()                               
     regist(                               
         .clk        (clk        )               ,
-        .i_rst_n    (i_rst_n    )               ,
+        .i_reset    (i_reset    )               ,
         .i_we       (i_we       )               , 
         .i_wr_addr  (i_wr_addr  )               , 
         .i_wr_data  (i_wr_data_WB)              ,
@@ -107,7 +107,7 @@ module ID_Stage
     ctrl                                                           
     (                                                           
         .clk        (clk        )               ,
-        .i_rst_n    (i_rst_n    )               ,
+        .i_reset    (i_reset    )               ,
         .i_opcode   (opcode     )               ,
         .i_funct    (func       )               ,
 
@@ -194,7 +194,7 @@ module ID_Stage
 
     IDEX idex_sreg (
     .clk(clk),
-    .i_rst_n(i_rst_n),
+    .i_reset(i_reset),
     .i_halt(i_halt),
     .i_stall(i_stall),
     .ReadData1(ReadData1),

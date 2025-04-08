@@ -5,7 +5,7 @@ module DataMemory
 
 )(
     input   wire                    clk                             ,
-    input   wire                    i_rst_n                         ,
+    input   wire                    i_reset                         ,
     input   wire                    i_halt                          ,
     input   wire   [4:0]            i_reg2write                     , //! o_write_reg from instruction_execute
     input   wire   [NB_DATA-1:0]    i_result                        , //! o_result from instruction_execute
@@ -81,7 +81,7 @@ module DataMemory
         .NB_DATA(NB_DATA)
     ) memwb_sreg(
         .clk         (clk),
-        .i_rst_n     (i_rst_n),
+        .i_reset     (i_reset),
         .i_halt      (i_halt),
         .i_reg_read  (masked_reg_read),
         .i_result    (i_result),

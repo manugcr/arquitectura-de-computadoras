@@ -6,7 +6,7 @@ module baudrate_generator
 )
 (
     input   wire clk,       // Señal de reloj
-    input   wire i_rst_n,   // Señal de reset activa en bajo
+    input   wire i_reset,   // Señal de reset activa en bajo
     output  wire o_tick     // Pulso generado a la frecuencia deseada
 );
 
@@ -16,8 +16,8 @@ localparam NB_COUNTER = 8; // Número de bits del contador
 reg [NB_COUNTER:0] counter; // Registro para el contador
 
 // Lógica secuencial del contador
-always @(posedge clk or negedge i_rst_n) begin
-    if(!i_rst_n) begin 
+always @(posedge clk or negedge i_reset) begin
+    if(!i_reset) begin 
         counter <= {NB_COUNTER {1'b0}}; // Reinicia el contador en reset
     end else begin
         if(counter == NC_PER_TICK) 

@@ -1,6 +1,6 @@
 module PC (
     input   wire                    clk,
-    input   wire                    i_rst_n,
+    input   wire                    i_reset,
     input   wire    [32-1:0]  i_addr2jump,
     input   wire                    i_jump,   // pc <= addr2jump (for jumps)
     output  reg     [32-1:0]  o_pcounter,
@@ -10,8 +10,8 @@ module PC (
 );
 
 
-    always @(posedge clk or negedge i_rst_n) begin
-        if (!i_rst_n) begin
+    always @(posedge clk or negedge i_reset) begin
+        if (!i_reset) begin
             o_pcounter <= 32'b0;        // Reset PC to 0
         end
         else if (!i_halt && !i_stall) begin

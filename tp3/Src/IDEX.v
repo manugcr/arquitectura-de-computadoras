@@ -1,6 +1,6 @@
 module IDEX (
     input wire clk,
-    input wire i_rst_n,
+    input wire i_reset,
     input wire i_halt,
     input wire i_stall,
 
@@ -33,8 +33,8 @@ module IDEX (
     localparam [5:0] R_TYPE   = 6'b000000;
     localparam [5:0] JARL_TYPE = 6'b011111;
 
-    always @(posedge clk or negedge i_rst_n) begin
-        if (!i_rst_n) begin
+    always @(posedge clk or negedge i_reset) begin
+        if (!i_reset) begin
             o_reg_DA         <= 32'b0;
             o_reg_DB         <= 32'b0;
             o_rd             <= 5'b0;

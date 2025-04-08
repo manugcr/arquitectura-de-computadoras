@@ -4,7 +4,7 @@ module EX_Stage
 )
 (
     input wire                  clk                             ,
-    input wire                  i_rst_n                         ,
+    input wire                  i_reset                         ,
     input wire                  i_stall                         ,
     input wire                  i_halt                          ,
     input wire [4:0]            i_rt                            ,
@@ -168,7 +168,7 @@ module EX_Stage
         .NB_REG()
     ) exmem_sreg (
         .clk         (clk),
-        .i_rst_n     (i_rst_n),
+        .i_reset     (i_reset),
         .i_halt      (i_halt),
 
         .i_mem2reg   (i_mem2reg),

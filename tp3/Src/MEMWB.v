@@ -2,7 +2,7 @@ module MEMWB #(
     parameter NB_DATA = 32
 )(
     input  wire              clk,
-    input  wire              i_rst_n,
+    input  wire              i_reset,
     input  wire              i_halt,
 
     // Entradas del pipeline
@@ -20,8 +20,8 @@ module MEMWB #(
     output reg                o_regWrite
 );
 
-    always @(posedge clk or negedge i_rst_n) begin
-        if (!i_rst_n) begin
+    always @(posedge clk or negedge i_reset) begin
+        if (!i_reset) begin
             o_reg_read  <= {NB_DATA{1'b0}};
             o_ALUresult <= {NB_DATA{1'b0}};
             o_reg2write <= 5'b0;

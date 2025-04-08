@@ -7,7 +7,7 @@ module uart
     parameter  OVERSAMPLING    = 16 //! Factor de sobremuestreo
 )(
     input   wire clk,           // Señal de reloj
-    input   wire i_rst_n,       // Señal de reset activo en bajo
+    input   wire i_reset,       // Señal de reset activo en bajo
     input   wire i_rx,          // Entrada de datos serie (recepción)
     input [7:0]  data_Interface2Tx, // Datos de interfaz para transmisión
     input        tx_start,      // Señal de inicio de transmisión
@@ -24,7 +24,7 @@ baudrate_generator #(
         .OVERSAMPLING   (OVERSAMPLING) // Factor de sobremuestreo
     ) baudrate_generator_inst (
         .clk    (clk),      // Conexión de la señal de reloj
-        .i_rst_n  (i_rst_n), // Señal de reset
+        .i_reset  (i_reset), // Señal de reset
         .o_tick (tick)      // Señal de tick para sincronización
     );
 
@@ -34,7 +34,7 @@ uart_rx #(
         .NB_STOP    (NB_STOP)  // Número de bits de parada
     ) uart_rx_inst (
         .clk        (clk),        // Reloj
-        .i_rst_n    (i_rst_n),    // Reset activo en bajo
+        .i_reset    (i_reset),    // Reset activo en bajo
         .i_tick     (tick),       // Señal de sincronización
         .i_data     (i_rx),       // Datos de entrada serial
         .o_data     (data_Rx2Interface), // Salida de datos recibidos
@@ -47,7 +47,7 @@ uart_tx #(
         .NB_STOP    (NB_STOP)  // Número de bits de parada
     ) uart_tx_inst (
         .clk        (clk),        // Reloj
-        .i_rst_n    (i_rst_n),    // Reset activo en bajo
+        .i_reset    (i_reset),    // Reset activo en bajo
         .i_tick     (tick),       // Señal de sincronización
         .i_start_tx (tx_start),   // Señal para iniciar la transmisión
         .i_data     (data_Interface2Tx), // Datos de entrada para transmitir

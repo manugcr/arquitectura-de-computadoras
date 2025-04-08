@@ -3,7 +3,7 @@ module Control
     parameter NB_OP = 6
 )(
     input wire clk,
-    input wire i_rst_n,
+    input wire i_reset,
     input wire [NB_OP-1:0] i_opcode       , //[31:26] instruction
     input wire [NB_OP-1:0] i_funct        , // for R-type [5:0] field
 

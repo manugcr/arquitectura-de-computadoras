@@ -1,11 +1,11 @@
 module IF_Stage
 (
     input wire          clk,
-    input wire          i_rst_n,   
+    input wire          i_reset,   
     input wire          i_jump,          //! 1 = jump asserted | 0 = normal PC increment
     input wire          i_we,            //! Write enable para inicializar memoria
     input wire [31:0]   i_addr2jump,     //! Dirección a saltar
-    input wire [31:0]   i_instr_data,    //! Dato a escribir si i_we está en 1
+    input wire [31:0]   i_inst_data,    //! Dato a escribir si i_we está en 1
     input wire [31:0]   i_inst_addr,     //! Dirección para escribir instrucción
     input wire          i_halt,          //! Halt del pipeline
     input wire          i_stall,         //! Stall del pipeline
@@ -17,9 +17,9 @@ module IF_Stage
     wire [7:0]  instruction_addr;
 
     //! PC module
-    PC pc1 (
+    PC programcounter (
         .clk        (clk),
-        .i_rst_n    (i_rst_n),
+        .i_reset    (i_reset),
         .i_addr2jump(i_addr2jump),
         .i_jump     (i_jump),
         .o_pcounter (o_pcounter),
@@ -34,7 +34,7 @@ module IF_Stage
     ) InstructionMemory (
         .clk              (clk),
         .i_write_enable   (i_we),
-        .i_data           (i_instr_data),
+        .i_data           (i_inst_data),
         .i_addr_w         (instruction_addr),
         .o_data           (instruction_data)
     );
@@ -45,7 +45,7 @@ module IF_Stage
     //! IF/ID register instanciado internamente
     IFID ifid_sreg (
         .clk           (clk),
-        .i_rst_n       (i_rst_n),
+        .i_reset       (i_reset),
         .i_halt        (i_halt),
         .i_stall       (i_stall),
         .i_instruction (instruction_data),

@@ -4,7 +4,7 @@ module Registers
     parameter NB_ADDR = 5
 )(
     input wire              clk                         ,
-    input wire              i_rst_n                     ,
+    input wire              i_reset                     ,
     
     //write
     input wire                i_we                          ,
@@ -32,9 +32,9 @@ module Registers
 
 
     //! writing block
-    always @(negedge clk or negedge i_rst_n)
+    always @(negedge clk or negedge i_reset)
     begin
-        if(~i_rst_n)
+        if(~i_reset)
         begin
             for( i = 0; i < 2**NB_ADDR; i = i+1)
             begin

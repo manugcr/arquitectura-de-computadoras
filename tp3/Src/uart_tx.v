@@ -3,7 +3,7 @@ module uart_tx #(
     parameter NB_STOP = 16 // Duración del bit de parada
 )(
     input  wire                   clk,         // Reloj del sistema
-    input  wire                   i_rst_n,     // Reset activo en bajo
+    input  wire                   i_reset,     // Reset activo en bajo
     input  wire                   i_tick,      // Pulso de reloj para la transmisión
     input  wire                   i_start_tx,  // Señal para iniciar la transmisión
     input  wire [NB_DATA - 1 : 0]  i_data,      // Dato a transmitir
@@ -27,8 +27,8 @@ module uart_tx #(
         STOP     = 4'b1000; // Enviando bit de parada
 
     // Lógica secuencial: Cambio de estado en flancos de reloj
-    always @(posedge clk or negedge i_rst_n) begin
-        if (!i_rst_n) begin
+    always @(posedge clk or negedge i_reset) begin
+        if (!i_reset) begin
             state         <= IDLE;
             tick_counter  <= 0;
             txBits        <= 0;

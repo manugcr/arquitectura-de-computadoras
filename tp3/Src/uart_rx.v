@@ -25,7 +25,7 @@ module uart_rx
     parameter NB_STOP  = 16  // Número de bits de Stop
 )(
     input   wire                    clk,        // Señal de reloj
-    input   wire                    i_rst_n,    // Reset activo en bajo
+    input   wire                    i_reset,    // Reset activo en bajo
     input   wire                    i_tick,     // Pulso de sincronización
     input   wire                    i_data,     // Entrada de datos serial
     output  wire [NB_DATA - 1 : 0]  o_data,     // Datos recibidos
@@ -53,8 +53,8 @@ module uart_rx
                     STOP    = 4'b1000; // Recepción de bits de Stop
  
     // Registro de estado y datos
-    always @(posedge clk or negedge i_rst_n) begin
-        if(!i_rst_n) begin
+    always @(posedge clk or negedge i_reset) begin
+        if(!i_reset) begin
             state         <= IDLE;
             tick_counter  <= 0;
             recBits       <= 0;
