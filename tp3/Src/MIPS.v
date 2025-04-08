@@ -245,11 +245,8 @@ module MIPS
     (
         .clk                             (clk),
         .i_rst_n                         (i_rst_n),
-        // hzrd?
         .i_stall                         (stall),
         .i_halt                          (i_halt),
-    
-        .i_rs                            (rsID2EX),
         .i_rt                            (rtID2EX),
         .i_rd                            (rdID2EX),
     
@@ -263,8 +260,6 @@ module MIPS
         .i_addr                          (),//jmp
     
         //ctrl unit
-        .i_jump                          (jumpID2EX), 
-        .i_branch                        (branchID2EX ), 
         .i_regDst                        (regDstID2EX ), 
         .i_mem2Reg                       (mem2RegID2EX), 
         .i_memRead                       (memReadID2EX), 
@@ -284,16 +279,13 @@ module MIPS
         
         // ctrl signals
         .o_mem2reg                       (mem2RegEX2MEM),
-        .o_memRead                       (memReadEX2MEM),
         .o_memWrite                      (memWriteEX2MEM ),
         .o_regWrite                      (regWriteEX2MEM ),
-        .o_aluSrc                        (aluSrcEX2MEM),
         //.o_jump                          (),
     
         .o_sign_flag                     (sign_flagEX2MEM),
         .o_width                         (widthEX2MEM ),
         .o_write_reg                     (write_regEX2MEM), // EX/MEM.RegisterRd for control unit
-        .o_aluOP                         (),
         .o_data4Mem                      (data4MemEX2MEM ),
         .o_result                        (resultALUEX2MEM)
     
@@ -322,8 +314,6 @@ module MIPS
     ) MEM_inst (
         .clk                             (clk),
         .i_rst_n                         (i_rst_n),
-
-        .i_stall                         (stall),
         .i_halt                          (i_halt),
 
         .i_reg2write                     (write_regEX2MEM), //! o_write_reg from instruction_execute

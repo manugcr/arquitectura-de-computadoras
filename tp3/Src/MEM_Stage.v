@@ -6,7 +6,6 @@ module DataMemory
 )(
     input   wire                    clk                             ,
     input   wire                    i_rst_n                         ,
-    input   wire                    i_stall                         ,
     input   wire                    i_halt                          ,
     input   wire   [4:0]            i_reg2write                     , //! o_write_reg from instruction_execute
     input   wire   [NB_DATA-1:0]    i_result                        , //! o_result from instruction_execute
@@ -23,13 +22,13 @@ module DataMemory
 
 
 
-    output  reg   [NB_DATA-1:0]    o_reg_read                       , //! data from memory 
-    output  reg   [NB_DATA-1:0]    o_ALUresult                      , //! alu result
-    output  reg   [4:0]            o_reg2write                      , //! o_write_reg from execute (rd or rt)
+    output wire   [NB_DATA-1:0]    o_reg_read                       , //! data from memory 
+    output wire   [NB_DATA-1:0]    o_ALUresult                      , //! alu result
+    output wire   [4:0]            o_reg2write                      , //! o_write_reg from execute (rd or rt)
 
     // ctrl signals
-    output  reg                    o_mem2reg                        , //! 0-> guardo el valor de leído || 1-> guardo valor de alu
-    output  reg                    o_regWrite                       , //! writes the value
+    output wire                    o_mem2reg                        , //! 0-> guardo el valor de leído || 1-> guardo valor de alu
+    output wire                    o_regWrite                       , //! writes the value
 
     output  wire [31:0]            o_data2mem                       , //
     output  wire [7 :0]            o_dataAddr                       ,  //
@@ -78,27 +77,23 @@ module DataMemory
         endcase
     end
 
-    always @(posedge clk or negedge i_rst_n) begin
-        if(!i_rst_n) begin
-            // reset
-            o_reg_read  <= 32'b0                                                            ;
-            o_ALUresult <= 32'b0                                                            ;
-            o_reg2write <= 4'b0                                                             ;
-            //ctrl          
-            o_regWrite  <= 1'b0                                                             ;
-            o_mem2reg   <= 1'b0                                                             ;
-        end else begin
-            if(!i_halt) begin
-                o_reg_read  <= masked_reg_read                                              ;
-                o_ALUresult <= i_result                                                     ;
-                o_reg2write <= i_reg2write                                                  ;  
-                //ctrl  
-                o_regWrite  <= i_regWrite                                                   ;
-                o_mem2reg   <= i_mem2reg                                                    ;
-            end
-            
-        end
-    end
+    MEMWB #(
+        .NB_DATA(NB_DATA)
+    ) memwb_sreg(
+        .clk         (clk),
+        .i_rst_n     (i_rst_n),
+        .i_halt      (i_halt),
+        .i_reg_read  (masked_reg_read),
+        .i_result    (i_result),
+        .i_reg2write (i_reg2write),
+        .i_mem2reg   (i_mem2reg),
+        .i_regWrite  (i_regWrite),
+        .o_reg_read  (o_reg_read),
+        .o_ALUresult (o_ALUresult),
+        .o_reg2write (o_reg2write),
+        .o_mem2reg   (o_mem2reg),
+        .o_regWrite  (o_regWrite)
+    );
 
     assign writeEnable = i_memWrite                                                         ;
     assign o_data2mem  = data2mem                                                           ;

@@ -7,8 +7,6 @@ module EX_Stage
     input wire                  i_rst_n                         ,
     input wire                  i_stall                         ,
     input wire                  i_halt                          ,
-
-    input wire [4:0]            i_rs                            ,
     input wire [4:0]            i_rt                            ,
     input wire [4:0]            i_rd                            ,
 
@@ -22,8 +20,6 @@ module EX_Stage
     input wire [15:0]           i_addr                          ,//jmp
 
     //ctrl unit
-    input wire                  i_jump                          , 
-    input wire                  i_branch                        , 
     input wire                  i_regDst                        , 
     input wire                  i_mem2Reg                       , 
     input wire                  i_memRead                       , 
@@ -42,19 +38,16 @@ module EX_Stage
     
     
     // ctrl signals
-    output reg                  o_mem2reg                       ,
-    output reg                  o_memRead                       ,
-    output reg                  o_memWrite                      ,
-    output reg                  o_regWrite                      ,
-    output reg [1:0]            o_aluSrc                        ,
-    //output reg                  o_jump                          ,
+    output wire                  o_mem2reg                       ,
+    output wire                  o_memWrite                      ,
+    output wire                  o_regWrite                      ,
+    //output wire                  o_jump                          ,
 
-    output reg                  o_sign_flag                     ,
-    output reg [1:0]            o_width                         ,
-    output reg [4:0]            o_write_reg                     , //! EX/MEM.RegisterRd for control unit
-    output reg [1:0]            o_aluOP                         ,
-    output reg [NB_DATA-1:0]    o_data4Mem                      ,
-    output reg [NB_DATA-1:0]    o_result                        
+    output wire                  o_sign_flag                     ,
+    output wire [1:0]            o_width                         ,
+    output wire [4:0]            o_write_reg                     , //! EX/MEM.RegisterRd for control unit
+    output wire [NB_DATA-1:0]    o_data4Mem                      ,
+    output wire [NB_DATA-1:0]    o_result                        
 
 );
     localparam [5:0]
@@ -169,51 +162,39 @@ module EX_Stage
 
     end
     
-    //! when asserted The register destination number for the Write registeW
-    //! comes from the rd field.
-    //! when deasserted The register destination number for the Write register
-    //! comes from the rt field
-    always @(posedge clk) begin
-        if(!i_rst_n) begin
-            o_write_reg = 5'b0                                  ;
-        end else begin
-            if(!i_halt) begin
-                o_write_reg = i_regDst ? i_rt : i_rd            ; 
-            end
-        end
-    end
-    
-    always @(posedge clk or negedge i_rst_n) begin
-        if(!i_rst_n) begin
-            o_mem2reg <= 1'b0                                   ;
-            o_memRead <= 1'b0                                   ;
-            o_memWrite<= 1'b0                                   ;
-            o_regWrite<= 1'b0                                   ;
-            o_aluSrc  <= 2'b00                                  ;
-            o_aluOP   <= 3'b000                                 ;
-            o_result  <= 8'b0                                   ;
-            o_data4Mem<= 8'b0                                   ;
-            o_width   <= 2'b11                                  ;
-            o_sign_flag<= 1'b0                                  ;
-        
-        end else begin
-            if(!i_halt) begin
-                //aluOP   <= i_aluOP                                  ;
-                //data4Mem <= data4Mem_aux                                    ;
-                o_mem2reg   <= i_mem2Reg                            ;
-                o_memRead   <= i_memRead                            ;
-                o_memWrite  <= i_memWrite                           ;
-                o_regWrite  <= i_regWrite                           ;
-                o_aluSrc    <= i_aluSrc                             ;
-                o_width     <= i_width                              ;
-                o_sign_flag <= i_sign_flag                          ;
-                o_aluOP     <= 2'b00                                ;
-                o_result    <= alu_result                           ;
-                o_data4Mem  <= data4Mem                             ;
-                 
-            end 
-        end 
-    end
+   
+    EXMEM #(
+        .NB_DATA(NB_DATA),
+        .NB_REG()
+    ) exmem_sreg (
+        .clk         (clk),
+        .i_rst_n     (i_rst_n),
+        .i_halt      (i_halt),
+
+        .i_mem2reg   (i_mem2reg),
+        .i_memRead   (i_memRead),
+        .i_memWrite  (i_memWrite),
+        .i_regWrite  (i_regWrite),
+        .i_aluSrc    (i_aluSrc),
+        .i_aluOP     (i_aluOP),
+        .i_width     (i_width),
+        .i_sign_flag (i_sign_flag),
+        .i_result    (alu_result),
+        .i_data4Mem  (i_dataB),     // para SW: este dato se va a la MEM
+
+        .i_regDst    (i_regDst),
+        .i_rt        (i_rt),
+        .i_rd        (i_rd),
+
+        .o_mem2reg   (o_mem2reg),
+        .o_memWrite  (o_memWrite),
+        .o_regWrite  (o_regWrite),
+        .o_result    (o_result),
+        .o_data4Mem  (o_data4Mem),
+        .o_write_reg (o_write_reg),
+        .o_width     (o_width),
+        .o_sign_flag (o_sign_flag)
+    );
 
     //! alu instance
     ALU #(
