@@ -1,1 +1,4 @@
 *.bin
+
+debug_unit.v
+top.v

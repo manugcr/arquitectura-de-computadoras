@@ -5,7 +5,7 @@ module MIPS
     input wire          i_we_IF             ,
     input wire [31:0]   i_instruction_data  ,
     input wire          i_halt              , 
-    input wire [31:0]   i_inst_addr         ,
+    input wire [31:0]   i_instruction_addr         ,
 
     output wire                 o_end,
 
@@ -109,7 +109,7 @@ module MIPS
 
     wire [31:0] inst_addr_from_interface;
     wire [4 :0] aux_rdEX;
-    assign inst_addr_from_interface = i_inst_addr;
+    assign inst_addr_from_interface = i_instruction_addr;
     assign aux_rdEX = regDstID2EX ? rtID2EX : rdID2EX;
 
 
@@ -136,15 +136,15 @@ module MIPS
         // ID
         .i_jump         (jumpID2EX),
         .i_we           (i_we_IF),  
-        .i_addr2jump    (addr2jumpID2IF),  
+        .i_jump_address    (addr2jumpID2IF),  
         // uart
         .i_inst_data   (i_instruction_data ),  
-        .i_inst_addr    (inst_addr_from_interface),
+        .i_instruction_addr    (inst_addr_from_interface),
         .i_halt         (haltIF),
         .i_stall        (stall), // from HDU
         //out
         .o_instruction  (instructionIF2ID),
-        .o_pcounter     (pcounterIF2ID)
+        .o_pc     (pcounterIF2ID)
     );
     
     assign rsIF2ID = instructionIF2ID[25:21];
@@ -158,7 +158,7 @@ module MIPS
         .i_reset                  (i_reset),
         // IF
         .i_instruction            (instructionIF2ID ),
-        .i_pcounter4              (pcounterIF2ID ),
+        .i_pc              (pcounterIF2ID ),
         // WB
         .i_we_wb                  ( ),
         .i_we                     (regWriteWB2ID ),
@@ -267,7 +267,7 @@ module MIPS
         .o_fw_a          (fwA_FU2EX)
     );
 
-    DataMemory #(
+    MEM_Stage  #(
         .NB_DATA(),
         .NB_ADDR()
     ) MEM_inst (

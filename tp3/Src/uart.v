@@ -9,12 +9,12 @@ module uart
     input   wire clk,           // Señal de reloj
     input   wire i_reset,       // Señal de reset activo en bajo
     input   wire i_rx,          // Entrada de datos serie (recepción)
-    input [7:0]  data_Interface2Tx, // Datos de interfaz para transmisión
+    input [7:0]  i_debug2Tx, // Datos de interfaz para transmisión
     input        tx_start,      // Señal de inicio de transmisión
     output  wire o_tx,          // Salida de datos serie (transmisión)
     output  wire o_txDone,      // Indicador de finalización de transmisión
     output  wire o_rxdone,      // Indicador de finalización de recepción
-    output [7:0] data_Rx2Interface // Datos recibidos para la interfaz
+    output [7:0] o_Rx2debug // Datos recibidos para la interfaz
 );
  
 // Instancia del generador de baudios
@@ -37,7 +37,7 @@ uart_rx #(
         .i_reset    (i_reset),    // Reset activo en bajo
         .i_tick     (tick),       // Señal de sincronización
         .i_data     (i_rx),       // Datos de entrada serial
-        .o_data     (data_Rx2Interface), // Salida de datos recibidos
+        .o_data     (o_Rx2debug), // Salida de datos recibidos
         .o_rxdone   (o_rxdone)    // Señal de dato recibido correctamente
     );
 
@@ -50,7 +50,7 @@ uart_tx #(
         .i_reset    (i_reset),    // Reset activo en bajo
         .i_tick     (tick),       // Señal de sincronización
         .i_start_tx (tx_start),   // Señal para iniciar la transmisión
-        .i_data     (data_Interface2Tx), // Datos de entrada para transmitir
+        .i_data     (i_debug2Tx), // Datos de entrada para transmitir
         .o_txdone   (o_txDone),   // Señal que indica que la transmisión finalizó
         .o_data     (o_tx)        // Salida de datos serial transmitidos
     );

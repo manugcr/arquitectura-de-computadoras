@@ -4,8 +4,8 @@ module ALU
     parameter NB_OP     = 6  //! BITs de operaciones
 )
 (
-    input   wire    signed [NB_DATA-1:0]   i_datoA        , //! Dato de entrada
-    input   wire    signed [NB_DATA-1:0]   i_datoB        , //! Dato de entrada
+    input   wire    signed [NB_DATA-1:0]   i_data_A        , //! Dato de entrada
+    input   wire    signed [NB_DATA-1:0]   i_data_B        , //! Dato de entrada
     input   wire           [NB_OP - 1:0]   i_op           , //! Operación a realizar    
     input   wire    signed [4:0]   i_shamt                , //! Shift amount
     output  wire    signed [NB_DATA-1:0]   o_resultALU     //! output  
@@ -14,8 +14,8 @@ module ALU
     reg signed [NB_DATA-1:0] result                  ; //! Resultado de la operación
     reg        [NB_DATA-1:0] result_U                ; //! Resultado de la operación unsigned
     wire                     is_unsigned             ; //! Señal para saber si es unsigned
-    wire       [NB_DATA-1:0] dato_A_u = i_datoA      ; //! Dato A unsigned
-    wire       [NB_DATA-1:0] dato_B_u = i_datoB      ; //! Dato B unsigned
+    wire       [NB_DATA-1:0] data_A_u = i_data_A      ; //! Dato A unsigned
+    wire       [NB_DATA-1:0] data_B_u = i_data_B      ; //! Dato B unsigned
     
     localparam [NB_OP-1:0] //! Operation cases
         IDLE_OP = 6'b111111    ,  
@@ -50,30 +50,30 @@ module ALU
     result = 0;
     result_U = 0;
     case(i_op)
-        ADD_OP:   result   = i_datoA + i_datoB             ; // Signed addition
-        SUB_OP:   result   = i_datoA - i_datoB             ; // Signed subtraction
-        SLL_OP:   result   = i_datoB << i_shamt            ; // Logical shift left by shift amount
-        SRL_OP:   result   = i_datoB >> i_shamt            ; // Logical shift right by shift amount
-        SRA_OP:   result   = i_datoB >>> i_shamt           ; // Arithmetic shift right by shift amount
-        SLLV_OP:  result   = i_datoB << i_datoA            ; // Logical shift left by variable amount
-        SRLV_OP:  result   = i_datoB >> i_datoA            ; // Logical shift right by variable amount
-        SRAV_OP:  result   = i_datoB >>> i_datoA           ; // Arithmetic shift right by variable amount
-        ADDU_OP:  result_U = dato_A_u + dato_B_u           ; // Unsigned addition
-        SUBU_OP:  result_U = dato_A_u - dato_B_u           ; // Unsigned subtraction
-        AND_OP:   result   = i_datoA & i_datoB             ; // Bitwise AND
-        OR_OP:    result   = i_datoA | i_datoB             ; // Bitwise OR
-        XOR_OP:   result   = i_datoA ^ i_datoB             ; // Bitwise XOR
-        NOR_OP:   result   = ~(i_datoA | i_datoB)          ; // Bitwise NOR
-        SLT_OP:   result   = (i_datoA < i_datoB) ? 1 : 0   ; // Set on less than (signed)
-        SLTU_OP:  result_U = (dato_A_u < dato_B_u) ? 1 : 0 ; // Set on less than (unsigned)
-        ADDI_OP:  result   = i_datoA + i_datoB             ; // Add immediate (signed)
-        ADDIU_OP: result_U = dato_A_u + dato_B_u           ; // Add immediate (unsigned)
-        ANDI_OP:  result   = i_datoA & i_datoB             ; // AND immediate
-        ORI_OP:   result   = i_datoA | i_datoB             ; // OR immediate
-        XORI_OP:  result   = i_datoA ^ i_datoB             ; // XOR immediate
-        LUI_OP:   result   = i_datoB << 16                 ; // Load upper immediate
-        SLTI_OP:  result   = (i_datoA < i_datoB) ? 1 : 0   ; // Set less than immediate (signed)
-        SLTIU_OP: result_U = (dato_A_u < dato_B_u) ? 1 : 0 ; // Set less than immediate (unsigned)
+        ADD_OP:   result   = i_data_A + i_data_B             ; // Signed addition
+        SUB_OP:   result   = i_data_A - i_data_B             ; // Signed subtraction
+        SLL_OP:   result   = i_data_B << i_shamt            ; // Logical shift left by shift amount
+        SRL_OP:   result   = i_data_B >> i_shamt            ; // Logical shift right by shift amount
+        SRA_OP:   result   = i_data_B >>> i_shamt           ; // Arithmetic shift right by shift amount
+        SLLV_OP:  result   = i_data_B << i_data_A            ; // Logical shift left by variable amount
+        SRLV_OP:  result   = i_data_B >> i_data_A            ; // Logical shift right by variable amount
+        SRAV_OP:  result   = i_data_B >>> i_data_A           ; // Arithmetic shift right by variable amount
+        ADDU_OP:  result_U = data_A_u + data_B_u           ; // Unsigned addition
+        SUBU_OP:  result_U = data_A_u - data_B_u           ; // Unsigned subtraction
+        AND_OP:   result   = i_data_A & i_data_B             ; // Bitwise AND
+        OR_OP:    result   = i_data_A | i_data_B             ; // Bitwise OR
+        XOR_OP:   result   = i_data_A ^ i_data_B             ; // Bitwise XOR
+        NOR_OP:   result   = ~(i_data_A | i_data_B)          ; // Bitwise NOR
+        SLT_OP:   result   = (i_data_A < i_data_B) ? 1 : 0   ; // Set on less than (signed)
+        SLTU_OP:  result_U = (data_A_u < data_B_u) ? 1 : 0 ; // Set on less than (unsigned)
+        ADDI_OP:  result   = i_data_A + i_data_B             ; // Add immediate (signed)
+        ADDIU_OP: result_U = data_A_u + data_B_u           ; // Add immediate (unsigned)
+        ANDI_OP:  result   = i_data_A & i_data_B             ; // AND immediate
+        ORI_OP:   result   = i_data_A | i_data_B             ; // OR immediate
+        XORI_OP:  result   = i_data_A ^ i_data_B             ; // XOR immediate
+        LUI_OP:   result   = i_data_B << 16                 ; // Load upper immediate
+        SLTI_OP:  result   = (i_data_A < i_data_B) ? 1 : 0   ; // Set less than immediate (signed)
+        SLTIU_OP: result_U = (data_A_u < data_B_u) ? 1 : 0 ; // Set less than immediate (unsigned)
         default: begin
             result   = result                              ; // Default: keep previous values
             result_U = result_U                            ;

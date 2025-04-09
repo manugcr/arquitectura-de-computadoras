@@ -14,7 +14,7 @@ module IDEX (
     input wire w_regWrite,
     input wire [1:0] w_aluSrc, w_aluOp, w_width,
     input wire w_sign_flag,
-    input wire [31:0] i_pcounter4,
+    input wire [31:0] i_pc,
     input wire [31:0] i_instruction,
 
     output reg [31:0] o_reg_DA,
@@ -70,7 +70,7 @@ module IDEX (
                 o_sign_flag      <= w_sign_flag;
 
                 if ((opcode == JAL_TYPE) || ((opcode == R_TYPE) && (func == JARL_TYPE))) begin
-                    o_reg_DA <= i_pcounter4;
+                    o_reg_DA <= i_pc;
                     o_rs     <= 5'b0;
                     o_reg_DB <= 32'd4;
                 end

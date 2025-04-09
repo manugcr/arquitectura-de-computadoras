@@ -74,7 +74,7 @@ module EX_Stage
                     I_TYPE     = 2'b11                           ;
 
     reg  [5:0]           opcode                                  ;
-    reg  signed [NB_DATA-1:0]   alu_datoA, alu_datoB, data4Mem   ; //data4Mem_aux
+    reg  signed [NB_DATA-1:0]   alu_data_A, alu_data_B, data4Mem ; //data4Mem_aux
     reg  [1:0]           aluOP                                   ;
     wire [NB_DATA-1:0]   alu_result                              ;
 
@@ -109,24 +109,24 @@ module EX_Stage
         case(i_fw_a)
             2'b00: begin
                 // datoA = reg[rs]
-                alu_datoA = i_reg_DA                            ;
+                alu_data_A = i_reg_DA                            ;
             end
             2'b10: begin
                 // datoA = datoB
-                alu_datoA = i_output_MEMWB                      ;
+                alu_data_A = i_output_MEMWB                      ;
             end
             2'b11: begin
                 // datoA = datoB
-                alu_datoA = i_output_EXMEM                      ;
+                alu_data_A = i_output_EXMEM                      ;
             end
             default: begin
                 // nop
-                alu_datoA = 8'b0                                ;
+                alu_data_A = 8'b0                                ;
             end
         endcase
     
         if((i_opcode == JAL_TYPE) || ((i_opcode== R_TYPE_OP) && (i_func == JARL_TYPE))) begin
-            alu_datoA = i_reg_DA;
+            alu_data_A = i_reg_DA;
         end
     end
 
@@ -137,28 +137,28 @@ module EX_Stage
         case(i_fw_b)
             2'b00: begin
                 // datoB = reg[rt]
-                alu_datoB = i_reg_DB                            ;
+                alu_data_B = i_reg_DB                            ;
             end
             2'b10: begin
                 // datoB = datoB
-                alu_datoB = i_output_MEMWB                      ;
+                alu_data_B = i_output_MEMWB                      ;
             end
             2'b11: begin
                 // datoB = datoB
-                alu_datoB = i_output_EXMEM                      ;
+                alu_data_B = i_output_EXMEM                      ;
             end
             default: begin
                 // nop
-                alu_datoB = 8'b0                                ;
+                alu_data_B = 8'b0                                ;
             end
         endcase
-        data4Mem = alu_datoB;
+        data4Mem = alu_data_B;
 
         if((i_opcode == JAL_TYPE) || ((i_opcode== R_TYPE_OP) && (i_func == JARL_TYPE))) begin
-            alu_datoB = i_reg_DB;
+            alu_data_B = i_reg_DB;
         end
 
-        if(i_immediate_flag) alu_datoB = i_immediate            ;
+        if(i_immediate_flag) alu_data_B = i_immediate            ;
 
     end
     
@@ -203,8 +203,8 @@ module EX_Stage
     ) alu1
     (
         .i_op       (opcode),
-        .i_datoA    (alu_datoA),
-        .i_datoB    (alu_datoB),
+        .i_data_A    (alu_data_A),
+        .i_data_B    (alu_data_B),
         .i_shamt    (i_shamt),
         .o_resultALU(alu_result)
     );

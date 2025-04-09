@@ -1,4 +1,4 @@
-module DataMemory
+module MEM_Stage
 #(
     parameter NB_DATA = 32,
     parameter NB_ADDR = 8
