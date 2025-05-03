@@ -222,10 +222,10 @@ module EX_Stage
     ) alu1
     (
         .i_op       (opcode         ),
-        .i_datoA    (alu_datoA      ),
-        .i_datoB    (alu_datoB      ),
+        .i_A    (alu_datoA      ),
+        .i_B    (alu_datoB      ),
         .i_shamt    (i_shamt        ),
-        .o_resultALU(alu_result     )
+        .o_alu_result(alu_result     )
     );
 
 
