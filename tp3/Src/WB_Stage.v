@@ -1,28 +1,31 @@
 module WB_Stage
 #(
-    parameter NB_DATA = 32, // Número de bits de datos
-    parameter NB_ADDR = 5  // Número de bits de direcciones
+    parameter NB_DATA = 32,
+    parameter NB_ADDR = 5,
+    parameter NB_REG  = 1
 )
 (
-    input   wire    [NB_DATA-1: 0]  i_reg_read,   // Dato leído desde la memoria
-    input   wire    [NB_DATA-1: 0]  i_ALUresult, // Resultado de la ALU
-    input   wire    [4:0]           i_reg2write, // Registro destino (rd o rt)
+    input   wire    [NB_DATA-1: 0]  i_reg_read      ,//! data from memory 
+    input   wire    [NB_DATA-1: 0]  i_ALUresult     ,//! alu result
+    input   wire    [4:0]           i_reg2write     ,//! o_write_reg from execute (rd or rt)
 
-    input   wire                    i_mem2reg,   // 1 -> Guarda el valor leído desde memoria, 0 -> Guarda el valor de la ALU
-    input   wire                    i_regWrite,  // Señal de control para escritura en registro
+    input   wire                    i_mem2reg       , //! 1-> guardo el valor de leído || 0-> guardo valor de alu
+    input   wire                    i_regWrite      , //! writes the value
 
-    output  wire    [NB_DATA-1: 0]  o_write_data, // Dato que se escribirá en el registro
-    output  wire    [4:0]           o_reg2write,  // Registro de destino
-    output  wire                    o_regWrite   // Señal de control para escritura en registro
+    output  wire    [NB_DATA-1: 0]  o_write_data    , //! data2write
+    output  wire    [4:0]           o_reg2write     , //! dst reg
+    output  wire                    o_regWrite        //!ctrl signal
 );
 
-    // Selecciona el dato a escribir dependiendo de i_mem2reg
-    assign o_write_data = (i_mem2reg) ? i_reg_read : i_ALUresult;
-    
-    // Propaga el registro de destino
-    assign o_reg2write = i_reg2write;
-    
-    // Propaga la señal de control de escritura
-    assign o_regWrite  = i_regWrite;
+
+
+    assign o_write_data = (i_mem2reg) ? 
+                                        i_reg_read  :
+                                        i_ALUresult ;
+                                    
+    assign o_reg2write = i_reg2write                ;
+    assign o_regWrite  = i_regWrite                 ; //ctrl signal
+
+
 
 endmodule

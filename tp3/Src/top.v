@@ -3,6 +3,8 @@ module top (
     input   wire i_rst_n    , 
     input   wire i_rx       ,
     output  wire o_tx       
+    //input   wire [7:0] i_data, //only for test
+    //input wire i_rxDoneTest
 );
     // Pipeline parameters
     localparam  NB_DATA_32      = 32                ;
@@ -24,7 +26,7 @@ module top (
     localparam  CLK_FREQ        = 45_000_000       ; //! Frecuencia del reloj
     localparam  OVERSAMPLING    = 16                ; //! Oversampling
 
-    wire clk_45MHz;
+    wire clk_50MHz;
     wire clk;
 
     // Baudrate_generator 
@@ -87,14 +89,14 @@ module top (
     wire [NB_CONTROL -1 : 0] concatenated_data_CONTROL  ;
     
 
-    assign clk = clk_45MHz;
+    assign clk = clk_50MHz;
     //assign clk = clk_100MHz;
 
     clk_wiz_0 clk_wz_inst(
         .reset(!i_rst_n),
         .locked(),
         .clk_in1(clk_100MHz),
-        .clk_out1(clk_45MHz)
+        .clk_out1(clk_50MHz)
     );
 
    
@@ -112,13 +114,43 @@ module top (
         .NB_CONTROL(NB_CONTROL)
     ) debug_unit_inst (
         .clk                (clk),
-        .i_rx               (data_Rx2Interface),
-        .i_rxDone           (rxDone), 
+        .i_rx               (data_Rx2Interface), // cambiado para testing, debe ser data_Rx2Interface
+        .i_rxDone           (rxDone), // cambiado para testing, debe ser rxDone
         .i_txDone           (txDone),
         .i_rst_n            (i_rst_n),
         .o_tx_start         (tx_start),
         .o_data             (data_Interface2Tx),
-        .i_end              (i_end), 
+        .i_end              (i_end), // hay que ver como le avisa en modo continuo que termino
+        // .i_reg_DA           (reg_DA), 
+        // .i_reg_DB           (reg_DB), 
+        // .i_opcode           (opcode), 
+        // .i_rs               (rs), 
+        // .i_rt               (rt), 
+        // .i_rd               (rd), 
+        // .i_shamt            (shamt), 
+        // .i_funct            (funct), 
+        // .i_immediate        (immediate      ),
+        // .i_addr2jump        (addr2jump      ),
+        // .i_ALUresult        (ALUresult      ),
+        // .i_data2mem         (data2mem       ),
+        // .i_dataAddr         (dataAddr       ),
+        // .i_write_dataWB2ID  (write_dataWB2ID),
+        // .i_reg2writeWB2ID   (reg2writeWB2ID ),
+        // .i_write_enable     (write_enable   ),
+        // .i_jump             (jump           ),
+        // .i_branch           (branch         ),
+        // .i_regDst           (regDst         ),
+        // .i_mem2Reg          (mem2Reg        ),
+        // .i_memRead          (memRead        ),
+        // .i_memWrite         (memWrite       ),
+        // .i_inmediate_flag   (inmediate_flag ),
+        // .i_sign_flag        (sign_flag      ),
+        // .i_regWrite         (regWrite       ),
+        // .i_aluSrc           (aluSrc         ),
+        // .i_width            (width          ),
+        // .i_aluOp            (aluOp          ),
+        // .i_fwA              (fwA            ),
+        // .i_fwB              (fwB            ),
         .o_instruction      (instruction),   
         .o_instruction_address(inst_addr_from_interface), 
         .o_valid              (we),
@@ -136,11 +168,11 @@ module top (
 
     MIPS MIPS_inst (
         .clk                    (clk)                           ,
-        .i_reset                (start)                     , // Aca entra el start de la interfaz que indica cuando el reset se tiene que poner en 1
+        .i_rst_n                (start)                     , // Aca entra el start de la interfaz que indica cuando el reset se tiene que poner en 1
         .i_we_IF                (we)                     , // Aca entra el o_valid de la interfaz
         .i_instruction_data     (instruction)          , // Aca entra el o_instruction de la interfaz
         .i_halt                 (aux_halt)                     , // Aca entra el o_step de la interfaz
-        .i_instruction_addr     (inst_addr_from_interface),
+        .i_inst_addr            (inst_addr_from_interface),
         .o_jump                 (jump          ),
         .o_branch               (branch        ),
         .o_regDst               (regDst        ),

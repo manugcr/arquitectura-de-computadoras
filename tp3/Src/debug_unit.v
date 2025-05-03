@@ -1,4 +1,4 @@
-module uart_interface
+module debug_unit
 #(
     NB_DATA   = 8                                                           , //! number bits data
     NB_STOP   = 16                                                          , //! stops at 16 count                               
