@@ -3,8 +3,8 @@ module IFID (
     input wire         i_reset,
     input wire         i_halt,
     input wire         i_stall,
-    input wire [31:0]  i_instruction,   //! instrucción cruda desde IF
-    output reg [31:0]  o_instruction    //! instrucción registrada para ID
+    input wire [31:0]  i_instruction,   // Raw instruction from IF stage
+    output reg [31:0]  o_instruction    // Registered instruction for ID stage
 );
 
     always @(posedge clk) begin
@@ -15,6 +15,5 @@ module IFID (
             o_instruction <= i_instruction;
         end
     end
-    
 
 endmodule

@@ -13,16 +13,12 @@ module debug_unit
 
 )(
     input       wire                            clk                         , //! project clock
-
-    // Tx Rx
     input       wire signed [NB_DATA - 1 : 0]   i_rx                        , //! Input from UART_RX module
     input       wire                            i_rxDone                    , //! UART_RX done bit
     input       wire                            i_txDone                    , //! UART_TX done bit
     input       wire                            i_rst_n                     , //! negative edge reset
     output      wire                            o_tx_start                  ,
     output      wire        [NB_DATA - 1 : 0]   o_data                      , //! Output for UART_TX module
-
-    // Pipeline
     input       wire                            i_end                       , //! End of the program
 
     input wire [NB_ID_EX   -1 : 0] i_concatenated_data_ID_EX    ,
@@ -59,9 +55,7 @@ module debug_unit
     CONTINOUS_MODE        = 8'b00000100,
     STEP_MODE             = 8'b00001000,
     END_DEBUG_MODE        = 8'b00010000;
-    // SENDING_LATCHES       = 8'b00100000,
-    // SENDING_REGISTERS     = 8'b01000000,
-    // SENDING_MEMORY        = 8'b10000000;
+
 
     localparam HALT_INSTR = 32'hffffffff;
 
@@ -77,7 +71,6 @@ module debug_unit
     reg [NB_DATA    -1 : 0] tx_data, next_tx_data                                       ; //! data to be sent 
     reg                     aux;
 
-    // wire signed [NB_DATA - 1 : 0]  leds_reg                                 ;
 
     always @(posedge clk or negedge i_rst_n) begin
         if(!i_rst_n) begin
@@ -85,7 +78,6 @@ module debug_unit
             done_counter <= 0                                               ;
             valid <= 0                                                      ;                                                    
             tx_start <= 0                                                   ;
-            //instruction_address <= 0                                        ;
             instruction_register <= 0                                       ;
             step <= 0                                                       ;
             debug_flag <= 0                                                 ;

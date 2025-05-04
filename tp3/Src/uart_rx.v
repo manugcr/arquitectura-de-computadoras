@@ -1,58 +1,58 @@
 /*
-    Proceso de recepción de datos en la UART
-        Suponiendo un total de N bits de datos y M bits de Stop:
-    
-        1) Permanecer en espera hasta que la señal de entrada pase a 0, 
-           lo que indica el inicio del bit de Start. Iniciar el contador de ticks. ---> IDLE
+    UART data reception process
+    Assuming a total of N data bits and M stop bits:
 
-        2) Cuando el contador alcance el valor 7, la señal de entrada se encontrará 
-           en la mitad del bit de Start. Reiniciar el contador. ---> START
-        
-        3) Al llegar a 15, la señal de entrada habrá avanzado un bit y se ubicará 
-           en la mitad del primer bit de datos. Capturar este valor y almacenarlo 
-           en un registro de desplazamiento. Reiniciar el contador. ---> RECEIVE
-        
-        4) Repetir el paso 3 un total de N-1 veces para capturar los bits restantes.
-        
-        5) Si se usa un bit de paridad, repetir nuevamente el paso 3.
-        
-        6) Repetir el paso 3 un total de M veces para procesar los bits de Stop. ---> STOP
+    1) Wait until the input signal goes low, 
+       indicating the start bit. Start tick counter. ---> IDLE
+
+    2) When the counter reaches 7, the input signal will be 
+       at the middle of the start bit. Reset the counter. ---> START
+    
+    3) When it reaches 15, the input signal will have advanced 
+       one bit and be at the middle of the first data bit. 
+       Capture and store this bit in a shift register. Reset counter. ---> RECEIVE
+    
+    4) Repeat step 3 a total of N-1 times to capture the remaining data bits.
+    
+    5) If a parity bit is used, repeat step 3 one more time.
+    
+    6) Repeat step 3 a total of M times to process the stop bits. ---> STOP
 */
 
 module uart_rx
 #(
-    parameter NB_DATA  = 8,  // Número de bits de datos
-    parameter NB_STOP  = 16  // Número de bits de Stop
+    parameter NB_DATA  = 8,  // Number of data bits
+    parameter NB_STOP  = 16  // Number of stop bits
 )(
-    input   wire                    clk,        // Señal de reloj
-    input   wire                    i_reset,    // Reset activo en bajo
-    input   wire                    i_tick,     // Pulso de sincronización
-    input   wire                    i_data,     // Entrada de datos serial
-    output  wire [NB_DATA - 1 : 0]  o_data,     // Datos recibidos
-    output  wire                    o_rxdone    // Señal de recepción completa
+    input   wire                    clk,        // Clock signal
+    input   wire                    i_reset,    // Active-low reset
+    input   wire                    i_tick,     // Synchronization tick
+    input   wire                    i_data,     // Serial data input
+    output  wire [NB_DATA - 1 : 0]  o_data,     // Received data
+    output  wire                    o_rxdone    // Reception complete signal
 );
 
-    reg [3:0]   tick_counter;       // Contador de ticks
-    reg [3:0]   next_tick_counter;  // Próximo valor del contador de ticks
+    reg [3:0]   tick_counter;       // Tick counter
+    reg [3:0]   next_tick_counter;  // Next tick counter value
     
-    reg [3:0]   state, next_state;  // Estado actual y siguiente
+    reg [3:0]   state, next_state;  // Current and next state
 
-    reg [3:0]   recBits;            // Contador de bits recibidos
+    reg [3:0]   recBits;            // Received bits counter
     reg [3:0]   next_recBits;
 
-    reg [NB_DATA-1:0] recByte;       // Registro para almacenar los datos recibidos
+    reg [NB_DATA-1:0] recByte;       // Register to store received data
     reg [NB_DATA-1:0] next_recByte;
 
-    reg          done_bit, next_done_bit; // Señal de recepción completa
+    reg          done_bit, next_done_bit; // Reception complete signal
 
-    // Definición de estados
+    // State definitions
     localparam [3:0] 
-                    IDLE    = 4'b0001, // Espera de bit de inicio
-                    START   = 4'b0010, // Sincronización con el bit de inicio
-                    RECEIVE = 4'b0100, // Recepción de bits de datos
-                    STOP    = 4'b1000; // Recepción de bits de Stop
+                    IDLE    = 4'b0001, // Waiting for start bit
+                    START   = 4'b0010, // Start bit synchronization
+                    RECEIVE = 4'b0100, // Data bit reception
+                    STOP    = 4'b1000; // Stop bit reception
  
-    // Registro de estado y datos
+    // State and data register
     always @(posedge clk or negedge i_reset) begin
         if(!i_reset) begin
             state         <= IDLE;
@@ -69,7 +69,7 @@ module uart_rx
         end
     end
 
-    // Máquina de estados
+    // Finite State Machine
     always @(*) begin
         next_state         = state;
         next_tick_counter  = tick_counter;
@@ -80,14 +80,14 @@ module uart_rx
         case (state) 
             IDLE: begin
                 next_done_bit = 0; 
-                if(!i_data) begin  // Detección del bit de inicio
+                if(!i_data) begin  // Start bit detection
                     next_state        = START;
                     next_tick_counter = 0;
                 end
             end
             START: begin
                 if(i_tick) begin
-                    if(tick_counter == 7) begin  // Sincronización con el bit de inicio
+                    if(tick_counter == 7) begin  // Synchronize to middle of start bit
                         next_state        = RECEIVE;
                         next_tick_counter = 0;
                         next_recBits      = 0;
@@ -98,11 +98,11 @@ module uart_rx
             end
             RECEIVE: begin
                 if(i_tick) begin
-                    if(tick_counter == 15) begin  // Muestreo en la mitad del bit
+                    if(tick_counter == 15) begin  // Sample in the middle of the bit
                         next_tick_counter = 0;
                         next_recByte = {i_data, recByte[NB_DATA-1:1]}; // Shift register
                         if(recBits == (NB_DATA-1)) begin 
-                            next_state = STOP; // Pasar a estado STOP cuando se reciben todos los bits
+                            next_state = STOP; // Go to STOP state after all bits are received
                         end else begin 
                             next_recBits = recBits + 1;
                         end
@@ -113,9 +113,9 @@ module uart_rx
             end
             STOP: begin
                 if(i_tick) begin
-                    if(tick_counter == (NB_STOP-1)) begin  // Finalización de la trama
+                    if(tick_counter == (NB_STOP-1)) begin  // End of frame
                         next_state = IDLE;
-                        if(i_data) next_done_bit = 1;  // Dato recibido correctamente
+                        if(i_data) next_done_bit = 1;  // Data correctly received
                     end else begin
                         next_tick_counter = tick_counter + 1;
                     end
@@ -127,7 +127,7 @@ module uart_rx
         endcase
     end
 
-    assign o_data   = recByte;   // Salida de datos recibidos
-    assign o_rxdone = done_bit;  // Indicación de recepción completa
+    assign o_data   = recByte;   // Output received data
+    assign o_rxdone = done_bit;  // Reception complete indicator
     
 endmodule

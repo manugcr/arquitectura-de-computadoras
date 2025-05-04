@@ -6,7 +6,7 @@ module EXMEM #(
     input  wire                 i_reset,
     input  wire                 i_halt,
 
-    // Señales de control y datos
+    // Control and data signals
     input  wire                 i_mem2reg,
     input  wire                 i_memRead,
     input  wire                 i_memWrite,
@@ -36,12 +36,9 @@ module EXMEM #(
     output reg [NB_REG-1:0]     o_write_reg
 );
 
-    // Registro de o_write_reg (solo con clk positivo)
-     //! when asserted The register destination number for the Write registeW
-    //! comes from the rd field.
-    //! when deasserted The register destination number for the Write register
-    //! comes from the rt field
-    // === Instancia del pipeline register EXMEM ===
+    // o_write_reg register (updated on positive clock edge)
+    //! When asserted, the write register number comes from the rt field.
+    //! When deasserted, the write register number comes from the rd field.
     always @(posedge clk) begin
         if (!i_reset) begin
             o_write_reg <= {NB_REG{1'b0}};
@@ -50,7 +47,7 @@ module EXMEM #(
         end
     end
 
-    // Registros del resto de señales (clk y rst_n asíncrono)
+    // Registers for remaining signals (with asynchronous reset)
     always @(posedge clk or negedge i_reset) begin
         if (!i_reset) begin
             o_mem2reg    <= 1'b0;
