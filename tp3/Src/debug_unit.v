@@ -21,11 +21,11 @@ module debug_unit
     output      wire        [NB_DATA - 1 : 0]   o_data                      , //! Output for UART_TX module
     input       wire                            i_end                       , //! End of the program
 
-    input wire [NB_ID_EX   -1 : 0] i_concatenated_data_ID_EX    ,
-    input wire [NB_EX_MEM  -1 : 0] i_concatenated_data_EX_MEM   ,
-    input wire [NB_MEM_WB  -1 : 0] i_concatenated_data_MEM_WB   ,
-    input wire [NB_WB_ID   -1 : 0] i_concatenated_data_WB_ID    ,
-    input wire [NB_CONTROL -1 : 0] i_concatenated_data_CONTROL  ,
+    input wire [NB_ID_EX   -1 : 0] i_segment_registers_ID_EX    ,
+    input wire [NB_EX_MEM  -1 : 0] i_segment_registers_EX_MEM   ,
+    input wire [NB_MEM_WB  -1 : 0] i_segment_registers_MEM_WB   ,
+    input wire [NB_WB_ID   -1 : 0] i_segment_registers_WB_ID    ,
+    input wire [NB_CONTROL -1 : 0] i_control_registers_ID_EX  ,
 
 
    
@@ -192,7 +192,7 @@ module debug_unit
                 next_step = 0;
                 if(done_counter == 0) begin
                     next_tx_start = 1;
-                    next_tx_data =  i_concatenated_data_ID_EX[(NB_ID_EX) - 1 - done_counter * 8 -: 8];
+                    next_tx_data =  i_segment_registers_ID_EX[(NB_ID_EX) - 1 - done_counter * 8 -: 8];
                     next_done_counter = done_counter + 1;
                     next_state = STATE_SEND_ID_EX;                    
                 end
@@ -204,7 +204,7 @@ module debug_unit
                         next_tx_start = 0;
                     end else begin
                         next_tx_start = 1;
-                        next_tx_data = i_concatenated_data_ID_EX[(NB_ID_EX) - 1 - done_counter * 8 -: 8];
+                        next_tx_data = i_segment_registers_ID_EX[(NB_ID_EX) - 1 - done_counter * 8 -: 8];
                         next_done_counter = done_counter + 1;
                         next_state = STATE_SEND_ID_EX;                        
                     end
@@ -215,7 +215,7 @@ module debug_unit
                 if(done_counter == 0)begin
                     next_done_counter = done_counter + 1;
                     next_tx_start = 1;
-                    next_tx_data = i_concatenated_data_EX_MEM[(NB_EX_MEM) - 1 - done_counter * 8 -: 8];
+                    next_tx_data = i_segment_registers_EX_MEM[(NB_EX_MEM) - 1 - done_counter * 8 -: 8];
                     next_state = STATE_SEND_EX_MEM;                      
                 end
 
@@ -227,7 +227,7 @@ module debug_unit
                     end else begin
                         next_done_counter = done_counter + 1;
                         next_tx_start = 1;
-                        next_tx_data = i_concatenated_data_EX_MEM[(NB_EX_MEM) - 1 - done_counter * 8 -: 8];
+                        next_tx_data = i_segment_registers_EX_MEM[(NB_EX_MEM) - 1 - done_counter * 8 -: 8];
                         next_state = STATE_SEND_EX_MEM;                        
                     end          
                 end
@@ -237,7 +237,7 @@ module debug_unit
                 if(done_counter == 0) begin
                     next_done_counter = done_counter + 1;        
                     next_tx_start = 1;
-                    next_tx_data = i_concatenated_data_MEM_WB[(NB_MEM_WB) - 1 - done_counter * 8 -: 8];
+                    next_tx_data = i_segment_registers_MEM_WB[(NB_MEM_WB) - 1 - done_counter * 8 -: 8];
                     next_state = STATE_SEND_MEM_WB;                    
                 end
                 if (i_txDone) begin   
@@ -248,7 +248,7 @@ module debug_unit
                     end else begin
                         next_done_counter = done_counter + 1;        
                         next_tx_start = 1;
-                        next_tx_data = i_concatenated_data_MEM_WB[(NB_MEM_WB) - 1 - done_counter * 8 -: 8];
+                        next_tx_data = i_segment_registers_MEM_WB[(NB_MEM_WB) - 1 - done_counter * 8 -: 8];
                         next_state = STATE_SEND_MEM_WB;
                     end
                 end
@@ -258,7 +258,7 @@ module debug_unit
                 if (done_counter==0) begin
                     next_done_counter = done_counter + 1;         
                     next_tx_start = 1;
-                    next_tx_data = i_concatenated_data_WB_ID[(NB_WB_ID) - 1 - done_counter * 8 -: 8];
+                    next_tx_data = i_segment_registers_WB_ID[(NB_WB_ID) - 1 - done_counter * 8 -: 8];
                     next_state = STATE_SEND_WB_ID;                    
                 end
                 if (i_txDone) begin   
@@ -269,7 +269,7 @@ module debug_unit
                     end else begin
                         next_done_counter = done_counter + 1;         
                         next_tx_start = 1;
-                        next_tx_data = i_concatenated_data_WB_ID[(NB_WB_ID) - 1 - done_counter * 8 -: 8];
+                        next_tx_data = i_segment_registers_WB_ID[(NB_WB_ID) - 1 - done_counter * 8 -: 8];
                         next_state = STATE_SEND_WB_ID;
                     end
                 end
@@ -279,7 +279,7 @@ module debug_unit
                 if(done_counter==0) begin
                     next_tx_start = 1;
                     next_done_counter = done_counter + 1;          
-                    next_tx_data = i_concatenated_data_CONTROL[(NB_CONTROL) - 1 - done_counter * 8 -: 8];
+                    next_tx_data = i_control_registers_ID_EX[(NB_CONTROL) - 1 - done_counter * 8 -: 8];
                     next_state = STATE_SEND_CONTROL;
                     
                 end
@@ -295,7 +295,7 @@ module debug_unit
                     end else begin
                         next_tx_start = 1;
                         next_done_counter = done_counter + 1;          
-                        next_tx_data = i_concatenated_data_CONTROL[(NB_CONTROL) - 1 - done_counter * 8 -: 8];
+                        next_tx_data = i_control_registers_ID_EX[(NB_CONTROL) - 1 - done_counter * 8 -: 8];
                         next_state = STATE_SEND_CONTROL;
                     end
                 end

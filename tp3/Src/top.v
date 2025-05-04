@@ -69,11 +69,11 @@ module top (
     wire [ 1 : 0]      fwA         ; //! Forward A
     wire [ 1 : 0]      fwB         ; //! Forward B
 
-    wire [NB_ID_EX   -1 : 0] concatenated_data_ID_EX    ; 
-    wire [NB_EX_MEM  -1 : 0] concatenated_data_EX_MEM   ;
-    wire [NB_MEM_WB  -1 : 0] concatenated_data_MEM_WB   ;
-    wire [NB_WB_ID   -1 : 0] concatenated_data_WB_ID    ; 
-    wire [NB_CONTROL -1 : 0] concatenated_data_CONTROL  ;
+    wire [NB_ID_EX   -1 : 0] segment_registers_ID_EX    ; 
+    wire [NB_EX_MEM  -1 : 0] segment_registers_EX_MEM   ;
+    wire [NB_MEM_WB  -1 : 0] segment_registers_MEM_WB   ;
+    wire [NB_WB_ID   -1 : 0] segment_registers_WB_ID    ; 
+    wire [NB_CONTROL -1 : 0] control_registers_ID_EX  ;
 
     assign clk = clk_45MHz;
 
@@ -110,11 +110,11 @@ module top (
         .o_valid                (we),
         .o_step                 (halt),
         .o_start                (start),
-        .i_concatenated_data_ID_EX     (concatenated_data_ID_EX  ), 
-        .i_concatenated_data_EX_MEM    (concatenated_data_EX_MEM ),
-        .i_concatenated_data_MEM_WB    (concatenated_data_MEM_WB ),
-        .i_concatenated_data_WB_ID     (concatenated_data_WB_ID  ), 
-        .i_concatenated_data_CONTROL   (concatenated_data_CONTROL)
+        .i_segment_registers_ID_EX     (segment_registers_ID_EX  ), 
+        .i_segment_registers_EX_MEM    (segment_registers_EX_MEM ),
+        .i_segment_registers_MEM_WB    (segment_registers_MEM_WB ),
+        .i_segment_registers_WB_ID     (segment_registers_WB_ID  ), 
+        .i_control_registers_ID_EX   (control_registers_ID_EX)
     );
 
     wire aux_halt;
@@ -128,11 +128,11 @@ module top (
         .i_halt                        (aux_halt), // This receives the interface's `o_step` signal
         .i_instruction_addr            (inst_addr_from_interface),
         .o_end                         (i_end),
-        .o_concatenated_data_ID_EX     (concatenated_data_ID_EX),
-        .o_concatenated_data_EX_MEM    (concatenated_data_EX_MEM),
-        .o_concatenated_data_MEM_WB    (concatenated_data_MEM_WB),
-        .o_concatenated_data_WB_ID     (concatenated_data_WB_ID),
-        .o_concatenated_data_CONTROL   (concatenated_data_CONTROL)
+        .o_segment_registers_ID_EX     (segment_registers_ID_EX),
+        .o_segment_registers_EX_MEM    (segment_registers_EX_MEM),
+        .o_segment_registers_MEM_WB    (segment_registers_MEM_WB),
+        .o_segment_registers_WB_ID     (segment_registers_WB_ID),
+        .o_control_registers_ID_EX   (control_registers_ID_EX)
     );
 
     assign o_tx = tx;

@@ -5,67 +5,20 @@ module MIPS
     input wire          i_we_IF             ,
     input wire [31:0]   i_instruction_data  ,
     input wire          i_halt              , 
-    input wire [31:0]   i_instruction_addr         ,
+    input wire [31:0]   i_instruction_addr  ,
     // IF
 
-    output  [143:0] o_concatenated_data_ID_EX,
-    output  [31:0]  o_concatenated_data_EX_MEM,
-    output  [47:0]  o_concatenated_data_MEM_WB,
-    output  [39:0]  o_concatenated_data_WB_ID,
-    output  [23:0]  o_concatenated_data_CONTROL,
-
-    // // ctrl unit flags (ID)
-    // output wire                     o_jump          , 
-    // output wire                     o_branch        ,
-    // output wire                     o_regDst        ,
-    // output wire                     o_mem2reg       ,
-    // output wire                     o_memRead       ,
-    // output wire                     o_memWrite      ,
-    // output wire                     o_immediate_flag,
-    // output wire                     o_sign_flag     ,
-    // output wire                     o_regWrite      ,
-    // output wire [1:0]               o_aluSrc        ,
-    // output wire [1:0]               o_width         ,
-    // output wire [1:0]               o_aluOp         ,
-
-    // // ID out
-    // output wire [32-1:0]       o_addr2jump          , //! ID 2 IF
-    // output wire [32-1:0]       o_reg_DA             ,
-    // output wire [32-1:0]       o_reg_DB             ,
-
-    // output wire [5:0]               o_opcode        ,
-    // output wire [5:0]               o_func          ,
-    // output wire [4:0]               o_shamt         ,
-
-    // output wire [5-1:0]       o_rs                  ,
-    // output wire [5-1:0]       o_rd                  ,
-    // output wire [5-1:0]       o_rt                  ,
-
-    // output wire [15:0]              o_immediate     ,
-
-    // // EX 2 MEM
-
-    // output wire [32-1:0]       o_ALUresult          ,
-    // // fu2ex
-    // output wire [1:0]               o_fwA           ,
-    // output wire [1:0]               o_fwB           ,
-
-    // //MEM 2 WB
-    // output wire [31:0]              o_data2mem      ,
-    // output wire [7 :0]              o_dataAddr      , // 
-    // output wire                     o_memWriteDebug ,
-
-    // // WB 2 ID
-    // output wire [32-1:0]        o_write_dataWB2ID,
-    // output wire [5-1:0]         o_reg2writeWB2ID ,
-    // output wire                 o_write_enable  ,
-
-    output wire [15:0]        pcounterIF2ID_LSB,
+    output  [143:0] o_segment_registers_ID_EX,
+    output  [31:0]  o_segment_registers_EX_MEM,
+    output  [47:0]  o_segment_registers_MEM_WB,
+    output  [39:0]  o_segment_registers_WB_ID,
+    output  [23:0]  o_control_registers_ID_EX,
+    output  [15:0]  o_pcounterIF2ID_LSB,
 
     output wire                 o_end           
 );
 
-    assign pcounterIF2ID_LSB = pcounterIF2ID[15:0];
+    assign o_pcounterIF2ID_LSB = pcounterIF2ID[15:0];
 
     localparam  NB_DATA = 32, NB_ADDR = 5 ;
     wire haltIF;
@@ -294,34 +247,6 @@ module MIPS
         .o_regWrite      (regWriteWB2ID)  
     );
 
-    // assign o_jump          = jumpID2EX          ;
-    // assign o_branch        = branchID2EX        ;
-    // assign o_regDst        = regDstID2EX        ;
-    // assign o_mem2reg       = mem2RegID2EX       ;
-    // assign o_memRead       = memReadID2EX       ;
-    // assign o_memWrite      = memWriteID2EX      ;
-    // assign o_immediate_flag= immediate_flagID2EX;
-    // assign o_sign_flag     = sign_flagID2EX     ;
-    // assign o_regWrite      = regWriteID2EX      ;
-    // assign o_aluSrc        = aluSrcID2EX        ;
-    // assign o_width         = widthID2EX         ;
-    // assign o_aluOp         = aluOpID2EX         ;
-    // assign o_addr2jump     = addr2jumpID2IF     ;
-    // assign o_reg_DA        = datoAID2EX         ;
-    // assign o_reg_DB        = datoBID2EX         ;
-    // assign o_opcode        = opcodeID2EX        ;
-    // assign o_func          = funcID2EX          ;
-    // assign o_shamt         = shamtID2EX         ;
-    // assign o_rs            = rsID2EX            ;
-    // assign o_rd            = rdID2EX            ;
-    // assign o_rt            = rtID2EX            ;
-    // assign o_immediate     = immediateID2EX     ;
-    // assign o_ALUresult     = resultALUEX2MEM    ;
-    // assign o_fwA           = fwA_FU2EX          ;
-    // assign o_fwB           = fwB_FU2EX          ;
-    // assign o_write_dataWB2ID= write_dataWB2ID   ;
-    // assign o_reg2writeWB2ID = reg2writeWB2ID    ;
-    // assign o_write_enable   = regWriteWB2ID     ;
 
     // program finishHHHHHH
 
@@ -330,7 +255,7 @@ module MIPS
 
 
   // ID -> EX
-assign o_concatenated_data_ID_EX = {
+assign o_segment_registers_ID_EX = {
     datoAID2EX         , // 32 bits
     datoBID2EX         , // 32 bits
     opcodeID2EX        , // 6 bits
@@ -344,12 +269,12 @@ assign o_concatenated_data_ID_EX = {
 };
 
 // EX -> MEM
-assign o_concatenated_data_EX_MEM = {
+assign o_segment_registers_EX_MEM = {
     resultALUEX2MEM      // 32 bits
 };
 
 // MEM -> WB
-assign o_concatenated_data_MEM_WB = {
+assign o_segment_registers_MEM_WB = {
     o_data2mem       , // 32 bits (ya viene como output)
     o_dataAddr       , // 8 bits
     o_memWriteDebug  , // 1 bit
@@ -357,7 +282,7 @@ assign o_concatenated_data_MEM_WB = {
 };
 
 // WB -> ID
-assign o_concatenated_data_WB_ID = {
+assign o_segment_registers_WB_ID = {
     write_dataWB2ID     , // 32 bits
     reg2writeWB2ID      , // 5 bits
     regWriteWB2ID       , // 1 bit
@@ -365,7 +290,7 @@ assign o_concatenated_data_WB_ID = {
 };
 
 // Control signals (ID -> EX)
-assign o_concatenated_data_CONTROL = {
+assign o_control_registers_ID_EX = {
     jumpID2EX           , // 1 bit
     branchID2EX         , // 1 bit
     regDstID2EX         , // 1 bit
@@ -382,9 +307,5 @@ assign o_concatenated_data_CONTROL = {
     fwB_FU2EX           , // 2 bits
     5'b00000              // Padding
 };
-
-
-
-
 
 endmodule
