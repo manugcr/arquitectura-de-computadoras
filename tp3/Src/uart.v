@@ -7,7 +7,7 @@ module uart
     parameter OVERSAMPLING = 16           // Oversampling factor
 )(
     input  wire clk,              // Clock signal
-    input  wire i_reset,          // Active-low reset signal
+    input  wire i_reset_n,          // Active-low reset signal
     input  wire i_rx,             // Serial data input (reception)
     input  [7:0] i_debug2Tx,      // Interface data for transmission
     input        tx_start,        // Transmission start signal
@@ -24,7 +24,7 @@ baudrate_generator #(
         .OVERSAMPLING  (OVERSAMPLING)  // Oversampling factor
     ) baudrate_generator_inst (
         .clk      (clk),      // Clock signal connection
-        .i_reset  (i_reset),  // Reset signal
+        .i_reset  (i_reset_n),  // Reset signal
         .o_tick   (tick)      // Tick signal for synchronization
     );
 
@@ -34,7 +34,7 @@ uart_rx #(
         .NB_STOP (NB_STOP)    // Number of stop bits
     ) uart_rx_inst (
         .clk       (clk),         // Clock
-        .i_reset   (i_reset),     // Active-low reset
+        .i_reset   (i_reset_n),     // Active-low reset
         .i_tick    (tick),        // Synchronization tick signal
         .i_data    (i_rx),        // Serial input data
         .o_data    (o_Rx2debug),  // Output received data
@@ -47,7 +47,7 @@ uart_tx #(
         .NB_STOP (NB_STOP)    // Number of stop bits
     ) uart_tx_inst (
         .clk        (clk),          // Clock
-        .i_reset    (i_reset),      // Active-low reset
+        .i_reset    (i_reset_n),      // Active-low reset
         .i_tick     (tick),         // Synchronization tick signal
         .i_start_tx (tx_start),     // Signal to start transmission
         .i_data     (i_debug2Tx),   // Input data to be transmitted

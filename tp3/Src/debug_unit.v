@@ -324,7 +324,7 @@ module debug_unit
         assign o_valid                  = valid                         ; // Se habilita para que se escriba en el IF
         assign o_tx_start               = tx_start                      ;
         assign o_data                   = tx_data                       ;
-        assign o_step                   = step                          ;
+        assign o_step                   = ~step                         ;
         assign o_start                  = start                         ;
 
     endmodule

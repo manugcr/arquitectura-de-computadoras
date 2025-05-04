@@ -5,7 +5,6 @@ module EX_Stage
 (
     input wire                  clk                             ,
     input wire                  i_reset                         ,
-    input wire                  i_stall                         ,
     input wire                  i_halt                          ,
     input wire [4:0]            i_rt                            ,
     input wire [4:0]            i_rd                            ,
@@ -18,12 +17,11 @@ module EX_Stage
     input wire [15:0]           i_addr                          ,//jmp
     //ctrl unit
     input wire                  i_regDst                        , 
-    input wire                  i_mem2Reg                       , 
+    input wire                  i_mem2reg                       , 
     input wire                  i_memRead                       , 
     input wire                  i_memWrite                      , 
     input wire                  i_immediate_flag                , 
     input wire                  i_regWrite                      ,
-    input wire [1:0]            i_aluSrc                        ,
     input wire [1:0]            i_aluOP                         ,
     input wire [1:0]            i_width                         ,
     input wire                  i_sign_flag                     ,
@@ -137,7 +135,6 @@ module EX_Stage
         .i_memRead   (i_memRead),
         .i_memWrite  (i_memWrite),
         .i_regWrite  (i_regWrite),
-        .i_aluSrc    (i_aluSrc),
         .i_aluOP     (i_aluOP),
         .i_width     (i_width),
         .i_sign_flag (i_sign_flag),

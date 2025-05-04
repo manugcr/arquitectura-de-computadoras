@@ -18,8 +18,6 @@ module MIPS
     output wire                 o_end           
 );
 
-    assign o_pcounterIF2ID_LSB = pcounterIF2ID[15:0];
-
     localparam  NB_DATA = 32, NB_ADDR = 5 ;
     wire haltIF;
 
@@ -74,6 +72,7 @@ module MIPS
     wire [4 :0] aux_rdEX;
     assign inst_addr_from_interface = i_instruction_addr;
     assign aux_rdEX = regDstID2EX ? rtID2EX : rdID2EX;
+    assign o_pcounterIF2ID_LSB = pcounterIF2ID[15:0];
 
 
     Hazard Hazard_unit (
@@ -154,7 +153,6 @@ module MIPS
     (
         .clk                             (clk),
         .i_reset                         (i_reset),
-        .i_stall                         (stall),
         .i_halt                          (i_halt),
         .i_rt                            (rtID2EX),
         .i_rd                            (rdID2EX),
@@ -166,12 +164,11 @@ module MIPS
         .i_func                          (funcID2EX),
         .i_addr                          (),
         .i_regDst                        (regDstID2EX ), 
-        .i_mem2Reg                       (mem2RegID2EX), 
+        .i_mem2reg                       (mem2RegID2EX), 
         .i_memRead                       (memReadID2EX), 
         .i_memWrite                      (memWriteID2EX), 
         .i_immediate_flag                (immediate_flagID2EX), 
         .i_regWrite                      (regWriteID2EX),
-        .i_aluSrc                        (aluSrcID2EX ),
         .i_aluOP                         (aluOpID2EX),
         .i_width                         (widthID2EX),
         .i_sign_flag                     (sign_flagID2EX ),

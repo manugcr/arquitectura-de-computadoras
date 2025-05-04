@@ -2,7 +2,8 @@ module top (
     input   wire clk_100MHz ,
     input   wire i_rst_n    , 
     input   wire i_rx       ,
-    output  wire o_tx       
+    output  wire o_tx       ,
+    output  [15:0] o_PC_IF  
 );
     localparam  NB_DATA_32      = 32         ;
     localparam  NB_ADDR         = 5          ;
@@ -78,8 +79,7 @@ module top (
     assign clk = clk_45MHz;
 
     clk_wiz_0 clk_wz_inst(
-        .reset(!i_rst_n),
-        .locked(),
+        .resetn(i_rst_n),
         .clk_in1(clk_100MHz),
         .clk_out1(clk_45MHz)
     );
@@ -118,7 +118,7 @@ module top (
     );
 
     wire aux_halt;
-    assign aux_halt = ~halt;
+    assign aux_halt = halt;
 
     MIPS MIPS_inst (
         .clk                           (clk),
@@ -132,7 +132,8 @@ module top (
         .o_segment_registers_EX_MEM    (segment_registers_EX_MEM),
         .o_segment_registers_MEM_WB    (segment_registers_MEM_WB),
         .o_segment_registers_WB_ID     (segment_registers_WB_ID),
-        .o_control_registers_ID_EX   (control_registers_ID_EX)
+        .o_control_registers_ID_EX   (control_registers_ID_EX),
+        .o_pcounterIF2ID_LSB         (o_PC_IF)
     );
 
     assign o_tx = tx;
@@ -145,7 +146,7 @@ module top (
         .OVERSAMPLING(OVERSAMPLING)
     ) uart_inst (
         .clk(clk),
-        .i_reset(i_rst_n),
+        .i_reset_n(i_rst_n),
         .o_Rx2debug(data_Rx2Interface),
         .i_debug2Tx(data_Interface2Tx),
         .tx_start(tx_start),
