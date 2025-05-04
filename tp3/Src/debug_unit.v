@@ -39,22 +39,23 @@ module debug_unit
 
     // Estados de la máquina de estados
     localparam [NB_STATES -1 : 0] 
-    IDLE                  = 4'b0001, 
-    PARSE                 = 4'b0010, //! Recibe la instruccion del RX de a 1 byte y cuando esta listo pasa a STOP y valid se pone en 1
-    DEBUG_STATE           = 4'b0011, //! Manda señal de step y se envian todos los datos por uart en cada step
-    CONTINOUS_STATE       = 4'b0100, //! Se ejecuta todo el programa y luego se envian los datos por uart
-    SEND_ID_EX_STATE      = 4'b0101, //! Se envian los datos de ID_EX
-    SEND_EX_MEM_STATE     = 4'b0110, //! Se envian los datos de EX_MEM
-    SEND_MEM_WB_STATE     = 4'b0111, //! Se envian los datos de MEM_WB
-    SEND_WB_ID_STATE      = 4'b1000, //! Se envian los datos de WB_ID
-    SEND_CONTROL_STATE    = 4'b1001; //! Se envian los datos de control  
+    STATE_IDLE            = 4'b0001, 
+    STATE_LOAD_INSTR      = 4'b0010, //! Recibe la instruccion del RX de a 1 byte y cuando esta listo pasa a STOP y valid se pone en 1
+    STATE_DEBUG_MODE      = 4'b0011, //! Manda señal de step y se envian todos los datos por uart en cada step
+    STATE_CONTINOUS_MODE  = 4'b0100, //! Se ejecuta todo el programa y luego se envian los datos por uart
+    STATE_SEND_ID_EX      = 4'b0101, //! Se envian los datos de ID_EX
+    STATE_SEND_EX_MEM     = 4'b0110, //! Se envian los datos de EX_MEM
+    STATE_SEND_MEM_WB     = 4'b0111, //! Se envian los datos de MEM_WB
+    STATE_SEND_WB_ID      = 4'b1000, //! Se envian los datos de WB_ID
+    STATE_SEND_CONTROL    = 4'b1001; //! Se envian los datos de control  
 
+    //  para las señales de comando por UART ; CMD = COMANDO
     localparam [7:0]
-    RECEIVING_INSTRUCTION = 8'b00000001,
-    DEBUG_MODE            = 8'b00000010,
-    CONTINOUS_MODE        = 8'b00000100,
-    STEP_MODE             = 8'b00001000,
-    END_DEBUG_MODE        = 8'b00010000;
+    CMD_LOAD_INSTR  = 8'b00000001,
+    CMD_ENTER_DEBUG = 8'b00000010,
+    CONTINOUS_MODE  = 8'b00000100,
+    STEP_MODE       = 8'b00001000,
+    END_DEBUG_MODE  = 8'b00010000;
 
 
     localparam HALT_INSTR = 32'hffffffff;
@@ -74,7 +75,7 @@ module debug_unit
 
     always @(posedge clk or negedge i_rst_n) begin
         if(!i_rst_n) begin
-            state <= IDLE                                                   ;
+            state <= STATE_IDLE                                                   ;
             done_counter <= 0                                               ;
             valid <= 0                                                      ;                                                    
             tx_start <= 0                                                   ;
@@ -112,18 +113,18 @@ module debug_unit
         next_tx_data = tx_data                                      ;
 
         case (state)
-            IDLE: begin
+            STATE_IDLE: begin
                 if (i_rxDone) begin 
                     case(i_rx)
-                        RECEIVING_INSTRUCTION: next_state  = PARSE              ;
-                        DEBUG_MODE:            next_state  = DEBUG_STATE        ; 
-                        CONTINOUS_MODE:        next_state  = CONTINOUS_STATE    ; 
+                        CMD_LOAD_INSTR: next_state  = STATE_LOAD_INSTR              ;
+                        CMD_ENTER_DEBUG:            next_state  = STATE_DEBUG_MODE        ; 
+                        CONTINOUS_MODE:        next_state  = STATE_CONTINOUS_MODE    ; 
 
-                        default:                next_state = IDLE               ;
+                        default:                next_state = STATE_IDLE               ;
                     endcase
                     
                 end else begin                  
-                    next_state = IDLE                                       ;
+                    next_state = STATE_IDLE                                       ;
                     next_done_counter = 0                                   ;
                     next_valid = 0                                          ;
                     next_tx_start = 0                                       ; // Asegúrate de que tx_start se restablezca
@@ -137,7 +138,7 @@ module debug_unit
                 end
             end
 
-            PARSE: begin
+            STATE_LOAD_INSTR: begin
                 next_start = 1;
                 if (i_rxDone) begin // Recibe la instrucción de 32 bits, un byte a la vez
                     next_done_counter = done_counter + 1;
@@ -145,7 +146,7 @@ module debug_unit
                 end
                 if (done_counter == 4) begin
                     if (instruction_register == HALT_INSTR) begin
-                        next_state = IDLE;
+                        next_state = STATE_IDLE;
                     end 
                     if(aux==0) begin
                         next_instruction_address = next_instruction_address;
@@ -158,7 +159,7 @@ module debug_unit
                 end
             end
 
-            DEBUG_STATE: begin
+            STATE_DEBUG_MODE: begin
                 next_step = 0;
                 if(i_rxDone) begin
                     next_debug_flag = 1;
@@ -166,11 +167,11 @@ module debug_unit
                     case(i_rx)
                         STEP_MODE: begin
                             next_step = 1;
-                            next_state = SEND_ID_EX_STATE; // SEND_ID_EX_STATE
+                            next_state = STATE_SEND_ID_EX; // STATE_SEND_ID_EX
                         end
                         END_DEBUG_MODE: begin
                             next_debug_flag = 0;
-                            next_state = SEND_ID_EX_STATE; // que igual se manden los registros xlas
+                            next_state = STATE_SEND_ID_EX; // que igual se manden los registros xlas
                         end
                         default: begin
                             next_step = 0;
@@ -179,115 +180,115 @@ module debug_unit
                 end
             end
 
-            CONTINOUS_STATE: begin
+            STATE_CONTINOUS_MODE: begin
                 next_step = 1;
                 next_start = 1;
                 if(i_end) begin 
-                    next_state = SEND_ID_EX_STATE;
+                    next_state = STATE_SEND_ID_EX;
                 end
             end
             
-            SEND_ID_EX_STATE: begin
+            STATE_SEND_ID_EX: begin
                 next_step = 0;
                 if(done_counter == 0) begin
                     next_tx_start = 1;
                     next_tx_data =  i_concatenated_data_ID_EX[(NB_ID_EX) - 1 - done_counter * 8 -: 8];
                     next_done_counter = done_counter + 1;
-                    next_state = SEND_ID_EX_STATE;                    
+                    next_state = STATE_SEND_ID_EX;                    
                 end
 
                 if (i_txDone) begin
                     if (done_counter == ((NB_ID_EX/8))) begin
-                        next_state = SEND_EX_MEM_STATE;
+                        next_state = STATE_SEND_EX_MEM;
                         next_done_counter = 0;
                         next_tx_start = 0;
                     end else begin
                         next_tx_start = 1;
                         next_tx_data = i_concatenated_data_ID_EX[(NB_ID_EX) - 1 - done_counter * 8 -: 8];
                         next_done_counter = done_counter + 1;
-                        next_state = SEND_ID_EX_STATE;                        
+                        next_state = STATE_SEND_ID_EX;                        
                     end
                 end
             end
             
-            SEND_EX_MEM_STATE: begin
+            STATE_SEND_EX_MEM: begin
                 if(done_counter == 0)begin
                     next_done_counter = done_counter + 1;
                     next_tx_start = 1;
                     next_tx_data = i_concatenated_data_EX_MEM[(NB_EX_MEM) - 1 - done_counter * 8 -: 8];
-                    next_state = SEND_EX_MEM_STATE;                      
+                    next_state = STATE_SEND_EX_MEM;                      
                 end
 
                 if (i_txDone) begin
                     if (done_counter == ((NB_EX_MEM/8))) begin
-                        next_state = SEND_MEM_WB_STATE;
+                        next_state = STATE_SEND_MEM_WB;
                         next_done_counter = 0;
                         next_tx_start = 0;
                     end else begin
                         next_done_counter = done_counter + 1;
                         next_tx_start = 1;
                         next_tx_data = i_concatenated_data_EX_MEM[(NB_EX_MEM) - 1 - done_counter * 8 -: 8];
-                        next_state = SEND_EX_MEM_STATE;                        
+                        next_state = STATE_SEND_EX_MEM;                        
                     end          
                 end
             end
             
-            SEND_MEM_WB_STATE: begin
+            STATE_SEND_MEM_WB: begin
                 if(done_counter == 0) begin
                     next_done_counter = done_counter + 1;        
                     next_tx_start = 1;
                     next_tx_data = i_concatenated_data_MEM_WB[(NB_MEM_WB) - 1 - done_counter * 8 -: 8];
-                    next_state = SEND_MEM_WB_STATE;                    
+                    next_state = STATE_SEND_MEM_WB;                    
                 end
                 if (i_txDone) begin   
                     if (done_counter == ((NB_MEM_WB/8))) begin
-                        next_state = SEND_WB_ID_STATE;
+                        next_state = STATE_SEND_WB_ID;
                         next_done_counter = 0;
                         next_tx_start = 0;
                     end else begin
                         next_done_counter = done_counter + 1;        
                         next_tx_start = 1;
                         next_tx_data = i_concatenated_data_MEM_WB[(NB_MEM_WB) - 1 - done_counter * 8 -: 8];
-                        next_state = SEND_MEM_WB_STATE;
+                        next_state = STATE_SEND_MEM_WB;
                     end
                 end
             end
 
-            SEND_WB_ID_STATE: begin
+            STATE_SEND_WB_ID: begin
                 if (done_counter==0) begin
                     next_done_counter = done_counter + 1;         
                     next_tx_start = 1;
                     next_tx_data = i_concatenated_data_WB_ID[(NB_WB_ID) - 1 - done_counter * 8 -: 8];
-                    next_state = SEND_WB_ID_STATE;                    
+                    next_state = STATE_SEND_WB_ID;                    
                 end
                 if (i_txDone) begin   
                     if (done_counter == ((NB_WB_ID/8))) begin
-                        next_state = SEND_CONTROL_STATE;
+                        next_state = STATE_SEND_CONTROL;
                         next_done_counter = 0;
                         next_tx_start = 0;
                     end else begin
                         next_done_counter = done_counter + 1;         
                         next_tx_start = 1;
                         next_tx_data = i_concatenated_data_WB_ID[(NB_WB_ID) - 1 - done_counter * 8 -: 8];
-                        next_state = SEND_WB_ID_STATE;
+                        next_state = STATE_SEND_WB_ID;
                     end
                 end
             end
             
-            SEND_CONTROL_STATE: begin
+            STATE_SEND_CONTROL: begin
                 if(done_counter==0) begin
                     next_tx_start = 1;
                     next_done_counter = done_counter + 1;          
                     next_tx_data = i_concatenated_data_CONTROL[(NB_CONTROL) - 1 - done_counter * 8 -: 8];
-                    next_state = SEND_CONTROL_STATE;
+                    next_state = STATE_SEND_CONTROL;
                     
                 end
                 if (i_txDone) begin  
                     if (done_counter == ((NB_CONTROL/8))) begin
                         if (debug_flag) begin
-                            next_state = DEBUG_STATE;
+                            next_state = STATE_DEBUG_MODE;
                         end else begin
-                            next_state = IDLE;
+                            next_state = STATE_IDLE;
                         end
                         next_done_counter = 0;
                         next_tx_start = 0;
@@ -295,7 +296,7 @@ module debug_unit
                         next_tx_start = 1;
                         next_done_counter = done_counter + 1;          
                         next_tx_data = i_concatenated_data_CONTROL[(NB_CONTROL) - 1 - done_counter * 8 -: 8];
-                        next_state = SEND_CONTROL_STATE;
+                        next_state = STATE_SEND_CONTROL;
                     end
                 end
             end
