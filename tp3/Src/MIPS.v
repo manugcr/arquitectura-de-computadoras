@@ -75,6 +75,15 @@ module MIPS
     assign o_pcounterIF2ID_LSB = pcounterIF2ID[15:0];
 
 
+
+
+    wire [31:0] data2mem_wire;
+    wire [7:0]  dataAddr_wire;
+    wire        memWriteDebug_wire;
+
+
+
+
     Hazard Hazard_unit (
         .i_ID_EX_RegisterRt (rtID2EX),
         .i_IF_ID_RegisterRs (rsIF2ID),
@@ -222,9 +231,9 @@ module MIPS
         .o_reg2write                     (reg2writeMEM2WB),
         .o_mem2reg                       (mem2regMEM2WB), //! 0-> guardo el valor de leído || 1-> guardo valor de alu
         .o_regWrite                      (regWriteMEM2WB ),  
-        .o_data2mem                      (o_data2mem ),
-        .o_dataAddr                      (o_dataAddr ),
-        .o_memWrite                      (o_memWriteDebug)
+        .o_data2mem                      (data2mem_wire ),
+        .o_dataAddr                      (dataAddr_wire ),
+        .o_memWrite                      (memWriteDebug_wire)
     );
     
     WB_Stage #(
@@ -272,11 +281,12 @@ assign o_segment_registers_EX_MEM = {
 
 // MEM -> WB
 assign o_segment_registers_MEM_WB = {
-    o_data2mem       , // 32 bits (ya viene como output)
-    o_dataAddr       , // 8 bits
-    o_memWriteDebug  , // 1 bit
-    7'b0000000         // Padding
+    data2mem_wire,  // 32 bits
+    dataAddr_wire,  // 8 bits
+    memWriteDebug_wire, // 1 bit
+    7'b0000000
 };
+
 
 // WB -> ID
 assign o_segment_registers_WB_ID = {

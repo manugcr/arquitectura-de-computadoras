@@ -139,7 +139,7 @@ module EX_Stage
         .i_width     (i_width),
         .i_sign_flag (i_sign_flag),
         .i_result    (alu_result),
-        .i_data4Mem  (i_dataB),     // para SW: este dato se va a la MEM
+        .i_data4Mem  (data4Mem),     // para SW: este dato se va a la MEM
 
         .i_regDst    (i_regDst),
         .i_rt        (i_rt),

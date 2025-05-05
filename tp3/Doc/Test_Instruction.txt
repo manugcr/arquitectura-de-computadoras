@@ -456,7 +456,7 @@
                   memory[6] = 28205088;  // add $t4, $t5, $t6  Registro 12d  =  27d = 1Bh
                   memory[7] = 19556384;  // add $t5, $t1, $t2  Registro 13d  =  9 + 10 d = 13h =    SINO   Registro 12d =  15h + 13h = 28 h  */
 
-              /*  CASO J: Branch & LOAD*/
+              /*  CASO P: Branch & LOAD*/
 
          /*   ```assembly 
               PC                 |   Instrucción   
