@@ -14,7 +14,6 @@ module EX_Stage
     input wire [5 :0]           i_opcode                        ,
     input wire [4 :0]           i_shamt                         ,
     input wire [5 :0]           i_func                          ,
-    input wire [15:0]           i_addr                          ,//jmp
     //ctrl unit
     input wire                  i_regDst                        , 
     input wire                  i_mem2reg                       , 
@@ -132,10 +131,8 @@ module EX_Stage
         .i_halt      (i_halt),
 
         .i_mem2reg   (i_mem2reg),
-        .i_memRead   (i_memRead),
         .i_memWrite  (i_memWrite),
         .i_regWrite  (i_regWrite),
-        .i_aluOP     (i_aluOP),
         .i_width     (i_width),
         .i_sign_flag (i_sign_flag),
         .i_result    (alu_result),

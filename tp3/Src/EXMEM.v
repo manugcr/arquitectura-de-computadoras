@@ -8,12 +8,10 @@ module EXMEM #(
 
     // Control and data signals
     input  wire                 i_mem2reg,
-    input  wire                 i_memRead,
     input  wire                 i_memWrite,
     input  wire                 i_regWrite,
     input  wire [1:0]           i_width,
     input  wire                 i_sign_flag,
-    input  wire [2:0]           i_aluOP,
     input  wire [NB_DATA-1:0]   i_result,
     input  wire [NB_DATA-1:0]   i_data4Mem,
 
