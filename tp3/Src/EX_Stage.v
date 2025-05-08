@@ -44,8 +44,8 @@ module EX_Stage
 
 );
     localparam [5:0]
-                    ADD = 6'b100000                             ,
-                    IDLE= 6'b111111                             ;
+                    OP_ADD  = 6'b100000                             ,
+                    OP_IDLE= 6'b111111                             ;
 
     localparam [2:1]
                 ADDI    = 3'b000                                ,
@@ -75,8 +75,8 @@ module EX_Stage
     always @(*) begin
 
          case (i_aluOP)
-            LOAD_STORE: opcode = ADD; // load - store - jalr - jal type
-            BRANCH:     opcode = IDLE;
+            LOAD_STORE: opcode = OP_ADD; // load - store - jalr - jal type
+            BRANCH:     opcode = OP_IDLE;
             R_TYPE:     opcode = i_func;
             I_TYPE:     opcode = i_opcode;
             default:    opcode = 6'b0;

@@ -171,7 +171,6 @@ module MIPS
         .i_opcode                        (opcodeID2EX ),
         .i_shamt                         (shamtID2EX),
         .i_func                          (funcID2EX),
-        .i_addr                          (),
         .i_regDst                        (regDstID2EX ), 
         .i_mem2reg                       (mem2RegID2EX), 
         .i_memRead                       (memReadID2EX), 

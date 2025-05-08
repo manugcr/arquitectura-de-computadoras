@@ -131,6 +131,7 @@ def load_program():
             while data:
                 ser.write(data)
                 # time.sleep(0.01)                        # Pausa de 10 ms
+                print(f"Sending byte: {data.hex()}")  # 👈 Imprime el byte en consola en hexadecimal
                 data = bin_file.read(1)
         log_message("Program loaded to FPGA.")
     except Exception as e:
