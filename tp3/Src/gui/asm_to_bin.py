@@ -7,23 +7,50 @@ import argparse
 class Assembler:
     # Retorna una lista con los tokens para cada instrucción
     def tokenizer(self, asm_file):
-        lines = asm_file.readlines()
-        tokens = []
-        gramatical_rules = (r'(?m)(\w+)\s+(-{0,1}\w+)\s*,\s*(-{0,1}\w+)\s*,\s*(-{0,1}\w+)\s*$'        # sub r2, r4, r1
-                    + r'|(\w+)\s+(-{0,1}\w+)\s*,\s*(-{0,1}\w+)\s*\(\s*(-{0,1}\w+)\)\s*$'       # lw r4, 176(r0)
-                    + r'|(\w+)\s+(-{0,1}\w+)\s*,\s*(-{0,1}\w+)\s*$'                            # bez r2, 8
-                    + r'|(\w+)\s+(-{0,1}\w+)\s*$')                                             # J r1
+            lines = asm_file.readlines()
+            tokens = []
+            self.labels = {}
+            instruction_index = 0
+          #  label_count = 0  # ← Cuenta cuántas etiquetas aparecieron hasta ahora
+
+            gramatical_rules = (
+                r'(?m)(\w+)\s+(-{0,1}\w+)\s*,\s*(-{0,1}\w+)\s*,\s*(-{0,1}\w+)\s*$'
+                + r'|(\w+)\s+(-{0,1}\w+)\s*,\s*(-{0,1}\w+)\s*\(\s*(-{0,1}\w+)\)\s*$'
+                + r'|(\w+)\s+(-{0,1}\w+)\s*,\s*(-{0,1}\w+)\s*$'
+                + r'|(\w+)\s+(-{0,1}\w+)\s*$'
+                + r'|(\w+)\s*$'
+            )
+
+            for line in lines:
+                line = line.split('#')[0].strip()
+                if not line:
+                    continue
+
+                line = line.upper()
+
+                # Si hay etiqueta
+                if ':' in line:
+                    label_part, rest = line.split(':', 1)
+                    label = label_part.strip()
+                 #   self.labels[label] = instruction_index + label_count  # ← suma 1 por cada etiqueta previa
+                    self.labels[label] = instruction_index   # ← suma 1 por cada etiqueta previa
+                    #label_count += 1
+                    line = rest.strip()
+                    if not line:
+                        continue
+
+                # Instrucción real
+                if line == 'HALT':
+                    tokens.append(['HALT'])
+                else:
+                    token = list(filter(None, re.split(string=line, pattern=gramatical_rules)))
+                    tokens.append(token)
+
+                instruction_index += 1
+
+            return tokens
 
 
-        for line in lines:
-            line = line.upper()
-            formated_line = line.replace('\n', '')
-            if formated_line != 'HALT':
-                tokens.append(
-                    list(filter(None, re.split(string=formated_line, pattern=gramatical_rules))))
-            else:
-                tokens.append(['HALT'])
-        return tokens
 
     # Toma uno de los números de la instrucción o el número de registro y lo pasa a un string binario
     # SLL r1, 2, -3, por ejemplo acá si pedimos sa = "11101"
@@ -188,32 +215,64 @@ class Assembler:
             inst_bin = self.set_rs(inst_bin, token[2])
         elif i_name == "BEQ":
             inst_bin = self.set_op_code(inst_bin, "000100")
-            inst_bin = self.set_rt(inst_bin, token[1])
-            inst_bin = self.set_offset_immed(inst_bin, token[3])
-            inst_bin = self.set_rs(inst_bin, token[2])
+            inst_bin = self.set_rs(inst_bin, token[1])
+            inst_bin = self.set_rt(inst_bin, token[2])
+            label = token[3]
+            if label.isdigit() or (label.startswith('-') and label[1:].isdigit()):
+                inst_bin = self.set_offset_immed(inst_bin, label)
+            elif label in self.labels:
+                offset = self.labels[label] - 1 - (self.instruction_counter + 1)
+                inst_bin = self.set_offset_immed(inst_bin, str(offset))
+            else:
+                log.fatal(f"Etiqueta '{label}' no encontrada para BEQ")
         elif i_name == "BNE":
             inst_bin = self.set_op_code(inst_bin, "000101")
-            inst_bin = self.set_rt(inst_bin, token[1])
-            inst_bin = self.set_offset_immed(inst_bin, token[3])
-            inst_bin = self.set_rs(inst_bin, token[2])
+            inst_bin = self.set_rs(inst_bin, token[1])
+            inst_bin = self.set_rt(inst_bin, token[2])
+            label = token[3]
+            if label.isdigit() or (label.startswith('-') and label[1:].isdigit()):
+                inst_bin = self.set_offset_immed(inst_bin, label)
+            elif label in self.labels:
+                offset = self.labels[label] - 1 - (self.instruction_counter + 1)
+                inst_bin = self.set_offset_immed(inst_bin, str(offset))
+            else:
+                log.fatal(f"Etiqueta '{label}' no encontrada para BNE")
         elif i_name == "J":
             inst_bin = self.set_op_code(inst_bin, "000010")
-            inst_bin = self.set_target(inst_bin, token[1])
+            target = token[1]
+            if not target.isdigit():
+                if target in self.labels:
+                    # suma 1 al target
+                    target = str(self.labels[target] + 1)
+                else:
+                    log.fatal(f"Etiqueta '{target}' no encontrada")
+            inst_bin = self.set_target(inst_bin, target)
         elif i_name == "JAL":
             inst_bin = self.set_op_code(inst_bin, "000011")
-            inst_bin = self.set_target(inst_bin, token[1])
+            target = token[1]
+            if not target.isdigit():
+                if target in self.labels:
+                    # suma 1 al target
+                    target = str(self.labels[target] + 1)
+                else:
+                    log.fatal(f"Etiqueta '{target}' no encontrada")
+            inst_bin = self.set_target(inst_bin, target)
         elif i_name == "JR":
+            print(f"DEBUG JR: token = {token}")
             inst_bin = self.set_func(inst_bin, "001000")
             inst_bin = self.set_rs(inst_bin, token[1])
         elif i_name == "JALR":
-            inst_bin = self.set_func(inst_bin, "001001")
-            if len(token) > 1:
-                inst_bin = self.set_rs(inst_bin, token[2])
-                inst_bin = self.set_rd(inst_bin, token[1])
-            else:
-                inst_bin = self.set_rs(inst_bin, token[1])
-                inst_bin = self.set_rd(inst_bin, "31")
+            inst_bin = self.set_op_code(inst_bin, "000000")   # tipo R
+            inst_bin = self.set_func(inst_bin, "001001")       # funct = 0x09
 
+            if len(token) > 2:
+                # JALR rd, rs
+                inst_bin = self.set_rd(inst_bin, token[1])     # guardar PC+8 en rd
+                inst_bin = self.set_rs(inst_bin, token[2])     # saltar a dirección de rs
+            else:
+                # JALR rs → equivalente a JALR R31, rs
+                inst_bin = self.set_rd(inst_bin, "31")
+                inst_bin = self.set_rs(inst_bin, token[1])
         elif i_name == "HALT":
             inst_bin = "11111111111111111111111111111111"
         elif i_name == "NOP":
@@ -268,8 +327,14 @@ try:
 finally:
     asm_file.close()
 
+jump_ops = {"J", "JAL", "JR", "BEQ", "BNE", "JALR"}
+
+asm.instruction_counter = 0  # Agregá esta línea antes del bucle
+
 for inst in asm_tokens:
-    binary_code += (asm.instruction_generator(inst))
+    binary_code += asm.instruction_generator(inst)
+    asm.instruction_counter += 1
+
 
 num_byte = []
 for i in range(int(len(binary_code)/8)):

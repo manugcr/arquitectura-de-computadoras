@@ -1,14 +1,18 @@
-ADDI R19,R0,4
-ADDI R30,R0,10
-SW R30,20(R19)        
-SW R30,16(R19)         
-LW R4,20(R19)        
-LW R18,16(R19)        
-BEQ R4,R18,2
+ADDI R1,R0,4       
+ADDI R2,R0,10
+SW R2,20(R1)        
+SW R2,16(R1)         
+LW R3,20(R1)        
+LW R4,16(R1)        
+BEQ R3,R4,salto
 NOP
-ADDU R9,R10,R11       
-ADDU R10,R11,R12      
-ADDU R11,R12,R13    
-ADDU R12,R13,R14      
-ADDU R13,R9,R10      
-HALT
+ADDI R11,R0,24      
+ADDI R13,R0,24    
+ADDI R15,R0,24     
+ADDI R17,R0,24      
+salto:
+ADDI R8,R0,8      
+ADDI R10,R0,10   
+ADDI R12,R0,12    
+ADDI R14,R0,14    
+HALT               
