@@ -12,7 +12,7 @@ module ID_Stage
     input wire [NB_ADDR-1:0]   i_wr_addr        ,
     input wire [NB_DATA-1:0]   i_wr_data_WB     ,
     input wire                 i_stall          ,
-    input wire                 i_halt           ,
+    input wire                 i_step           ,
                                                                 
     output wire [4:0]    o_rs                    ,    
     output wire [4:0]    o_rt                    ,
@@ -195,7 +195,7 @@ module ID_Stage
     IDEX idex_sreg (
     .clk(clk),
     .i_reset(i_reset),
-    .i_halt(i_halt),
+    .i_step(i_step),
     .i_stall(i_stall),
     .ReadData1(ReadData1),
     .ReadData2(ReadData2),

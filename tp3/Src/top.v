@@ -125,7 +125,7 @@ module top (
         .i_reset                       (start), // This receives the interface's `o_start` signal to assert reset
         .i_we_IF                       (we),    // This receives the interface's `o_valid` signal
         .i_instruction_data            (instruction), // Instruction from interface
-        .i_halt                        (aux_halt), // This receives the interface's `o_step` signal
+        .i_step                        (aux_halt), // This receives the interface's `o_step` signal
         .i_instruction_addr            (inst_addr_from_interface),
         .o_end                         (i_end),
         .o_segment_registers_ID_EX     (segment_registers_ID_EX),

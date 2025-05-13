@@ -3,7 +3,7 @@ module MEMWB #(
 )(
     input  wire              clk,
     input  wire              i_reset,
-    input  wire              i_halt,
+    input  wire              i_step,
 
     // Entradas del pipeline
     input  wire [NB_DATA-1:0] i_reg_read,
@@ -27,7 +27,7 @@ module MEMWB #(
             o_reg2write <= 5'b0;
             o_mem2reg   <= 1'b0;
             o_regWrite  <= 1'b0;
-        end else if (!i_halt) begin
+        end else if (!i_step) begin
             o_reg_read  <= i_reg_read;
             o_ALUresult <= i_result;
             o_reg2write <= i_reg2write;

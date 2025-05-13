@@ -4,7 +4,7 @@ module EXMEM #(
 )(
     input  wire                 clk,
     input  wire                 i_reset,
-    input  wire                 i_halt,
+    input  wire                 i_step,
 
     // Control and data signals
     input  wire                 i_mem2reg,
@@ -36,7 +36,7 @@ module EXMEM #(
     always @(posedge clk) begin
         if (!i_reset) begin
             o_write_reg <= {NB_REG{1'b0}};
-        end else if (!i_halt) begin
+        end else if (!i_step) begin
             o_write_reg <= i_regDst ? i_rt : i_rd;
         end
     end
@@ -51,7 +51,7 @@ module EXMEM #(
             o_sign_flag  <= 1'b0;
             o_result     <= {NB_DATA{1'b0}};
             o_data4Mem   <= {NB_DATA{1'b0}};
-        end else if (!i_halt) begin
+        end else if (!i_step) begin
             o_mem2reg    <= i_mem2reg;
             o_memWrite   <= i_memWrite;
             o_regWrite   <= i_regWrite;

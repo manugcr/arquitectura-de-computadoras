@@ -1,7 +1,7 @@
 module IDEX (
     input wire clk,
     input wire i_reset,
-    input wire i_halt,
+    input wire i_step,
     input wire i_stall,
 
     input wire [31:0] ReadData1,
@@ -47,7 +47,7 @@ module IDEX (
             o_immediate      <= 0;
             o_immediate_flag <= 1'b0;
         end else begin
-            if (!i_halt) begin
+            if (!i_step) begin
                 o_reg_DA         <= ReadData1;
                 o_reg_DB         <= ReadData2;
                 o_rd             <= rd;

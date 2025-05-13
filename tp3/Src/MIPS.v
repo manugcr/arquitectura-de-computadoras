@@ -4,7 +4,7 @@ module MIPS
     input wire          i_reset             ,
     input wire          i_we_IF             ,
     input wire [31:0]   i_instruction_data  ,
-    input wire          i_halt              , 
+    input wire          i_step              , 
     input wire [31:0]   i_instruction_addr  ,
     // IF
 
@@ -129,7 +129,7 @@ module MIPS
         .i_wr_addr                (reg2writeWB2ID),
         .i_wr_data_WB             (write_dataWB2ID),
         .i_stall                  (stall || stop),
-        .i_halt                   (i_halt ),
+        .i_step                   (i_step ),
         .o_rs                     (rsID2EX),
         .o_rt                     (rtID2EX),
         .o_rd                     (rdID2EX),
@@ -162,7 +162,7 @@ module MIPS
     (
         .clk                             (clk),
         .i_reset                         (i_reset),
-        .i_halt                          (i_halt),
+        .i_step                          (i_step),
         .i_rt                            (rtID2EX),
         .i_rd                            (rdID2EX),
         .i_reg_DA                        (datoAID2EX),
@@ -216,7 +216,7 @@ module MIPS
     ) MEM_inst (
         .clk                             (clk),
         .i_reset                         (i_reset),
-        .i_halt                          (i_halt),
+        .i_step                          (i_step),
         .i_reg2write                     (write_regEX2MEM), //! o_write_reg from instruction_execute
         .i_result                        (resultALUEX2MEM), //! o_result from instruction_execute
         .i_width                         (widthEX2MEM), //! width
@@ -256,7 +256,7 @@ module MIPS
     // program finishHHHHHH
 
     assign o_end = stop;
-    assign haltIF = (i_halt || stop) ? 1 : 0;
+    assign haltIF = (i_step || stop) ? 1 : 0;
 
 
   // ID -> EX

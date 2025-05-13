@@ -64,7 +64,7 @@ module debug_unit
     reg [NB_32     -1 : 0]  done_counter,next_done_counter                              ;
     reg                     valid, next_valid                                           ;
     reg                     tx_start, next_tx_start                                     ;
-    reg [NB_32 - 1 : 0]     instruction_address, next_instruction_address               ;   //! address donde se va a guardar la instrucción           
+    reg [NB_32 - 1 : 0]     instruction_address, next_instruction_address               ;         
     reg [NB_32 - 1 : 0]     instruction_register, next_instruction_register             ;   //! instrucción recibida  
     reg                     step, next_step                                             ;
     reg                     debug_flag, next_debug_flag                                 ;
@@ -171,7 +171,7 @@ module debug_unit
                         end
                         END_DEBUG_MODE: begin
                             next_debug_flag = 0;
-                            next_state = STATE_SEND_ID_EX; // que igual se manden los registros xlas
+                            next_state = STATE_SEND_ID_EX; 
                         end
                         default: begin
                             next_step = 0;
@@ -319,9 +319,9 @@ module debug_unit
     end
 
         // assign
-        assign o_instruction            = instruction_register          ; // Se pasa la instrucción que se recibe
-        assign o_instruction_address    = instruction_address           ; // No entiendo bien xq se pasa el address
-        assign o_valid                  = valid                         ; // Se habilita para que se escriba en el IF
+        assign o_instruction            = instruction_register          ; 
+        assign o_instruction_address    = instruction_address           ; 
+        assign o_valid                  = valid                         ; 
         assign o_tx_start               = tx_start                      ;
         assign o_data                   = tx_data                       ;
         assign o_step                   = ~step                         ;

@@ -6,7 +6,7 @@ module MEM_Stage
     // Input control and data signals
     input wire                   clk,            // Clock signal
     input wire                   i_reset,        // Asynchronous active-low reset
-    input wire                   i_halt,         // Pipeline halt
+    input wire                   i_step,         // Pipeline halt
     input wire [4:0]             i_reg2write,    // Destination register (from EX stage)
     input wire [NB_DATA-1:0]     i_result,       // ALU result from EX stage
     input wire [1:0]             i_width,        // Memory access width: 00=Byte, 01=Half, 10=Word
@@ -65,7 +65,7 @@ module MEM_Stage
     ) memwb_sreg (
         .clk         (clk),
         .i_reset     (i_reset),
-        .i_halt      (i_halt),
+        .i_step      (i_step),
         .i_reg_read  (aligned_mem_read),
         .i_result    (i_result),
         .i_reg2write (i_reg2write),
