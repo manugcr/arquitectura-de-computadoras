@@ -1,0 +1,33 @@
+ADDI R1,R0,5    
+ADDI R2,R0,6   
+ADDU R3,R1,R2       # HAZARD DATA 1
+ADDI R4,R0,10        
+SW  R4, 9(R3)       # HAZARD DATA 2      
+LW  R5, 14(R2)  
+ADDU R6,R5,R1       # HAZARD LOAD USE
+JAL salto1          # JUMP AND LINK R31
+NOP
+salto3:
+ADDI R7,R0,1
+ADDI R8,R0,1
+J end
+NOP
+salto1:
+ADDI R9,R0,1
+ADDI R4,R0,10      
+ADDI R6,R0,10     
+BEQ  R4,R6,salto2  # HAZARD DATA BRACH   
+NOP
+ADDI R7,R0,1
+ADDI R8,R0,1
+salto2:
+ADDI R10,R0,4       
+ADDI R11,R0,10
+SW R11,20(R10)        
+SW R11,16(R10)         
+LW R13,20(R10)        
+LW R14,16(R10)        
+BEQ R13,R14,salto3  # HAZARD LOAD USE BRACH
+NOP
+end:
+HALT
